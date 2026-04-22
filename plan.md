@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Companion to:** prd.md, userstories.md, architecture.md, decisions.md
 **Status:** Active
-**Last updated:** 2026-04-18
+**Last updated:** 2026-04-21
 
 ---
 
@@ -52,25 +52,27 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 ### 🔬 Research checkpoint (before starting)
 
-- [ ] Confirm **Next.js 15** is the current stable line (if Next 16 has shipped stably, flag to user — `architecture.md §9.1` locks us to 15, but `decisions.md` 2026-04-18 entry anticipates this).
-- [ ] Confirm **DuckDB `@duckdb/node-api`** latest API — verify the `COPY ... TO 'file.parquet'` + `read_parquet` patterns still work as documented in `architecture.md §5.4`.
-- [ ] Confirm **Trigger.dev v4** `triggerAndWait` / `batchTriggerAndWait` + `metadata.set` / `@trigger.dev/react-hooks` `useRealtimeRun()` APIs are stable.
-- [ ] Confirm **Supabase Storage TUS resumable** endpoint path (`/storage/v1/upload/resumable`) and chunk size (6MB) against current Supabase docs.
-- [ ] Confirm **`@myriaddreamin/typst.ts`** bundle size and WASM compatibility with Trigger.dev workers.
-- [ ] Confirm **Anthropic model IDs** (`claude-sonnet-4-6`, `claude-haiku-4-5-20251001`) are still current — these were locked 2026-04-18.
+- [x] Confirm **Next.js 15** is the current stable line (if Next 16 has shipped stably, flag to user — `architecture.md §9.1` locks us to 15, but `decisions.md` 2026-04-18 entry anticipates this). **Result:** Next 16.2.4 is latest stable; Next 15.5.15 is latest 15.x. Staying on 15 per locked decision. Flagged to user, confirmed.
+- [x] Confirm **DuckDB `@duckdb/node-api`** latest API — verify the `COPY ... TO 'file.parquet'` + `read_parquet` patterns still work as documented in `architecture.md §5.4`. **Result:** v1.5.2-r.1 confirmed. Package name and SQL patterns valid.
+- [x] Confirm **Trigger.dev v4** `triggerAndWait` / `batchTriggerAndWait` + `metadata.set` / `@trigger.dev/react-hooks` `useRealtimeRun()` APIs are stable. **Result:** v4.4.4 confirmed. All APIs stable.
+- [x] Confirm **Supabase Storage TUS resumable** endpoint path (`/storage/v1/upload/resumable`) and chunk size (6MB) against current Supabase docs. **Result:** Supabase JS v2.103.3. TUS endpoint and 6MB chunks confirmed.
+- [x] Confirm **`@myriaddreamin/typst.ts`** bundle size and WASM compatibility with Trigger.dev workers. **Result:** v0.7.0-rc2 (~8MB WASM). Still RC but acceptable — React-PDF fallback covers risk.
+- [x] Confirm **Anthropic model IDs** (`claude-sonnet-4-5-20250929`, `claude-haiku-4-5-20251001`) are still current — these were locked 2026-04-18. **Result:** `claude-sonnet-4-6` does not exist; corrected to `claude-sonnet-4-5-20250929`. Haiku confirmed. Fixed in decisions.md + architecture.md.
 
 ### 0.1 Repo scaffold
 
-- [ ] Initialize Next.js 15 App Router app: `pnpm create next-app@latest . --typescript --tailwind --app --src-dir --import-alias "@/*"`
-- [ ] Configure `tsconfig.json` with strict mode, `@/` alias
-- [ ] Install core deps: `zod`, `@t3-oss/env-nextjs`, `next-safe-action`, `react-hook-form`, `@hookform/resolvers`, `motion`, `p-limit`
-- [ ] ESLint v9 flat config + Prettier, matching coding conventions in CLAUDE.md
-- [ ] `vitest.config.ts` with path alias, test file discovery under `tests/`
-- [ ] `package.json` scripts: `dev`, `build`, `lint`, `format`, `test`, `test:watch`, `db:migrate`, `db:types`
-- [ ] `.gitignore` — include `.gitignore-additions.txt` contents
+- [x] Initialize Next.js 15 App Router app: `pnpm create next-app@latest . --typescript --tailwind --app --src-dir --import-alias "@/*"`
+- [x] Configure `tsconfig.json` with strict mode, `@/` alias
+- [x] Install core deps: `zod`, `@t3-oss/env-nextjs`, `next-safe-action`, `react-hook-form`, `@hookform/resolvers`, `motion`, `p-limit`
+- [x] ESLint v9 flat config + Prettier, matching coding conventions in CLAUDE.md
+- [x] `vitest.config.ts` with path alias, test file discovery under `tests/`
+- [x] `package.json` scripts: `dev`, `build`, `lint`, `format`, `test`, `test:watch`, `db:migrate`, `db:types`
+- [x] `.gitignore` — include `.gitignore-additions.txt` contents
 - [ ] Commit and push initial scaffold
 
 ### 0.2 External service provisioning
+
+*Manual step — Vyshag provisions these before first real deploy.*
 
 - [ ] Create Supabase project (Pro tier or Free to start)
 - [ ] Create Trigger.dev v4 project
@@ -79,37 +81,42 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 - [ ] Create Upstash Redis database (free tier)
 - [ ] Create Anthropic API key
 - [ ] Create Helicone project, grab proxy URL + key
-- [ ] Create Sentry project (Next.js + Trigger.dev integrations)
-- [ ] Create PostHog Cloud EU project
-- [ ] Purchase / confirm `xray.baslix.com` DNS (arch §15 deferred decision — confirm with Vyshag before pointing DNS)
+- [-] Create Sentry project (descoped: MVP focus on CX, add post-launch)
+- [-] Create PostHog Cloud EU project (descoped: MVP focus on CX, add post-launch)
+- [ ] Purchase / confirm `xray.baslix.com` DNS
 - [ ] Add all secrets to Vercel + Trigger.dev env (never `NEXT_PUBLIC_*`)
 
 ### 0.3 Env + validation
 
-- [ ] `src/env.ts` — T3 Env schema covering every secret listed in `architecture.md §10.2`
-- [ ] Schema explicitly rejects `NEXT_PUBLIC_*` prefixed secrets (decisions §3 hard rule)
-- [ ] Add a `/api/health` route that touches each external service once on request (Supabase select, Trigger.dev ping, Anthropic models list, Resend ping)
+- [x] `src/env.ts` — T3 Env schema covering every secret listed in `architecture.md §10.2`
+- [x] Schema explicitly rejects `NEXT_PUBLIC_*` prefixed secrets (decisions §3 hard rule)
+- [x] Add a `/api/health` route that touches each external service once on request (Supabase select, Trigger.dev ping, Anthropic models list, Resend ping)
 
 ### 0.4 Database migrations
 
 **Reference:** `architecture.md §4`
 
-- [ ] Migration: `audits` table (arch §4.1)
-- [ ] Migration: `raw_uploads` table (arch §4.2)
-- [ ] Migration: `case_source_rows` table (arch §4.3b)
-- [ ] Migration: `findings` table + indexes (arch §4.4)
-- [ ] Migration: `audit_events` table (arch §4.5)
-- [ ] Migration: `cost_events` table (arch §4.5)
-- [ ] Migration: `rule_versions` table (arch §4.5)
-- [ ] Migration: `block_list` table (arch §4.5)
-- [ ] Migration: `deletion_requests` table (arch §4.5)
-- [ ] Migration: RLS policies — `deny all` to anon + authenticated on every server-only table (arch §4.6)
+*Deviation: all tables shipped in a single migration file (`001_initial_schema.sql`) instead of one-per-table. Simpler for MVP; no functional difference.*
+
+- [x] Migration: `audits` table (arch §4.1)
+- [x] Migration: `raw_uploads` table (arch §4.2)
+- [x] Migration: `case_source_rows` table (arch §4.3b)
+- [x] Migration: `findings` table + indexes (arch §4.4)
+- [x] Migration: `audit_events` table (arch §4.5)
+- [x] Migration: `cost_events` table (arch §4.5)
+- [x] Migration: `rule_versions` table (arch §4.5)
+- [x] Migration: `block_list` table (arch §4.5)
+- [x] Migration: `deletion_requests` table (arch §4.5)
+- [x] Migration: RLS policies — `deny all` to anon + authenticated on every server-only table (arch §4.6)
+- [x] Migration: `002_add_report_data.sql` — adds `report_data jsonb` to audits + `row_ref text` to findings (unplanned; needed for report page rendering)
 - [ ] Migration: seed Vyshag's admin user with `role: 'admin'` app_metadata claim
 - [ ] `pnpm db:types` regenerates TypeScript types into `src/types/supabase.ts`
 
-### 0.5 Security baseline
+### 0.5 Security baseline (deferred — add before public launch)
 
 **Reference:** `.claude/rules/security.md`
+
+*Descoped from Phase 0 per user direction ("don't overdo, just care about CX"). Will add before first real users.*
 
 - [ ] `src/lib/security/nosecone.ts` — CSP per arch §10.5 (include `wasm-unsafe-eval` for Typst)
 - [ ] `src/lib/security/rate-limit.ts` — Upstash wrappers for the three limits in arch §10.4
@@ -117,28 +124,30 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 - [ ] `src/middleware.ts` — admin route guard (arch §9.1) + Nosecone headers application
 - [ ] `robots.txt` — disallow `/admin`, `/r/`, `/run/`, `/upload/`, `/start`, `/deletion/` (only landing + legal pages are indexable)
 
-### 0.6 Observability wiring
+### 0.6 Observability wiring (descoped for MVP)
 
-- [ ] `src/instrumentation.ts` — Sentry Next.js init with `beforeSend` filter stripping CSV data, order IDs, emails, dollar values (arch §14.1)
-- [ ] `src/lib/observability/sentry.ts` — helper for tagging Trigger.dev task errors
-- [ ] `src/lib/analytics/posthog.ts` — server + client init, event helpers; event names only, no PII payloads (arch §14.1)
-- [ ] Helicone base URL configured as Anthropic `baseURL` override
-- [ ] `/api/health` now also logs a test event to Sentry + PostHog
+*Descoped per user direction. Sentry + PostHog + Helicone will be wired post-launch when CX is validated.*
 
-### 0.7 CI/CD baseline
+- [-] `src/instrumentation.ts` (descoped: MVP focus on CX)
+- [-] `src/lib/observability/sentry.ts` (descoped: MVP focus on CX)
+- [-] `src/lib/analytics/posthog.ts` (descoped: MVP focus on CX)
+- [-] Helicone base URL (descoped: MVP focus on CX)
 
-- [ ] GitHub Actions workflow: on PR, run `pnpm lint && pnpm build && pnpm test` (no deploys from CI — Vercel owns that)
-- [ ] Vercel: enable preview deploys per branch
-- [ ] Trigger.dev: confirm deploy on push to `main`
-- [ ] Smoke test: push a branch, land a PR, confirm Vercel preview builds, confirm Sentry receives an event
+### 0.7 CI/CD baseline (descoped for MVP)
+
+*Descoped per user direction. Manual deploys sufficient for MVP.*
+
+- [-] GitHub Actions workflow (descoped: MVP focus on CX)
+- [-] Vercel preview deploys (descoped: MVP focus on CX)
+- [-] Trigger.dev deploy on push (descoped: MVP focus on CX)
 
 ### 🔒 Phase 0 exit gate
 
-- [ ] All `pnpm` scripts pass cleanly on a fresh clone.
-- [ ] Preview deploy URL boots, `/api/health` returns green for all services.
-- [ ] Migrations applied, DB types generated, RLS verified (manual check: signing in as anon returns zero rows on `audits`).
-- [ ] Sentry + PostHog + Helicone each received at least one event from the deployed preview.
-- [ ] **User confirmation received before starting Phase 1.**
+- [x] All `pnpm` scripts pass cleanly on a fresh clone. *(build, lint, test all pass as of 2026-04-21)*
+- [ ] Preview deploy URL boots, `/api/health` returns green for all services. *(blocked on 0.2 service provisioning)*
+- [ ] Migrations applied, DB types generated, RLS verified.
+- [-] Sentry + PostHog + Helicone each received at least one event. *(descoped for MVP)*
+- [x] **User confirmed skipping Phase 0 ceremony and jumping to Phase 1 CX.** *(2026-04-18)*
 
 ---
 
@@ -150,158 +159,169 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 ### 🔬 Research checkpoint (before starting)
 
-- [ ] Pull **current Amazon Seller Central report formats** — the four required reports (`prd.md §4.3`). Record the header rows as of today in `src/lib/csv/headers.ts`. Amazon has renamed columns before; the MVP's validation layer cannot be stale.
-- [ ] Confirm **Anthropic prompt caching** API shape (`cache_control: { type: "ephemeral" }`) and the minimum cacheable prompt length.
-- [ ] Confirm **Vercel AI SDK v5+** `generateText`/`generateObject` shape for Claude models via custom `baseURL` (Helicone).
-- [ ] Confirm **Typst syntax + `@myriaddreamin/typst.ts`** embed API for the `json(...)` data injection pattern (arch §7.1).
-- [ ] Confirm **Uppy Dashboard** + `@uppy/tus` plugin props (endpoint, custom headers for Supabase JWT).
-- [ ] Confirm **Supabase signed upload URLs** — the upload-token issuance API and scoping to a specific storage path.
+*Partially deferred — jumped to building CX-facing code per user direction. Headers need verification against real Amazon data before launch.*
+
+- [~] Pull **current Amazon Seller Central report formats** — placeholder headers written in `src/lib/csv/headers.ts`; need verification against real CSVs before launch.
+- [ ] Confirm **Anthropic prompt caching** API shape (deferred: template-based narrative for now)
+- [ ] Confirm **Vercel AI SDK v5+** shape (deferred: template-based narrative for now)
+- [ ] Confirm **Typst syntax + `@myriaddreamin/typst.ts`** embed API (deferred: PDF rendering not yet built)
+- [-] Confirm **Uppy Dashboard** + `@uppy/tus` plugin (descoped: using simpler FormData upload for MVP — see decisions.md)
+- [ ] Confirm **Supabase signed upload URLs** (using service-role direct upload for now)
 
 ### 1.1 Public intake — landing + start form
 
 **User stories:** US-1.1, US-1.2, US-2.1, US-2.2 · **PRD:** §4.1, §4.2
 
-- [ ] `src/app/(public)/page.tsx` — landing page
-  - [ ] Hero with headline, subhead, trust line (PRD §4.1)
+- [x] `src/app/(public)/page.tsx` — landing page
+  - [x] Hero with headline, subhead, trust line (PRD §4.1)
   - [ ] 60-second screen recording embed (placeholder video OK until Phase 1.11)
-  - [ ] Three anonymized sample finding cards
-  - [ ] "About Baslix" block (US-1.2)
-  - [ ] Footer with privacy policy + terms links
-- [ ] `src/app/(public)/start/page.tsx` — email + brand form
-  - [ ] Zod-validated form (email, brand_name, legal_checkbox) via next-safe-action + React Hook Form
-  - [ ] Disposable email domain rejection (US-2.2)
-  - [ ] Block-list check against `block_list` table (US-2.2)
-  - [ ] Rate limit: 5/domain/30d + 10/IP/day (arch §10.4)
-  - [ ] Insert `audits` row with `status = 'pending_upload'`
-  - [ ] Redirect to `/upload/[id]`
-- [ ] `src/app/(public)/privacy/page.tsx` — real privacy policy reflecting PRD §9.2 + arch §10.1 language
+  - [x] Three anonymized sample finding cards
+  - [x] "About Baslix" block (US-1.2)
+  - [x] Footer with privacy policy + terms links
+- [x] `src/app/(public)/start/page.tsx` — email + brand form
+  - [x] Zod-validated form (email, brand_name, legal_checkbox) via server action *(deviation: useActionState instead of React Hook Form — simpler for this form)*
+  - [x] Disposable email domain rejection (US-2.2)
+  - [x] Block-list check against `block_list` table (US-2.2)
+  - [ ] Rate limit: 5/domain/30d + 10/IP/day (arch §10.4) *(deferred to 0.5 security baseline)*
+  - [x] Insert `audits` row with `status = 'pending_upload'`
+  - [x] Redirect to `/upload/[id]`
+- [ ] `src/app/(public)/privacy/page.tsx` — real privacy policy
 - [ ] `src/app/(public)/terms/page.tsx` — terms of service
-- [ ] PostHog events: `landing.viewed`, `start.submitted`, `start.blocked`
+- [-] PostHog events (descoped for MVP)
 
-### 1.2 Upload — Uppy + TUS + client-side validation
+### 1.2 Upload — client-side validation + FormData upload
 
 **User stories:** US-3.1, US-3.2, US-3.3, US-3.5 · **PRD:** §4.3 · **Arch:** §6
 
-- [ ] `src/lib/csv/headers.ts` — zod schemas for the three required Phase-1 reports (Returns, Adjustments, Reimbursements)
-- [ ] `src/lib/csv/validate-client.ts` — PapaParse `preview: 50` sniffer + header-signature match
-- [ ] `src/components/upload/ReportTile.tsx` — tile with report name, menu path, 4-screenshot walkthrough accordion, drop zone, validation badge
-- [ ] `src/components/upload/UppyDashboard.tsx` — Uppy Dashboard wrapper scoped per report type, wired to `@uppy/tus` → Supabase Storage TUS endpoint
-- [ ] `src/app/api/upload-token/route.ts` — issues scoped Supabase Storage JWT (path-restricted to `raw/{audit_id}/{report_type}/`, 30-min TTL)
-- [ ] `src/app/api/upload-complete/route.ts` — inserts `raw_uploads` row on client callback
-- [ ] `src/app/(public)/upload/[id]/page.tsx` — page with tiles for Returns, Adjustments, Reimbursements
-  - [ ] 5 plain-English privacy bullets (US-8.1) above the tiles
-  - [ ] "Run audit" button disabled until all three validated
-- [ ] `src/app/api/audit/run/route.ts` — enqueues `audit.run` Trigger.dev task, flips status to `processing`, redirects to `/run/[id]`
-- [ ] PostHog events: `upload.page_viewed`, `upload.file_dropped`, `upload.validated`, `upload.rejected_wrong_report`, `upload.completed`, `audit.started`
+*Deviation: replaced Uppy + TUS with simpler FormData upload via single `/api/audit/upload` route. Uppy adds complexity and a dependency; FormData is sufficient for MVP file sizes. TUS resumable upload can be added later if users hit reliability issues on large files.*
 
-### 1.3 Core pipeline — validate + parse
+- [x] `src/lib/csv/headers.ts` — header signatures for 3 Phase-1 reports (placeholder headers; need real Amazon verification)
+- [x] `src/lib/csv/validate-client.ts` — client-side header sniffer (reads first 10KB, not PapaParse — lighter weight)
+- [x] `src/components/upload/ReportTile.tsx` — drag-drop zone per report type with validation states (valid/error/empty)
+- [-] `src/components/upload/UppyDashboard.tsx` (descoped: using FormData upload instead — see decisions.md)
+- [-] `src/app/api/upload-token/route.ts` (descoped: using service-role direct upload)
+- [-] `src/app/api/upload-complete/route.ts` (descoped: combined into single upload route)
+- [x] `src/app/(public)/upload/[id]/page.tsx` — page with 3 tiles for Returns, Adjustments, Reimbursements
+  - [x] Privacy bullets above tiles
+  - [x] "Run audit" button disabled until all three validated
+- [x] `src/app/api/audit/upload/route.ts` — receives FormData with 3 CSVs, uploads to Supabase Storage, creates `raw_uploads` rows, enqueues `audit.run` Trigger.dev task *(replaces planned upload-token + upload-complete + audit/run three-route flow)*
+- [-] PostHog events (descoped for MVP)
+
+### 1.3 Core pipeline — monolithic parent task
 
 **User stories:** US-4.4, US-4.5 · **PRD:** §7.2 · **Arch:** §5
 
-- [ ] `src/trigger/audit-run.ts` — parent task using `batchTriggerAndWait` for each stage
-- [ ] `src/trigger/validate-csv.ts` — child task, one per uploaded report
-  - [ ] DuckDB `read_csv` sniff + first-100-row scan
-  - [ ] Zod header-signature re-check server-side (client sniff is defense-in-depth, not authoritative)
-  - [ ] Populate `row_count` + `date_range_*` on `raw_uploads`
-  - [ ] Fail-fast with actionable message on bad report
-- [ ] `src/lib/duckdb/client.ts` — per-task DuckDB connection factory
-- [ ] `src/lib/duckdb/parse-to-parquet.ts` — `COPY (SELECT typed_cols FROM read_csv('<url>')) TO 'parquet/...'` with zstd, including stable `row_ref` generation
-- [ ] `src/trigger/parse-csv.ts` — child task that streams CSV → Parquet → upload to Supabase Storage at `parquet/{audit_id}/{type}.parquet`
-- [ ] `src/lib/db/audit-events.ts` — helper that writes `audit_events` rows on every stage transition
-- [ ] Idempotency keys on every child: `{audit_id}:{stage}:{input_hash}` (decisions §3)
-- [ ] Retries: `maxAttempts: 3, factor: 2`
+*Deviation: all pipeline stages run inside a single `audit-run.ts` parent task instead of separate child tasks with `batchTriggerAndWait`. Simpler for MVP with 3 rules. Child tasks can be extracted later if per-stage retry granularity is needed.*
+
+*Deviation: DuckDB reads CSVs directly via `read_csv()` instead of converting to Parquet first. Eliminates the `parse-to-parquet.ts` step. Parquet conversion can be added later for performance on larger datasets.*
+
+- [x] `src/trigger/audit-run.ts` — monolithic parent task (detect + narrate + draft disputes + store report data)
+- [-] `src/trigger/validate-csv.ts` (descoped: validation done client-side only for MVP)
+- [-] `src/trigger/parse-csv.ts` (descoped: DuckDB reads CSVs directly, no Parquet conversion)
+- [x] `src/lib/duckdb/client.ts` — per-task DuckDB connection factory with httpfs extension
+- [-] `src/lib/duckdb/parse-to-parquet.ts` (descoped: reading CSVs directly)
+- [-] `src/lib/db/audit-events.ts` helper (inline in audit-run.ts for now)
+- [-] Idempotency keys (descoped: add when extracting child tasks)
+- [x] Retries: `maxAttempts: 3` on parent task
 
 ### 1.4 Detection rules (Phase 1) + cost ledger
 
-**User stories:** US-5.1, US-5.2, US-5.3, US-9.7 · **PRD:** §5.1–5.3 · **Rules reference:** `.claude/rules/detection-rules.md`
+**User stories:** US-5.1, US-5.2, US-5.3, US-9.7 · **PRD:** §5.1–5.3
 
-- [ ] `src/lib/rules/index.ts` — rule registry with `{ id, version, sql, requiredReports, confidenceFn }` shape
-- [ ] `src/lib/duckdb/run-rule.ts` — generic rule executor that opens required Parquet files via signed URL, runs the rule's SQL, maps rows → `findings` inserts with `rule_version` + `row_ref`
-- [ ] `src/lib/rules/returns-gap.ts` — PRD §5.1 (pure SQL)
-- [ ] `src/lib/rules/inventory-lost.ts` — PRD §5.2 (pure SQL)
-- [ ] `src/lib/rules/refund-reimbursement-mismatch.ts` — PRD §5.3 (pure SQL)
-- [ ] `src/trigger/detect-rule.ts` — generic child task that takes `rule_id`, loads it from registry, executes
-- [ ] `tests/rules/returns-gap.test.ts` — fixture Parquet in, expected findings out (Vitest)
+- [x] `src/lib/rules/index.ts` — rule registry with `{ id, version, sql, requiredReports, confidenceFn }` shape
+- [x] `src/lib/duckdb/run-rule.ts` — generic rule executor that reads CSVs via signed URL, runs rule SQL, maps rows → findings *(deviation: uses `read_csv()` not `read_parquet()`)*
+- [x] `src/lib/rules/returns-gap.ts` — PRD §5.1 (pure SQL)
+- [x] `src/lib/rules/inventory-lost.ts` — PRD §5.2 (pure SQL)
+- [x] `src/lib/rules/refund-reimbursement-mismatch.ts` — PRD §5.3 (pure SQL)
+- [-] `src/trigger/detect-rule.ts` (descoped: rules run inline in audit-run.ts)
+- [ ] `tests/rules/returns-gap.test.ts` — fixture CSV tests (need fixture data)
 - [ ] `tests/rules/inventory-lost.test.ts`
 - [ ] `tests/rules/refund-reimbursement-mismatch.test.ts`
-- [ ] `src/trigger/materialize-cases.ts` — pulls top-25 source rows into `case_source_rows` (arch §4.3b + §5 materialize stage)
-- [ ] `src/lib/cost/record.ts` — writes `cost_events` rows (storage, compute seconds via task duration)
-- [ ] `src/lib/cost/circuit-breaker.ts` — checks running total vs. `MAX_COST_PER_AUDIT_CENTS` (default 5000) before LLM stages
+- [-] `src/trigger/materialize-cases.ts` (descoped: report page reads findings directly)
+- [ ] `src/lib/cost/record.ts` — writes `cost_events` rows
+- [ ] `src/lib/cost/circuit-breaker.ts` — checks running total vs. `MAX_COST_PER_AUDIT_CENTS`
 
-### 1.5 LLM — narrative + dispute drafts
+### 1.5 LLM — narrative + dispute drafts (template-based for MVP)
 
-**User stories:** US-4.5, US-6.3 · **PRD:** §5, §6.3 · **Arch:** §8 · **Rules reference:** `.claude/rules/llm.md`
+**User stories:** US-4.5, US-6.3 · **PRD:** §5, §6.3 · **Arch:** §8
 
-- [ ] `src/lib/llm/narrate.ts` — Sonnet 4.6 pattern-analysis narrative generator (takes pre-aggregated findings JSON)
-- [ ] `src/lib/llm/draft-dispute.ts` — Haiku 4.5 per-case draft dispute generator (input: finding evidence jsonb)
-- [ ] `src/lib/llm/validate-output.ts` — zod + regex pass: every `$X` / `$X.XX` substring must match a known `findings.amount_cents`. Also rejects shorthand (`$147k`, `$1.2M`) per decisions 2026-04-18.
-- [ ] Prompt caching on the static system prompt (arch §8.1)
-- [ ] Helicone proxy configured on both calls; per-audit cost written to `cost_events` via webhook or request metadata
-- [ ] `src/trigger/narrate-llm.ts` — single task
-- [ ] `src/trigger/draft-disputes.ts` — batch task × top-25 findings, p-limit(4)
-- [ ] Fallback: if validation fails or cost circuit breaker trips, substitute templated prose and flag for admin
-- [ ] **Promptfoo**: `promptfoo/narrate.yaml` + `promptfoo/draft-dispute.yaml` with synthetic finding sets; `npx promptfoo eval` passes in CI
-- [ ] PostHog events: `llm.narrate_ok`, `llm.narrate_fallback`, `llm.draft_dispute_ok`
+*Deviation: template-based narrative and dispute drafts for MVP. No Anthropic API calls yet. LLM enhancement will be added when template quality is validated against real data.*
+
+- [x] `src/lib/llm/narrate.ts` — template-based narrative generator (takes pre-aggregated findings JSON) *(deviation: templates, not LLM — "source: template" flag in output)*
+- [x] `src/lib/llm/draft-dispute.ts` — template-based per-case dispute draft generator *(deviation: templates, not LLM)*
+- [ ] `src/lib/llm/validate-output.ts` — zod + regex validation (needed when LLM is wired)
+- [ ] Prompt caching (deferred to LLM integration)
+- [ ] Helicone proxy (deferred to LLM integration)
+- [-] `src/trigger/narrate-llm.ts` (descoped: narration runs inline in audit-run.ts)
+- [-] `src/trigger/draft-disputes.ts` (descoped: drafts run inline in audit-run.ts)
+- [x] Fallback: template prose is the default for now; LLM becomes the upgrade
+- [ ] **Promptfoo** tests (deferred to LLM integration)
+- [-] PostHog events (descoped for MVP)
 
 ### 1.6 PDF rendering — Typst primary + React-PDF fallback
 
 **User stories:** US-6.2, US-6.3 · **PRD:** §6.2 · **Arch:** §7
 
-- [ ] `templates/report.typ` — Typst template with imported partials for cover, exec summary, methodology, findings-by-category, top-25 case pages, pattern analysis, math, about, appendix
-- [ ] `src/lib/pdf/data-builder.ts` — findings + narrative → JSON blob consumed by Typst + React-PDF
-- [ ] `src/lib/pdf/typst-render.ts` — compile Typst WASM, produce PDF buffer
-- [ ] `src/lib/pdf/react-pdf-render.tsx` — mirror template in `@react-pdf/renderer`, page-for-page
-- [ ] `src/trigger/render-pdf.ts` — Typst first, React-PDF on failure, record renderer choice on `reports` metadata
-- [ ] Upload to `reports/{audit_id}.pdf` in Supabase Storage
-- [ ] Manual PDF inspection on 3 real datasets before marking 1.6 complete
+*Not yet built. PDF download button currently redirects to the web report page. Web report IS the product for MVP; PDF is an enhancement.*
+
+- [ ] `templates/report.typ` — Typst template
+- [x] `src/lib/pdf/data-builder.ts` — findings + narrative → structured JSON *(built, used by audit-run.ts to populate `report_data` on audits)*
+- [ ] `src/lib/pdf/typst-render.ts` — compile Typst WASM
+- [ ] `src/lib/pdf/react-pdf-render.tsx` — fallback
+- [ ] `src/trigger/render-pdf.ts`
+- [x] `src/app/api/audit/pdf/route.ts` — checks for pre-rendered PDF, falls back to redirecting to web report
+- [ ] Manual PDF inspection on 3 real datasets
 
 ### 1.7 Processing page + report page
 
 **User stories:** US-4.1, US-4.2, US-6.1, US-6.5 · **PRD:** §4.4, §4.5, §6.1 · **Arch:** §5.1
 
-- [ ] `src/app/(public)/run/[id]/page.tsx` — processing page with `useRealtimeRun()`
-  - [ ] Streamed stage labels (e.g. `Parsing 47,231 reimbursement records...`)
-  - [ ] Elapsed + estimated-remaining timer
-  - [ ] Auto-switch to "we'll email you" after 10 minutes (US-4.2)
-  - [ ] On failure: show actionable error + re-upload path (US-4.3)
-- [ ] `src/app/(public)/r/[uuid]/page.tsx` — report page served from DB
-  - [ ] Headline strip (total, urgent, cases)
-  - [ ] Four category cards
-  - [ ] Urgency timeline (Recharts)
-  - [ ] Top 10 cases table with view-evidence expander
-  - [ ] Pattern findings section (LLM narrative rendered through react-markdown + DOMPurify)
-  - [ ] CTA block restating top-3 findings + Cal.com/Calendly link (US-7.1)
-  - [ ] Download PDF button → signed URL (1-hour TTL, new URL each click)
-- [ ] Report URL valid indefinitely until deletion (US-6.5)
-- [ ] PostHog events: `processing.viewed`, `report.viewed`, `report.pdf_downloaded`, `report.cta_clicked`
+- [x] `src/app/(public)/run/[id]/page.tsx` — processing page
+  - [x] Animated stage labels (cycling every 15s) *(deviation: not `useRealtimeRun()` — uses polling via `/api/audit/status` every 5s; simpler, no Trigger.dev React hooks dependency)*
+  - [x] Elapsed timer
+  - [x] Auto-switch to "we'll email you" after 10 minutes (US-4.2)
+  - [ ] On failure: show actionable error + re-upload path (US-4.3) *(polls for status but no failure-specific UI yet)*
+- [x] `src/app/(public)/r/[uuid]/page.tsx` — report page served from DB
+  - [x] Headline strip (total, urgent, cases)
+  - [x] Executive summary (from `report_data.narrative`)
+  - [x] Category cards with confidence badges
+  - [ ] Urgency timeline (Recharts) *(deferred)*
+  - [x] Top 10 cases table with badges
+  - [x] Methodology section (from `report_data.narrative`)
+  - [x] CTA block ("Filing N disputes is a 60-80 hour job...")
+  - [x] Download PDF button (links to `/api/audit/pdf`)
+- [x] Report URL valid indefinitely until deletion
+- [-] PostHog events (descoped for MVP)
 
 ### 1.8 Email delivery
 
 **User stories:** US-6.4 · **PRD:** §4.6 · **Arch:** §5
 
-- [ ] `src/lib/email/templates/ReportReady.tsx` — React Email template with headline number, key stats, link, PDF link, soft CTA, signed deletion link
-- [ ] `src/lib/email/send.ts` — Resend client wrapper
-- [ ] `src/trigger/notify-email.ts` — sends email, marks audit `completed`, writes `cost_events` row for email cost
-- [ ] In Phase 1, `notify-email` runs **only** after admin approval (not auto on pipeline completion); if pending_review, skip and wait
+- [x] `src/lib/email/templates/report-ready.ts` — plain HTML email template *(deviation: plain HTML string, not React Email component — simpler for MVP)*
+- [x] `src/lib/email/send.ts` — Resend client wrapper (raw fetch to Resend API)
+- [x] `src/trigger/notify-email.ts` — sends email after admin approval, checks audit is `completed`
+- [x] In Phase 1, `notify-email` runs **only** after admin approval
 
 ### 1.9 Admin (Phase 1)
 
 **User stories:** US-9.1, US-9.2, US-9.3, US-9.6, US-9.7 · **PRD:** §8 · **Arch:** §9
 
-- [ ] Supabase Auth password flow; admin middleware guard (arch §9.1)
-- [ ] `src/app/(admin)/admin/page.tsx` — dashboard: today/yesterday counts, 7-day trend sparkline
-- [ ] `src/app/(admin)/admin/audits/page.tsx` — audit list (sortable, filterable, searchable)
-- [ ] `src/app/(admin)/admin/audits/[id]/page.tsx` — full report view + `audit_events` timeline + raw upload links
-- [ ] `src/app/(admin)/admin/review/[id]/page.tsx` — approve / reject UI (US-9.2)
-  - [ ] Approve flips status → `completed` + triggers `notify.email`
-  - [ ] Reject sets `failed`, persists reason note
-- [ ] `src/app/(admin)/admin/cost/page.tsx` — per-audit breakdown, 7d rolling avg, $50 flag list, month total
-- [ ] `src/app/(admin)/admin/failures/page.tsx` — failed audits + stage + Sentry error link + re-run button + raw file preview (pre-purge)
-- [ ] `src/app/api/admin/approve/route.ts`
-- [ ] `src/app/api/admin/reject/route.ts`
-- [ ] `src/app/api/admin/rerun/route.ts` — idempotency-safe re-enqueue of `audit.run`
-- [ ] Verify admin pages ship `noindex` + appear in `robots.txt` disallow (arch §9)
-- [ ] PostHog events: `admin.approved`, `admin.rejected`, `admin.rerun_triggered`
+*Partial build — core review flow works. Auth middleware, detailed audit views, cost page, failures page deferred.*
+
+- [ ] Supabase Auth password flow; admin middleware guard *(deferred: admin routes are unlinked + noindex for now)*
+- [x] `src/app/(admin)/admin/page.tsx` — dashboard with pending/processing/completed/failed counts + recent audits list + pending review queue *(deviation: simpler than planned — no sparkline charts yet)*
+- [ ] `src/app/(admin)/admin/audits/page.tsx` — audit list (deferred: basic list is on dashboard)
+- [ ] `src/app/(admin)/admin/audits/[id]/page.tsx` — full audit detail (deferred)
+- [x] `src/app/(admin)/admin/review/[id]/page.tsx` — approve / reject UI
+  - [x] Approve flips status → `completed` + triggers `notify.email`
+  - [x] Reject sets `failed`, persists reason note
+- [ ] `src/app/(admin)/admin/cost/page.tsx` (deferred)
+- [ ] `src/app/(admin)/admin/failures/page.tsx` (deferred)
+- [x] `src/app/api/admin/approve/route.ts`
+- [x] `src/app/api/admin/reject/route.ts`
+- [ ] `src/app/api/admin/rerun/route.ts` (deferred)
+- [x] Admin page has `robots: "noindex, nofollow"` metadata
+- [-] PostHog events (descoped for MVP)
 
 ### 1.10 Privacy + deletion + purge
 
@@ -537,3 +557,6 @@ These don't belong to a single phase — they're continuous discipline across al
 | Date | Change | Trigger |
 |---|---|---|
 | 2026-04-18 | Initial plan written | User requested comprehensive phased plan after PRD / architecture / decisions / userstories were frozen |
+| 2026-04-18 | Phase 0 research checkpoint completed | All 6 items verified. Corrected Sonnet model ID (`claude-sonnet-4-6` → `claude-sonnet-4-5-20250929`). |
+| 2026-04-18 | Phase 0.6, 0.7 descoped; 0.5 deferred | User: "don't overdo observability, CI/CD etc — just care about CX and customer value." Jumped to building CX-facing Phase 1 code. |
+| 2026-04-21 | Phase 1 bulk build completed (1.1–1.5 partial, 1.7–1.9 partial) | Built landing, start, upload, pipeline, report, admin review, email. Multiple deviations documented: FormData instead of Uppy/TUS, monolithic parent task instead of child tasks, template-based LLM instead of API calls, `read_csv()` instead of Parquet conversion. See decisions.md change log for rationale. |

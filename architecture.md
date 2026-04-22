@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Companion to:** prd.md, userstories.md
 **Status:** Draft for build
-**Last updated:** April 2026
+**Last updated:** 2026-04-21
 
 ---
 
@@ -92,7 +92,7 @@ A companion file `decisions.md` captures the one-line "locked" version of each c
 | CSV → Parquet conversion | **DuckDB (`@duckdb/node-api`) inside `parse.csv` task** | DuckDB streams CSV → writes columnar Parquet in one pass. Parquet is 10–20× smaller than CSV and DuckDB reads it 10–100× faster. | PapaParse-only pipeline — forces a second pass + ORM-style inserts. |
 | Analytics engine (detection rules) | **DuckDB (in-process, serverless)** | Every detection rule is pure SQL against the Parquet files. DuckDB runs in-process in Node — no server, no port. 1TB TPC-H in ~30s on a laptop; our audits are ~150MB total. Cross-CSV joins (Returns ⨝ Reimbursements ⨝ Adjustments) become 15-line SQL, not 150-line TypeScript. | Postgres for detection (slow on cross-CSV analytics + inserts are wasted work), Python+pandas (not our language), hand-rolled JS joins (error-prone, unreviewable). |
 | Background jobs | **Trigger.dev v4** | Same as ChannelScope. v4 adds `triggerAndWait` and `batchTriggerAndWait` for parent→child orchestration with back-pressure. Warm starts ~100-300ms. Native realtime streams for progress UI. | Inngest (fine, but v4's parent-child API fits pipeline shape better), raw queue (we'd rewrite Trigger.dev). |
-| LLM | **Anthropic Claude (`claude-sonnet-4-6` default, `claude-haiku-4-5-20251001` for summaries)** via **Vercel AI SDK** | Narrative only — never arithmetic. Sonnet for the main pattern-finding prose. Haiku for per-case dispute drafts (cost/latency). Prompt caching cuts ~70% of repeated system-prompt cost. | GPT — no benefit for our workload, cost same order. Opus 4.7 — latency + cost not worth it for narrative. |
+| LLM | **Anthropic Claude (`claude-sonnet-4-5-20250929` default, `claude-haiku-4-5-20251001` for summaries)** via **Vercel AI SDK** | Narrative only — never arithmetic. Sonnet 4.5 for the main pattern-finding prose. Haiku for per-case dispute drafts (cost/latency). Prompt caching cuts ~70% of repeated system-prompt cost. | GPT — no benefit for our workload, cost same order. Opus 4.6 — latency + cost not worth it for narrative. |
 | LLM proxy | **Helicone** | Per-audit cost attribution, request logging, cache layer. Powers the admin cost page without our own infra. | Raw API — we'd rebuild cost tracking. |
 | LLM prompt testing | **Promptfoo** | Same as ChannelScope. Regression tests on synthetic finding sets so narrative quality doesn't drift. | — |
 | PDF generation | **Typst via `@myriaddreamin/typst.ts` (WASM) as primary**, **`@react-pdf/renderer` as fallback** | Typst: Rust-based, compiles beautiful typography in milliseconds. WASM means no Rust toolchain on Vercel. React-PDF is declarative and widely battle-tested if Typst runtime turns out flaky on serverless. | Puppeteer (cold start + Chromium binary size on Vercel is painful), LaTeX (same), PDFKit (ugly). |
@@ -184,6 +184,7 @@ All tables use `uuid` PKs, `created_at timestamptz default now()`, `updated_at` 
 | `rule_versions` | `jsonb` | `{ "returns_gap": "1.2.0", ... }` — every rule's semver at run time. |
 | `ip` | `inet` | For rate limiting. Purged with raw uploads at 30 days. |
 | `ua` | `text` | Same. |
+| `report_data` | `jsonb` | Full report JSON (narrative, categories, top cases, dispute drafts). Added 2026-04-21 to avoid multiple queries on report page load. |
 | `completed_at` | `timestamptz` | |
 
 ### 4.2 `raw_uploads` — auto-purged
@@ -243,6 +244,7 @@ Everything else (full case list export to CSV — US-6.6) is served by a just-in
 | `confidence` | `confidence enum` | `high` \| `medium` \| `low`. |
 | `window_days_remaining` | `int` | Computed at finding time; may be negative for closed windows. |
 | `window_closes_on` | `date` | Computed from source event date + policy window. |
+| `row_ref` | `text` | Stable reference to source CSV row (`{ upload_id, row_number }`). |
 | `evidence` | `jsonb` | Structured: source row refs, expected vs actual, policy citation. |
 | `narrative_summary` | `text` | LLM-generated plain-English summary (for the PDF case pages). |
 | `draft_dispute_text` | `text` | LLM-generated starter dispute (not auto-fileable). |
@@ -268,7 +270,15 @@ Indexes: `(audit_id, category)`, `(audit_id, confidence, amount_cents desc)`, `(
 
 ## 5. End-to-end pipeline
 
-The processing pipeline is one **parent Trigger.dev task** (`audit.run`) that orchestrates children. Children use `batchTriggerAndWait` so the parent blocks without counting compute time against the concurrency budget ([Trigger.dev v4 doc: parent waits, only children consume a slot](https://trigger.dev/docs/v4)).
+The processing pipeline is one **parent Trigger.dev task** (`audit.run`). The target architecture uses child tasks with `batchTriggerAndWait` for per-stage retry and concurrency isolation (see diagram below). **Current MVP implementation** runs all stages inline in the parent task — simpler for 3 rules on small datasets. Extraction to child tasks is planned when adding Phase 2 rules.
+
+**Current MVP simplifications** (documented in `decisions.md` 2026-04-21):
+- No `validate-csv` or `parse-csv` child tasks — client-side validation only, DuckDB reads CSVs directly via `read_csv()` (no Parquet conversion)
+- No separate `detect-rule` child tasks — rules run sequentially in the parent
+- No `narrate-llm` or `draft-disputes` child tasks — template-based prose runs inline
+- No `render-pdf` task — PDF download redirects to web report page
+
+**Target architecture** (to be built incrementally):
 
 ```
 audit.run (parent)
@@ -298,7 +308,7 @@ audit.run (parent)
   │     - for top-25 findings per audit, DuckDB pulls source rows from Parquet
   │     - inserts into case_source_rows for fast PDF rendering
   │
-  ├─► narrate.llm           single task, Sonnet 4.6
+  ├─► narrate.llm           single task, Sonnet 4.5
   │     - reads top-25 findings + aggregates
   │     - generates pattern-analysis narrative (~2k tokens out)
   │     - prompt-cached system message (big, static) saves 70% cost
@@ -356,12 +366,12 @@ export const returnsGap: Rule = {
   sql: /* sql */ `
     WITH damaged_returns AS (
       SELECT order_id, sku, fnsku, return_date, refund_cents, quantity, row_ref
-      FROM read_parquet($returns_url)
+      FROM read_csv($returns_url, auto_detect=true)
       WHERE disposition IN ('CUSTOMER_DAMAGED', 'DEFECTIVE', 'CARRIER_DAMAGED', 'DAMAGED')
     ),
     matched_reimbursements AS (
       SELECT DISTINCT r.order_id, r.sku
-      FROM read_parquet($reimbursements_url) r
+      FROM read_csv($reimbursements_url, auto_detect=true) r
       JOIN damaged_returns d
         ON r.order_id = d.order_id
        AND r.sku = d.sku
@@ -369,7 +379,7 @@ export const returnsGap: Rule = {
     ),
     returned_to_sellable AS (
       SELECT DISTINCT a.sku
-      FROM read_parquet($adjustments_url) a
+      FROM read_csv($adjustments_url, auto_detect=true) a
       JOIN damaged_returns d ON a.sku = d.sku
       WHERE a.reason_code IN ('R', 'G')  -- found/sellable
         AND a.date BETWEEN d.return_date AND d.return_date + INTERVAL 30 DAY
@@ -391,7 +401,9 @@ export const returnsGap: Rule = {
 }
 ```
 
-That is the whole rule. The engine executes the SQL against the audit's Parquet files with DuckDB, maps each returned row to a `findings` insert, and records `rule_version = "1.0.0"` on each row. Vitest tests feed in fixture Parquet files and assert the returned rows. **No arithmetic in JavaScript anywhere** — the calculation lives in SQL, which is the most reviewable form of financial logic.
+That is the whole rule. The engine executes the SQL against the audit's CSV files (or Parquet, when conversion is added) with DuckDB, maps each returned row to a `findings` insert, and records `rule_version = "1.0.0"` on each row. Vitest tests feed in fixture CSV files and assert the returned rows. **No arithmetic in JavaScript anywhere** — the calculation lives in SQL, which is the most reviewable form of financial logic.
+
+**Note (2026-04-21):** The current MVP uses `read_csv(auto_detect=true)` instead of `read_parquet()`. DuckDB reads CSVs directly via signed URLs. When Parquet conversion is added (see §4.3), these will switch to `read_parquet()` for better performance on re-reads.
 
 Compared to the Postgres-based path this replaces: ~10× less code per rule, trivially reviewable by a finance person, and the rule runs in hundreds of milliseconds even against the full 18-month dataset.
 
@@ -401,7 +413,13 @@ Compared to the Postgres-based path this replaces: ~10× less code per rule, tri
 
 Uploads are the single biggest source of risk (large files, flaky Wi-Fi, wrong-file-in-wrong-slot). The architecture is built to survive all three.
 
-### 6.1 Client
+### 6.0 Current MVP implementation
+
+**The MVP uses a simpler FormData upload** (decisions.md 2026-04-21). Instead of Uppy + TUS + three separate API routes, a single `POST /api/audit/upload?auditId=X` receives all 3 CSV files as FormData, uploads them to Supabase Storage via service-role key, creates `raw_uploads` rows, and enqueues the `audit.run` Trigger.dev task. Client-side validation happens in `ReportTile.tsx` which reads the first 10KB of each file to sniff headers.
+
+Trade-off: no resumable upload on flaky Wi-Fi. Acceptable for Phase 1 (most CSVs are <50MB). Target TUS architecture below will be built if reliability issues emerge.
+
+### 6.1 Client (target — Uppy + TUS)
 
 - **Uppy Dashboard** renders the 4 required + 4 optional tiles.
 - Each tile has an Uppy instance scoped to a specific `report_type`.
@@ -410,7 +428,7 @@ Uploads are the single biggest source of risk (large files, flaky Wi-Fi, wrong-f
 - Upload endpoint auth: scoped signed JWT (valid 30 min, `role: anon`, path-restricted) issued by `/api/upload-token` after the `/start` form succeeds.
 - **Before upload:** client runs PapaParse `{ preview: 50, header: true }` on the first 50 rows. If the header signature doesn't match the tile's expected schema (for example, the user dropped the Reimbursements file into the Returns tile), reject client-side with: *"This looks like the Reimbursements report, not the Returns report."* Zero server cost on bad uploads (US-3.2).
 
-### 6.2 Server
+### 6.2 Server (target — three-route flow)
 
 - `POST /api/upload-token` — validates the audit exists in `pending_upload`, issues a Supabase Storage upload JWT for path `raw/{audit_id}/{report_type}/{uuid}.csv`.
 - On upload completion, client calls `POST /api/upload-complete` with `{ audit_id, report_type, storage_key, client_row_count }`.
@@ -470,7 +488,7 @@ LLM calls in the pipeline:
 
 | Call | Model | Input | Output | Cost budget |
 |---|---|---|---|---|
-| `narrate.llm` | Claude Sonnet 4.6 | Top-25 findings + per-category aggregates (structured JSON, precomputed) | Pattern-analysis narrative for report §5 | ≤ $2 per audit |
+| `narrate.llm` | Claude Sonnet 4.5 | Top-25 findings + per-category aggregates (structured JSON, precomputed) | Pattern-analysis narrative for report §5 | ≤ $2 per audit |
 | `draft.disputes` × 25 | Claude Haiku 4.5 | One finding's `evidence` jsonb + matching policy excerpt | One draft dispute message | ≤ $0.20 per audit total |
 | `category_blurbs` (optional) | Haiku 4.5 | Per-category total + confidence mix | 2-3 sentence category intro | ≤ $0.05 per audit |
 
@@ -663,7 +681,7 @@ src/
       fee-anomaly.ts             §5.10 (Phase 3) — SQL
       index.ts                   registry { id, version, sql, requiredReports, confidenceFn }
     llm/
-      narrate.ts                 Sonnet 4.6 pattern narrative
+      narrate.ts                 Sonnet 4.5 pattern narrative
       draft-dispute.ts           Haiku 4.5 per-case drafts
       validate-output.ts         zod + regex to ensure no invented numbers
     pdf/

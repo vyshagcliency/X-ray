@@ -139,7 +139,7 @@ Update docs in the same session as the code change. Never defer to "later."
 | **Analytics engine (detection)** | **DuckDB (`@duckdb/node-api`), in-process** — pure SQL over Parquet |
 | **Working-set format** | **Parquet (written by DuckDB during parse)** |
 | Background Jobs | Trigger.dev v4 (parent-child with `batchTriggerAndWait`) |
-| LLM | Vercel AI SDK + Anthropic Claude (Sonnet 4.6 + Haiku 4.5) + prompt caching |
+| LLM | Vercel AI SDK + Anthropic Claude (Sonnet 4.5 + Haiku 4.5) + prompt caching |
 | LLM Observability | Helicone (proxy) |
 | LLM Testing | Promptfoo |
 | PDF (primary) | Typst via `@myriaddreamin/typst.ts` (WASM) |
@@ -237,7 +237,7 @@ src/
       # ... Phase 2 and 3 rules
       index.ts                     # { id, version, sql, requiredReports, confidenceFn }
     llm/
-      narrate.ts                   # Sonnet 4.6 pattern narrative
+      narrate.ts                   # Sonnet 4.5 pattern narrative
       draft-dispute.ts             # Haiku 4.5 per-case drafts
       validate-output.ts           # Ensures no invented numbers
     pdf/

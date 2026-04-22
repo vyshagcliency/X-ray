@@ -1,0 +1,64 @@
+{
+  "name": "baslix-leakage-xray",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "supabase db push",
+    "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "1.5.2-r.1",
+    "@hookform/resolvers": "^5.0.1",
+    "@supabase/supabase-js": "^2.103.3",
+    "@t3-oss/env-nextjs": "^0.12.0",
+    "@trigger.dev/sdk": "^4.4.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.8.0",
+    "motion": "^12.11.0",
+    "next": "15.5.15",
+    "next-safe-action": "^7.10.0",
+    "p-limit": "^6.2.0",
+    "radix-ui": "^1.4.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.56.0",
+    "tailwind-merge": "^3.5.0",
+    "zod": "^3.25.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver",
+      "protobufjs"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.0",
+    "@eslint/js": "^9.26.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^20.17.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "eslint": "^9.26.0",
+    "eslint-config-next": "15.5.15",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.5.0",
+    "prettier-plugin-tailwindcss": "^0.6.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.32.0",
+    "vitest": "^3.1.0"
+  }
+}
