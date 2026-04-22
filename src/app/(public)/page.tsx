@@ -85,10 +85,19 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="bg-gradient-to-b from-slate-50 to-white">
-        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-5 lg:gap-16 lg:py-28">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        {/* Decorative background blobs */}
+        <div className="pointer-events-none absolute -left-40 -top-40 size-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 right-0 size-80 rounded-full bg-emerald-500/5 blur-3xl" />
+
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-5 lg:gap-16 lg:py-28">
           {/* Left — 3/5 */}
-          <div className="flex flex-col justify-center lg:col-span-3">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col justify-center lg:col-span-3"
+          >
             <Badge variant="secondary" className="w-fit">
               Free forensic audit for FBA sellers
             </Badge>
@@ -99,8 +108,8 @@ export default function LandingPage() {
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
               Upload 4 reports from Seller Central. In minutes, get a forensic
-              audit of 18 months of FBA activity — every missed reimbursement,
-              every overcharge, every closing dispute window.
+              audit of 18 months of FBA activity: missed reimbursements,
+              overcharges, and closing dispute windows.
             </p>
             <div className="mt-10 flex items-center gap-4">
               <Button asChild size="lg">
@@ -113,15 +122,31 @@ export default function LandingPage() {
                 No signup required
               </span>
             </div>
-          </div>
+
+            {/* Social proof stats */}
+            <div className="mt-12 flex gap-8 border-t pt-8">
+              <div>
+                <p className="text-2xl font-bold tracking-tight">$2.4M+</p>
+                <p className="text-xs text-muted-foreground">Leakage found</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold tracking-tight">18 mo</p>
+                <p className="text-xs text-muted-foreground">Data scanned</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold tracking-tight">3 min</p>
+                <p className="text-xs text-muted-foreground">Avg. audit time</p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Right — 2/5 — stock image */}
           <div className="flex items-center lg:col-span-2">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="overflow-hidden rounded-xl shadow-lg"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15, duration: 0.6 }}
+              className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5"
             >
               <Image
                 src="https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80"
