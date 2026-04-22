@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Shield,
@@ -9,6 +10,9 @@ import {
   Upload,
   Search,
   FileText,
+  RotateCcw,
+  Ruler,
+  PackageX,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -20,16 +24,19 @@ const sampleFindings = [
     amount: "$14,331",
     label: "Unreimbursed customer returns",
     detail: "47 returns marked damaged but never reimbursed",
+    icon: RotateCcw,
   },
   {
     amount: "$8,902",
     label: "Dimension overcharges",
     detail: "23 ASINs measured larger than actual — you're overpaying per unit",
+    icon: Ruler,
   },
   {
     amount: "$4,210",
     label: "Lost inventory never claimed",
     detail: "Inventory Amazon lost in warehouses — reimbursement window still open",
+    icon: PackageX,
   },
 ];
 
@@ -100,26 +107,23 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right — 2/5 — animated finding cards */}
-          <div className="flex flex-col gap-4 lg:col-span-2">
-            {sampleFindings.map((f, i) => (
-              <motion.div
-                key={f.amount}
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-              >
-                <Card className="overflow-hidden border-l-4 border-l-emerald-500">
-                  <CardContent className="py-4">
-                    <p className="text-2xl font-bold">{f.amount}</p>
-                    <p className="mt-1 text-sm font-medium">{f.label}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {f.detail}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+          {/* Right — 2/5 — stock image */}
+          <div className="lg:col-span-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="overflow-hidden rounded-xl shadow-lg"
+            >
+              <Image
+                src="https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80"
+                alt="Warehouse fulfillment center with organized inventory shelves"
+                width={800}
+                height={600}
+                className="h-auto w-full object-cover"
+                priority
+              />
+            </motion.div>
           </div>
         </div>
       </section>
@@ -155,12 +159,10 @@ export default function LandingPage() {
           </h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {sampleFindings.map((f) => (
-              <Card
-                key={f.amount}
-                className="overflow-hidden border-l-4 border-l-emerald-500"
-              >
+              <Card key={f.amount} className="shadow-sm">
                 <CardContent className="py-6">
-                  <p className="text-3xl font-bold">{f.amount}</p>
+                  <f.icon className="size-8 text-muted-foreground" />
+                  <p className="mt-4 text-3xl font-bold">{f.amount}</p>
                   <p className="mt-2 text-sm font-medium">{f.label}</p>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {f.detail}
