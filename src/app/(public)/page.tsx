@@ -35,7 +35,8 @@ const sampleFindings = [
   {
     amount: "$4,210",
     label: "Lost inventory never claimed",
-    detail: "Inventory Amazon lost in warehouses — reimbursement window still open",
+    detail:
+      "Inventory Amazon lost in warehouses — reimbursement window still open",
     icon: PackageX,
   },
 ];
@@ -65,10 +66,17 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Nav */}
-      <nav className="border-b">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-bold tracking-tight">
-            Baslix
+      <nav className="border-b bg-white/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/logo.png"
+              alt="Baslix"
+              width={32}
+              height={32}
+              className="size-8"
+            />
+            <span className="text-xl font-bold tracking-tight">Baslix</span>
           </Link>
           <Button variant="outline" size="sm" asChild>
             <Link href="/start">Start Free Audit</Link>
@@ -89,12 +97,12 @@ export default function LandingPage() {
               <br />
               Amazon owes you.
             </h1>
-            <p className="mt-6 max-w-lg text-lg text-muted-foreground">
+            <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
               Upload 4 reports from Seller Central. In minutes, get a forensic
               audit of 18 months of FBA activity — every missed reimbursement,
               every overcharge, every closing dispute window.
             </p>
-            <div className="mt-8 flex items-center gap-4">
+            <div className="mt-10 flex items-center gap-4">
               <Button asChild size="lg">
                 <Link href="/start">
                   Start your free audit
@@ -108,7 +116,7 @@ export default function LandingPage() {
           </div>
 
           {/* Right — 2/5 — stock image */}
-          <div className="lg:col-span-2">
+          <div className="flex items-center lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -130,19 +138,18 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section className="bg-slate-50">
-        <div className="mx-auto max-w-7xl px-6 py-20">
+        <div className="mx-auto max-w-4xl px-6 py-20">
           <h2 className="text-center text-3xl font-bold tracking-tight">
             How it works
           </h2>
-          <div className="mt-12 grid gap-8 sm:grid-cols-3">
-            {steps.map((step, i) => (
-              <div key={step.title} className="text-center">
-                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <span className="text-lg font-bold">{i + 1}</span>
+          <div className="mt-14 grid gap-10 sm:grid-cols-3">
+            {steps.map((step) => (
+              <div key={step.title} className="flex flex-col items-center text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                  <step.icon className="size-6" />
                 </div>
-                <step.icon className="mx-auto mt-4 size-8 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <h3 className="mt-5 text-lg font-semibold">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {step.description}
                 </p>
               </div>
@@ -153,18 +160,20 @@ export default function LandingPage() {
 
       {/* Sample findings */}
       <section className="py-20">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-5xl px-6">
           <h2 className="text-center text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Real findings from real audits (anonymized)
           </h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
             {sampleFindings.map((f) => (
-              <Card key={f.amount} className="shadow-sm">
+              <Card key={f.amount} className="shadow-sm transition-shadow hover:shadow-md">
                 <CardContent className="py-6">
-                  <f.icon className="size-8 text-muted-foreground" />
-                  <p className="mt-4 text-3xl font-bold">{f.amount}</p>
+                  <f.icon className="size-7 text-muted-foreground" />
+                  <p className="mt-4 text-3xl font-bold tracking-tight">
+                    {f.amount}
+                  </p>
                   <p className="mt-2 text-sm font-medium">{f.label}</p>
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                     {f.detail}
                   </p>
                 </CardContent>
@@ -175,8 +184,8 @@ export default function LandingPage() {
       </section>
 
       {/* Trust signals */}
-      <section className="bg-slate-50">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-16 sm:flex-row sm:justify-between">
+      <section className="border-y bg-slate-50">
+        <div className="mx-auto grid max-w-5xl gap-8 px-6 py-14 sm:grid-cols-3">
           {[
             {
               icon: Shield,
@@ -186,7 +195,7 @@ export default function LandingPage() {
             {
               icon: Clock,
               title: "Results in minutes",
-              text: "Most audits complete in 3–8 minutes. We'll email you when it's ready.",
+              text: "Most audits complete in 3\u20138 minutes. We\u2019ll email you when it\u2019s ready.",
             },
             {
               icon: DollarSign,
@@ -194,11 +203,13 @@ export default function LandingPage() {
               text: "Every dollar figure traces to a specific transaction in your data.",
             },
           ].map((signal) => (
-            <div key={signal.title} className="flex items-start gap-4">
-              <signal.icon className="mt-0.5 size-6 shrink-0 text-muted-foreground" />
+            <div key={signal.title} className="flex items-start gap-3.5">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <signal.icon className="size-5 text-primary" />
+              </div>
               <div>
                 <h3 className="font-medium">{signal.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   {signal.text}
                 </p>
               </div>
@@ -213,7 +224,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold tracking-tight">
             Stop leaving money on the table.
           </h2>
-          <p className="mt-4 text-primary-foreground/80">
+          <p className="mt-4 leading-relaxed text-primary-foreground/80">
             We&apos;re{" "}
             <span className="font-semibold text-primary-foreground">
               Baslix
@@ -223,12 +234,7 @@ export default function LandingPage() {
             you find $200k of leakage, you&apos;ll probably want help filing the
             claims.
           </p>
-          <Button
-            variant="secondary"
-            size="lg"
-            asChild
-            className="mt-8"
-          >
+          <Button variant="secondary" size="lg" asChild className="mt-8">
             <Link href="/start">
               Start your free audit
               <ArrowRight className="ml-2 size-4" />
@@ -240,13 +246,25 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-8">
-          <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link href="/privacy" className="hover:underline">
-              Privacy Policy
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/logo.png"
+                alt="Baslix"
+                width={20}
+                height={20}
+                className="size-5"
+              />
+              <span className="text-sm font-semibold">Baslix</span>
             </Link>
-            <Link href="/terms" className="hover:underline">
-              Terms of Service
-            </Link>
+            <div className="flex gap-6 text-sm text-muted-foreground">
+              <Link href="/privacy" className="hover:underline">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="hover:underline">
+                Terms of Service
+              </Link>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} Baslix
