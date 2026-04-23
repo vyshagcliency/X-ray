@@ -95,7 +95,7 @@ export default function LandingPage() {
         <div className="pointer-events-none absolute -left-40 -top-40 size-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 right-0 size-80 rounded-full bg-emerald-500/5 blur-3xl" />
 
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-5 lg:gap-16 lg:py-28">
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 lg:grid-cols-5 lg:gap-16 lg:py-24">
           {/* Left — 3/5 */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
