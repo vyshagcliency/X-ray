@@ -13,6 +13,9 @@ import {
   RotateCcw,
   Ruler,
   PackageX,
+  ShieldCheck,
+  TrendingUp,
+  AlertTriangle,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -127,8 +130,8 @@ export default function LandingPage() {
 
           </motion.div>
 
-          {/* Right — 2/5 — stock image */}
-          <div className="flex items-center lg:col-span-2">
+          {/* Right — 2/5 — stock image with floating badges */}
+          <div className="relative flex items-center lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -143,6 +146,58 @@ export default function LandingPage() {
                 className="h-auto w-full object-cover"
                 priority
               />
+            </motion.div>
+
+            {/* Floating badge — top-left */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.4 }}
+              className="absolute -left-4 top-4 flex items-center gap-2 rounded-full bg-white px-3.5 py-2 shadow-lg ring-1 ring-black/5"
+            >
+              <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100">
+                <DollarSign className="size-4 text-emerald-600" />
+              </div>
+              <span className="text-xs font-semibold">Leakage found</span>
+            </motion.div>
+
+            {/* Floating badge — top-right */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65, duration: 0.4 }}
+              className="absolute -right-3 top-12 flex items-center gap-2 rounded-full bg-white px-3.5 py-2 shadow-lg ring-1 ring-black/5"
+            >
+              <div className="flex size-8 items-center justify-center rounded-full bg-blue-100">
+                <ShieldCheck className="size-4 text-blue-600" />
+              </div>
+              <span className="text-xs font-semibold">Dispute-ready</span>
+            </motion.div>
+
+            {/* Floating badge — bottom-left */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.4 }}
+              className="absolute -left-6 bottom-16 flex items-center gap-2 rounded-full bg-white px-3.5 py-2 shadow-lg ring-1 ring-black/5"
+            >
+              <div className="flex size-8 items-center justify-center rounded-full bg-amber-100">
+                <AlertTriangle className="size-4 text-amber-600" />
+              </div>
+              <span className="text-xs font-semibold">Window closing</span>
+            </motion.div>
+
+            {/* Floating badge — bottom-right */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.95, duration: 0.4 }}
+              className="absolute -right-2 bottom-6 flex items-center gap-2 rounded-full bg-white px-3.5 py-2 shadow-lg ring-1 ring-black/5"
+            >
+              <div className="flex size-8 items-center justify-center rounded-full bg-violet-100">
+                <TrendingUp className="size-4 text-violet-600" />
+              </div>
+              <span className="text-xs font-semibold">Recovery ready</span>
             </motion.div>
           </div>
         </div>
