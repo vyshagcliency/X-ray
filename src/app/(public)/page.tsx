@@ -19,24 +19,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-const sampleFindings = [
+const auditCategories = [
   {
-    amount: "$14,331",
-    label: "Unreimbursed customer returns",
-    detail: "47 returns marked damaged but never reimbursed",
+    label: "Returns gap",
+    detail:
+      "Customers get refunded, but Amazon never reimburses you. We flag every case.",
+    stat: "1–3% of FBA revenue is typically lost here",
     icon: RotateCcw,
   },
   {
-    amount: "$8,902",
     label: "Dimension overcharges",
-    detail: "23 ASINs measured larger than actual — you're overpaying per unit",
+    detail:
+      "Amazon re-measures your products and charges higher fees. We catch the mismatches.",
+    stat: "Affects ~10% of ASINs on average",
     icon: Ruler,
   },
   {
-    amount: "$4,210",
-    label: "Lost inventory never claimed",
+    label: "Lost inventory",
     detail:
-      "Inventory Amazon lost in warehouses — reimbursement window still open",
+      "Inventory goes missing in warehouses. Amazon owes you, but won't remind you.",
+    stat: "Reimbursement window closes after 18 months",
     icon: PackageX,
   },
 ];
@@ -123,21 +125,6 @@ export default function LandingPage() {
               </span>
             </div>
 
-            {/* Social proof stats */}
-            <div className="mt-12 flex gap-8 border-t pt-8">
-              <div>
-                <p className="text-2xl font-bold tracking-tight">$2.4M+</p>
-                <p className="text-xs text-muted-foreground">Leakage found</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold tracking-tight">18 mo</p>
-                <p className="text-xs text-muted-foreground">Data scanned</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold tracking-tight">3 min</p>
-                <p className="text-xs text-muted-foreground">Avg. audit time</p>
-              </div>
-            </div>
           </motion.div>
 
           {/* Right — 2/5 — stock image */}
@@ -183,23 +170,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Sample findings */}
+      {/* What we scan for */}
       <section className="py-20">
         <div className="mx-auto max-w-5xl px-6">
           <h2 className="text-center text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Real findings from real audits (anonymized)
+            What we scan for
           </h2>
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {sampleFindings.map((f) => (
-              <Card key={f.amount} className="shadow-sm transition-shadow hover:shadow-md">
+            {auditCategories.map((c) => (
+              <Card key={c.label} className="shadow-sm transition-shadow hover:shadow-md">
                 <CardContent className="py-6">
-                  <f.icon className="size-7 text-muted-foreground" />
-                  <p className="mt-4 text-3xl font-bold tracking-tight">
-                    {f.amount}
+                  <c.icon className="size-7 text-muted-foreground" />
+                  <p className="mt-4 text-lg font-semibold">{c.label}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {c.detail}
                   </p>
-                  <p className="mt-2 text-sm font-medium">{f.label}</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                    {f.detail}
+                  <p className="mt-3 text-xs font-medium text-primary">
+                    {c.stat}
                   </p>
                 </CardContent>
               </Card>
