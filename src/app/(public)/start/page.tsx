@@ -9,7 +9,6 @@ import {
   Clock,
   FileText,
   CheckCircle2,
-  Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -106,7 +105,7 @@ export default function StartPage() {
             You&apos;ll upload your Seller Central CSVs on the next step.
           </p>
 
-          <div className="mt-10 space-y-5">
+          <div className="mt-10 space-y-6">
             <div className="flex items-start gap-3.5">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <Clock className="size-5 text-primary" />
@@ -142,24 +141,6 @@ export default function StartPage() {
             </div>
           </div>
 
-          {/* Bottom callout */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.4 }}
-            className="mt-10 flex items-center gap-3 rounded-xl border bg-white/60 p-4"
-          >
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-              <Zap className="size-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">100% free, no credit card</p>
-              <p className="text-xs text-muted-foreground">
-                The audit is on us. If you want help recovering, that&apos;s
-                where we come in.
-              </p>
-            </div>
-          </motion.div>
         </motion.div>
 
         {/* Right — form card */}
