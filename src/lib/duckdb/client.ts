@@ -8,6 +8,9 @@ export async function createDuckDB() {
   const instance = await DuckDBInstance.create(":memory:");
   const connection = await instance.connect();
 
+  // Set home directory for extension installation (required in containers like Trigger.dev)
+  await connection.run("SET home_directory = '/tmp';");
+
   // Enable httpfs for reading from signed URLs
   await connection.run("INSTALL httpfs; LOAD httpfs;");
 
