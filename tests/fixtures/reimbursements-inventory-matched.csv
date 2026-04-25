@@ -1,0 +1,4 @@
+approval-date,reimbursement-id,case-id,amazon-order-id,reason,sku,fnsku,asin,condition,currency-unit,amount-per-unit,amount-total,quantity-reimbursed-cash,quantity-reimbursed-inventory,quantity-reimbursed-total
+2026-01-15,R0010,C0010,,WAREHOUSE_LOST,SKU-ALPHA,X000AA0001,B00AAAA111,Sellable,USD,25.00,75.00,3,0,3
+2026-02-10,R0011,C0011,,WAREHOUSE_DAMAGED,SKU-BETA,X000BB0002,B00BBBB222,Damaged,USD,30.00,30.00,1,0,1
+2026-03-05,R0012,C0012,,INVENTORY_LOST,SKU-GAMMA,X000CC0003,B00CCCC333,Sellable,USD,20.00,40.00,2,0,2

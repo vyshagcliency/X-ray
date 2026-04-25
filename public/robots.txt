@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Disallow: /admin
+Disallow: /r/
+Disallow: /run/
+Disallow: /upload/
+Disallow: /start
+Disallow: /deletion/
+Disallow: /api/
+
+Sitemap: https://xray.baslix.com/sitemap.xml

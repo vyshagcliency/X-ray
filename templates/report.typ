@@ -1,0 +1,226 @@
+// Baslix Leakage X-Ray Report Template
+// Populated with JSON data at render time
+
+#let data = json("report.data.json")
+
+// Page setup
+#set page(
+  paper: "us-letter",
+  margin: (x: 0.75in, y: 0.75in),
+  numbering: "1 / 1",
+  header: context {
+    if counter(page).get().first() > 1 [
+      #set text(size: 8pt, fill: rgb("#999"))
+      Baslix Leakage X-Ray — #data.brand_name
+      #h(1fr)
+      Confidential
+    ]
+  },
+)
+
+#set text(font: "Helvetica", size: 10pt, fill: rgb("#222"))
+#set par(leading: 0.7em, justify: true)
+
+// ── Cover Page ──────────────────────────────────────────────────
+#page(numbering: none, header: none)[
+  #v(2in)
+  #align(center)[
+    #text(size: 14pt, fill: rgb("#666"), weight: "bold")[BASLIX LEAKAGE X-RAY]
+
+    #v(0.5in)
+
+    #text(size: 28pt, weight: "bold")[
+      #data.brand_name
+    ]
+
+    #v(0.3in)
+
+    #text(size: 12pt, fill: rgb("#666"))[
+      Forensic FBA Audit Report
+    ]
+
+    #v(0.5in)
+
+    #line(length: 40%, stroke: 0.5pt + rgb("#ccc"))
+
+    #v(0.3in)
+
+    #text(size: 20pt, weight: "bold", fill: rgb("#111"))[
+      #data.total_recoverable recoverable
+    ]
+
+    #v(0.15in)
+
+    #if data.urgent_recoverable_cents > 0 [
+      #text(size: 13pt, fill: rgb("#c44"))[
+        #data.urgent_recoverable closing within 14 days
+      ]
+      #v(0.15in)
+    ]
+
+    #text(size: 11pt, fill: rgb("#666"))[
+      #str(data.findings_count) cases across #str(data.categories.len()) categories
+    ]
+
+    #v(1in)
+
+    #text(size: 9pt, fill: rgb("#999"))[
+      Generated #data.generated_at.slice(0, 10) — baslix.com
+    ]
+  ]
+]
+
+// ── Executive Summary ───────────────────────────────────────────
+#heading(level: 1)[Executive Summary]
+
+#data.narrative.executive_summary
+
+#v(0.3in)
+
+// ── Category Breakdown ──────────────────────────────────────────
+#heading(level: 1)[Findings by Category]
+
+#for cat in data.categories [
+  #block(
+    width: 100%,
+    inset: 12pt,
+    stroke: 0.5pt + rgb("#ddd"),
+    radius: 4pt,
+  )[
+    #text(weight: "bold", size: 11pt)[#cat.display_name]
+    #h(1fr)
+    #text(weight: "bold", size: 11pt)[#cat.total]
+
+    #v(4pt)
+    #text(size: 9pt, fill: rgb("#666"))[
+      #str(cat.count) cases
+      #if cat.urgent_count > 0 [ — #str(cat.urgent_count) urgent]
+    ]
+
+    #if cat.category in data.narrative.category_narratives [
+      #v(6pt)
+      #text(size: 9pt)[
+        #data.narrative.category_narratives.at(cat.category)
+      ]
+    ]
+  ]
+  #v(8pt)
+]
+
+// ── Methodology ─────────────────────────────────────────────────
+#heading(level: 1)[Methodology]
+
+#text(size: 9pt)[#data.narrative.methodology_note]
+
+#v(0.3in)
+
+// ── Top Cases ───────────────────────────────────────────────────
+#heading(level: 1)[Top Cases — Dispute-Ready Evidence]
+
+#for case in data.top_cases [
+  #block(
+    width: 100%,
+    inset: 10pt,
+    stroke: 0.5pt + rgb("#ddd"),
+    radius: 3pt,
+    breakable: false,
+  )[
+    #grid(
+      columns: (auto, 1fr, auto),
+      gutter: 8pt,
+      [
+        #text(weight: "bold", size: 10pt)[Case ##str(case.rank)]
+      ],
+      [
+        #text(size: 9pt, fill: rgb("#666"))[
+          #case.category — #case.sku
+        ]
+      ],
+      [
+        #text(weight: "bold", size: 11pt)[#case.amount]
+      ],
+    )
+
+    #v(4pt)
+
+    #grid(
+      columns: (1fr, 1fr, 1fr),
+      gutter: 6pt,
+      [
+        #text(size: 8pt, fill: rgb("#666"))[Order: #case.order_id]
+      ],
+      [
+        #text(size: 8pt, fill: rgb("#666"))[Confidence: #case.confidence]
+      ],
+      [
+        #if case.days_remaining != none [
+          #text(size: 8pt, fill: if case.days_remaining < 14 { rgb("#c44") } else { rgb("#666") })[
+            #str(case.days_remaining) days remaining
+          ]
+        ] else [
+          #text(size: 8pt, fill: rgb("#666"))[No hard deadline]
+        ]
+      ],
+    )
+
+    #if case.dispute_draft != none [
+      #v(6pt)
+      #block(
+        width: 100%,
+        inset: 8pt,
+        fill: rgb("#f8f8f8"),
+        radius: 2pt,
+      )[
+        #text(size: 8pt, weight: "bold")[Draft Dispute:]
+        #v(2pt)
+        #text(size: 8pt)[#case.dispute_draft.subject]
+        #v(4pt)
+        #text(size: 7.5pt, fill: rgb("#444"))[#case.dispute_draft.body]
+      ]
+    ]
+  ]
+  #v(6pt)
+]
+
+// ── CTA ─────────────────────────────────────────────────────────
+#pagebreak()
+
+#align(center)[
+  #v(1in)
+
+  #block(
+    width: 80%,
+    inset: 20pt,
+    stroke: 1pt + rgb("#222"),
+    radius: 6pt,
+  )[
+    #text(size: 14pt, weight: "bold")[
+      Filing #str(data.findings_count) disputes is a 60-80 hour job.
+    ]
+
+    #v(10pt)
+
+    #text(size: 10pt)[
+      We do this for our customers as a managed service — we only get paid when
+      the money lands in your account (20% of recovered, no retainer, no software).
+    ]
+
+    #v(12pt)
+
+    #text(size: 11pt, weight: "bold")[
+      Talk to us — 15 min, no pitch deck
+    ]
+
+    #v(4pt)
+
+    #text(size: 9pt, fill: rgb("#666"))[baslix.com]
+  ]
+
+  #v(1in)
+
+  #text(size: 8pt, fill: rgb("#999"))[
+    This report was generated by Baslix Leakage X-Ray.
+    All findings are based on the Seller Central data you provided
+    and are backed by row-level evidence from your reports.
+  ]
+]

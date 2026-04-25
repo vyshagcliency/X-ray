@@ -4,12 +4,9 @@ import { supabaseAdmin } from "@/lib/db/supabase";
 /**
  * GET /api/audit/pdf?id=<audit_id>
  *
- * Generates a signed URL for the pre-rendered PDF, or returns
- * a simple HTML-to-PDF fallback for Phase 1.
- *
- * Phase 1: Returns report_data as a downloadable JSON (PDF rendering
- * will be added when Typst WASM integration is complete).
- * The report page itself IS the product in Phase 1.
+ * Returns a signed URL for the pre-rendered PDF stored in Supabase Storage.
+ * If no PDF exists yet, falls back to on-demand rendering via React-PDF.
+ * Signed URLs expire after 1 hour (minted fresh on each request).
  */
 export async function GET(req: NextRequest) {
   const auditId = req.nextUrl.searchParams.get("id");
@@ -20,15 +17,46 @@ export async function GET(req: NextRequest) {
   const db = supabaseAdmin();
 
   // Check if a pre-rendered PDF exists in storage
+  const storagePath = `reports/${auditId}.pdf`;
   const { data: pdfUrl } = await db.storage
-    .from("reports")
-    .createSignedUrl(`${auditId}.pdf`, 3600);
+    .from("uploads")
+    .createSignedUrl(storagePath, 3600);
 
   if (pdfUrl?.signedUrl) {
     return NextResponse.redirect(pdfUrl.signedUrl);
   }
 
-  // Phase 1 fallback: redirect to the web report
-  // PDF rendering will be added in Phase 1.6
-  return NextResponse.redirect(new URL(`/r/${auditId}`, req.url));
+  // No pre-rendered PDF — try on-demand React-PDF render
+  const { data: audit } = await db
+    .from("audits")
+    .select("report_data, brand_name")
+    .eq("id", auditId)
+    .single();
+
+  if (!audit?.report_data) {
+    return NextResponse.redirect(new URL(`/r/${auditId}`, req.url));
+  }
+
+  try {
+    const { renderReactPdf } = await import("@/lib/pdf/react-pdf-render");
+    const pdfBuffer = await renderReactPdf(audit.report_data);
+
+    // Upload for next time
+    await db.storage
+      .from("uploads")
+      .upload(storagePath, pdfBuffer, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+
+    return new NextResponse(new Uint8Array(pdfBuffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${audit.brand_name ?? "report"}-xray.pdf"`,
+      },
+    });
+  } catch {
+    // Final fallback: redirect to web report
+    return NextResponse.redirect(new URL(`/r/${auditId}`, req.url));
+  }
 }

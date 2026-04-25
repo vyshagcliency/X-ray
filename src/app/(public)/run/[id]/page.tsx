@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 const STAGES = [
   "Parsing your reimbursement records...",
@@ -70,10 +70,30 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
   if (status === "failed") {
     return (
       <main className="mx-auto max-w-md px-6 py-32 text-center">
-        <h1 className="text-2xl font-bold text-destructive">Something went wrong</h1>
+        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-destructive/10">
+          <AlertTriangle className="size-8 text-destructive" />
+        </div>
+        <h1 className="mt-6 text-2xl font-bold">We couldn&apos;t process your audit</h1>
         <p className="mt-4 text-muted-foreground">
-          We ran into an issue processing your data. Please try uploading again or contact us.
+          Something went wrong while analyzing your data. This usually means one or more of
+          your CSV files had an unexpected format.
         </p>
+        <div className="mt-8 space-y-3">
+          <a
+            href="/start"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Start a new audit
+          </a>
+          <p className="text-xs text-muted-foreground">
+            If this keeps happening, email{" "}
+            <a href="mailto:support@baslix.com" className="underline">
+              support@baslix.com
+            </a>{" "}
+            with your audit ID:{" "}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{auditId}</code>
+          </p>
+        </div>
       </main>
     );
   }

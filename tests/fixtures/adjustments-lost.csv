@@ -1,0 +1,4 @@
+adjusted-date,transaction-item-id,fnsku,sku,product-name,fulfillment-center-id,quantity,reason,disposition
+2026-01-10,T0010,X000AA0001,SKU-ALPHA,Widget Alpha,PHX7,-3,E,SELLABLE
+2026-02-05,T0011,X000BB0002,SKU-BETA,Widget Beta,SDF8,-1,D,DAMAGED
+2026-03-01,T0012,X000CC0003,SKU-GAMMA,Widget Gamma,ONT6,-2,M,SELLABLE

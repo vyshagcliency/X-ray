@@ -135,7 +135,8 @@ export default function StartPage() {
               <div>
                 <p className="text-sm font-medium">Your data stays private</p>
                 <p className="text-sm text-muted-foreground">
-                  Raw files auto-deleted after 30 days. Never shared.
+                  Raw files auto-deleted after 30 days. A compact derivative
+                  is kept so your report stays accessible. Never shared.
                 </p>
               </div>
             </div>

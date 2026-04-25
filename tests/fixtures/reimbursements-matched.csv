@@ -1,0 +1,2 @@
+approval-date,reimbursement-id,case-id,amazon-order-id,reason,sku,fnsku,asin,condition,currency-unit,amount-per-unit,amount-total,quantity-reimbursed-cash,quantity-reimbursed-inventory,quantity-reimbursed-total
+2026-01-20,R0001,C0001,111-1111111-1111111,CUSTOMER_RETURN,SKU-ALPHA,X000AA0001,B00AAAA111,Sellable,USD,49.99,49.99,1,0,1

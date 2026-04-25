@@ -12,8 +12,8 @@ const REQUIRED_REPORTS = ["reimbursements", "returns", "adjustments"] as const;
 const PRIVACY_BULLETS = [
   { icon: Lock, text: "Your files are encrypted in transit and at rest" },
   { icon: Trash2, text: "Original CSV files are deleted after 30 days" },
+  { icon: Server, text: "A compact derivative is retained so your report stays accessible" },
   { icon: Eye, text: "Your data is never shared with third parties" },
-  { icon: Server, text: "Never used to train AI models" },
   { icon: Shield, text: "Request full deletion anytime via your report email" },
 ];
 

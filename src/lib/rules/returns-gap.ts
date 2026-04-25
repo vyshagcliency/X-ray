@@ -29,8 +29,8 @@ export const returnsGap: Rule = {
     ),
     matched_reimbursements AS (
       SELECT DISTINCT
-        "amazon-order-id" AS order_id,
-        sku
+        r."amazon-order-id" AS order_id,
+        r.sku
       FROM read_csv($reimbursements_url, auto_detect=true) r
       JOIN damaged_returns d
         ON r."amazon-order-id" = d.order_id

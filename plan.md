@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Companion to:** prd.md, userstories.md, architecture.md, decisions.md
 **Status:** Active
-**Last updated:** 2026-04-21
+**Last updated:** 2026-04-25
 
 ---
 
@@ -118,11 +118,11 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 *Descoped from Phase 0 per user direction ("don't overdo, just care about CX"). Will add before first real users.*
 
-- [ ] `src/lib/security/nosecone.ts` — CSP per arch §10.5 (include `wasm-unsafe-eval` for Typst)
-- [ ] `src/lib/security/rate-limit.ts` — Upstash wrappers for the three limits in arch §10.4
-- [ ] `src/lib/security/dompurify.ts` — isomorphic DOMPurify config
-- [ ] `src/middleware.ts` — admin route guard (arch §9.1) + Nosecone headers application
-- [ ] `robots.txt` — disallow `/admin`, `/r/`, `/run/`, `/upload/`, `/start`, `/deletion/` (only landing + legal pages are indexable)
+- [ ] `src/lib/security/nosecone.ts` — CSP per arch §10.5 (include `wasm-unsafe-eval` for Typst) *(deferred: add before public launch)*
+- [ ] `src/lib/security/rate-limit.ts` — Upstash wrappers for the three limits in arch §10.4 *(deferred: add before public launch)*
+- [ ] `src/lib/security/dompurify.ts` — isomorphic DOMPurify config *(deferred: add before public launch)*
+- [x] `src/middleware.ts` — admin route guard (cookie-based for MVP; will upgrade to Supabase Auth JWT verification) + security headers (X-Frame-Options, HSTS, nosniff, referrer-policy, permissions-policy)
+- [x] `robots.txt` + `sitemap.xml` — disallow `/admin`, `/r/`, `/run/`, `/upload/`, `/start`, `/deletion/`, `/api/` (only landing + legal pages are indexable)
 
 ### 0.6 Observability wiring (descoped for MVP)
 
@@ -185,8 +185,8 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
   - [ ] Rate limit: 5/domain/30d + 10/IP/day (arch §10.4) *(deferred to 0.5 security baseline)*
   - [x] Insert `audits` row with `status = 'pending_upload'`
   - [x] Redirect to `/upload/[id]`
-- [ ] `src/app/(public)/privacy/page.tsx` — real privacy policy
-- [ ] `src/app/(public)/terms/page.tsx` — terms of service
+- [x] `src/app/(public)/privacy/page.tsx` — real privacy policy (data retention, security, deletion)
+- [x] `src/app/(public)/terms/page.tsx` — terms of service
 - [-] PostHog events (descoped for MVP)
 
 ### 1.2 Upload — client-side validation + FormData upload
@@ -234,12 +234,12 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 - [x] `src/lib/rules/inventory-lost.ts` — PRD §5.2 (pure SQL)
 - [x] `src/lib/rules/refund-reimbursement-mismatch.ts` — PRD §5.3 (pure SQL)
 - [-] `src/trigger/detect-rule.ts` (descoped: rules run inline in audit-run.ts)
-- [ ] `tests/rules/returns-gap.test.ts` — fixture CSV tests (need fixture data)
-- [ ] `tests/rules/inventory-lost.test.ts`
-- [ ] `tests/rules/refund-reimbursement-mismatch.test.ts`
+- [x] `tests/rules/returns-gap.test.ts` — fixture CSV tests (7 tests, all passing)
+- [x] `tests/rules/inventory-lost.test.ts` — fixture CSV tests (7 tests, all passing)
+- [x] `tests/rules/refund-reimbursement-mismatch.test.ts` — fixture CSV tests (6 tests, all passing)
 - [-] `src/trigger/materialize-cases.ts` (descoped: report page reads findings directly)
-- [ ] `src/lib/cost/record.ts` — writes `cost_events` rows
-- [ ] `src/lib/cost/circuit-breaker.ts` — checks running total vs. `MAX_COST_PER_AUDIT_CENTS`
+- [x] `src/lib/cost/record.ts` — writes `cost_events` rows
+- [x] `src/lib/cost/circuit-breaker.ts` — checks running total vs. `MAX_COST_PER_AUDIT_CENTS`
 
 ### 1.5 LLM — narrative + dispute drafts (template-based for MVP)
 
@@ -249,7 +249,7 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 - [x] `src/lib/llm/narrate.ts` — template-based narrative generator (takes pre-aggregated findings JSON) *(deviation: templates, not LLM — "source: template" flag in output)*
 - [x] `src/lib/llm/draft-dispute.ts` — template-based per-case dispute draft generator *(deviation: templates, not LLM)*
-- [ ] `src/lib/llm/validate-output.ts` — zod + regex validation (needed when LLM is wired)
+- [x] `src/lib/llm/validate-output.ts` — regex validation ensuring no invented dollar amounts; sanitization fallback
 - [ ] Prompt caching (deferred to LLM integration)
 - [ ] Helicone proxy (deferred to LLM integration)
 - [-] `src/trigger/narrate-llm.ts` (descoped: narration runs inline in audit-run.ts)
@@ -264,12 +264,12 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 *Not yet built. PDF download button currently redirects to the web report page. Web report IS the product for MVP; PDF is an enhancement.*
 
-- [ ] `templates/report.typ` — Typst template
+- [x] `templates/report.typ` — Typst template (cover, exec summary, categories, methodology, top cases, CTA)
 - [x] `src/lib/pdf/data-builder.ts` — findings + narrative → structured JSON *(built, used by audit-run.ts to populate `report_data` on audits)*
-- [ ] `src/lib/pdf/typst-render.ts` — compile Typst WASM
-- [ ] `src/lib/pdf/react-pdf-render.tsx` — fallback
-- [ ] `src/trigger/render-pdf.ts`
-- [x] `src/app/api/audit/pdf/route.ts` — checks for pre-rendered PDF, falls back to redirecting to web report
+- [x] `src/lib/pdf/typst-render.ts` — compile Typst WASM via @myriaddreamin/typst.ts
+- [x] `src/lib/pdf/react-pdf-render.tsx` — React-PDF fallback renderer
+- [x] `src/trigger/render-pdf.ts` — Trigger.dev task with Typst primary + React-PDF fallback
+- [x] `src/app/api/audit/pdf/route.ts` — serves signed PDF URL or on-demand React-PDF render
 - [ ] Manual PDF inspection on 3 real datasets
 
 ### 1.7 Processing page + report page
@@ -280,7 +280,7 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
   - [x] Animated stage labels (cycling every 15s) *(deviation: not `useRealtimeRun()` — uses polling via `/api/audit/status` every 5s; simpler, no Trigger.dev React hooks dependency)*
   - [x] Elapsed timer
   - [x] Auto-switch to "we'll email you" after 10 minutes (US-4.2)
-  - [ ] On failure: show actionable error + re-upload path (US-4.3) *(polls for status but no failure-specific UI yet)*
+  - [x] On failure: show actionable error + re-upload path (US-4.3) *(alert icon, explanation, "Start a new audit" button, support email with audit ID)*
 - [x] `src/app/(public)/r/[uuid]/page.tsx` — report page served from DB
   - [x] Headline strip (total, urgent, cases)
   - [x] Executive summary (from `report_data.narrative`)
@@ -306,17 +306,17 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 **User stories:** US-9.1, US-9.2, US-9.3, US-9.6, US-9.7 · **PRD:** §8 · **Arch:** §9
 
-*Partial build — core review flow works. Auth middleware, detailed audit views, cost page, failures page deferred.*
+*All admin pages built. Auth middleware uses cookie-based guard for MVP. Supabase Auth password flow deferred until service provisioned.*
 
-- [ ] Supabase Auth password flow; admin middleware guard *(deferred: admin routes are unlinked + noindex for now)*
+- [~] Supabase Auth password flow *(deferred: needs Supabase project provisioned)*; [x] admin middleware guard *(cookie-based for MVP, security headers applied)*
 - [x] `src/app/(admin)/admin/page.tsx` — dashboard with pending/processing/completed/failed counts + recent audits list + pending review queue *(deviation: simpler than planned — no sparkline charts yet)*
-- [ ] `src/app/(admin)/admin/audits/page.tsx` — audit list (deferred: basic list is on dashboard)
-- [ ] `src/app/(admin)/admin/audits/[id]/page.tsx` — full audit detail (deferred)
+- [x] `src/app/(admin)/admin/audits/page.tsx` — audit list with status filters, search, sortable grid
+- [x] `src/app/(admin)/admin/audits/[id]/page.tsx` — full audit detail (findings, uploads, cost breakdown, event timeline, rule versions, deletion warnings)
 - [x] `src/app/(admin)/admin/review/[id]/page.tsx` — approve / reject UI
   - [x] Approve flips status → `completed` + triggers `notify.email`
   - [x] Reject sets `failed`, persists reason note
-- [ ] `src/app/(admin)/admin/cost/page.tsx` (deferred)
-- [ ] `src/app/(admin)/admin/failures/page.tsx` (deferred)
+- [x] `src/app/(admin)/admin/cost/page.tsx` — cost tracking dashboard (total spend, avg/audit, 7-day rolling avg, component breakdown, flagged >$50)
+- [x] `src/app/(admin)/admin/failures/page.tsx` — failed audit list with error events + metadata
 - [x] `src/app/api/admin/approve/route.ts`
 - [x] `src/app/api/admin/reject/route.ts`
 - [ ] `src/app/api/admin/rerun/route.ts` (deferred)
@@ -327,11 +327,11 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 **User stories:** US-8.1, US-8.2, US-8.3, US-8.4 · **PRD:** §9 · **Arch:** §10
 
-- [ ] `src/trigger/purge-raw-uploads.ts` — scheduled daily task: deletes Storage objects + sets `purged_at` on `raw_uploads` older than 30 days (Parquet survives, findings survive)
-- [ ] `src/app/(public)/deletion/[audit_id]/page.tsx` — confirmation page (reached via signed token in email)
-- [ ] `src/app/api/deletion/route.ts` — validates token, writes `deletion_requests` row (Phase 1: manual processing)
+- [x] `src/trigger/purge-raw-uploads.ts` — scheduled daily (3 AM UTC), deletes Storage objects + sets `purged_at` on `raw_uploads` older than 30 days
+- [x] `src/app/(public)/deletion/[audit_id]/page.tsx` — confirmation page with cascade wipe description
+- [x] `src/app/api/deletion/route.ts` — writes `deletion_requests` row (Phase 1: manual processing)
 - [ ] `src/app/(admin)/admin/audits/[id]/page.tsx` includes a "Process deletion" action in Phase 1 — cascade wipes raw CSV (if present), Parquet, `findings`, `case_source_rows`, `reports/{audit_id}.pdf`, zeros PII on `audits`, sets status `deleted` (arch §10.1)
-- [ ] Privacy language on `/start` + `/upload` + privacy policy matches exact wording from arch §4.3 (Parquet retention explicitly disclosed)
+- [x] Privacy language on `/start` + `/upload` + privacy policy matches arch §4.3 (Parquet retention explicitly disclosed on both pages)
 
 ### 1.11 Hardening + launch readiness
 
@@ -340,7 +340,7 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 - [ ] Manually inspect each PDF — typography, page breaks, forwardability test ("would a CFO read this?")
 - [ ] Verify cost per audit on all three smoke datasets is under $30
 - [ ] Final landing page polish: shoot the real 60-second screen recording, replace placeholder
-- [ ] Confirm `sitemap.xml` and `robots.txt` are correct
+- [x] Confirm `sitemap.xml` and `robots.txt` are correct
 - [ ] Confirm TLS 1.3, HSTS, CSP headers via `securityheaders.com` against the production domain
 - [ ] Load test: 10 concurrent audits don't trip cost circuit breaker or Trigger.dev concurrency limits
 - [ ] Write the internal launch announcement / outreach template for Vyshag
