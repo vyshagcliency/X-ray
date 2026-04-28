@@ -3,23 +3,18 @@ import type { NextRequest } from "next/server";
 
 /**
  * Middleware guards:
- * 1. Admin routes require a valid admin session (Phase 1: basic cookie check;
- *    will upgrade to Supabase Auth session verification when provisioned).
+ * 1. Admin routes require a valid admin session cookie (set by /api/admin/login).
+ *    The login page itself is excluded so unauthenticated users can reach it.
  * 2. Security headers applied to all responses.
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Admin route guard
-  if (pathname.startsWith("/admin")) {
-    // Phase 1: check for admin session cookie.
-    // When Supabase Auth is provisioned, this will verify the JWT and check
-    // for the admin role claim in app_metadata.
+  // Admin route guard — exclude the login page itself
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const adminSession = request.cookies.get("admin-session");
     if (!adminSession?.value) {
-      // Redirect unauthenticated requests to home page.
-      // No login page exists yet — admin routes are unlinked and noindex.
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
 
