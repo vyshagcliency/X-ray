@@ -7,7 +7,7 @@ describe("returns_gap", () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
       returns: "returns-with-gap.csv",
       reimbursements: "reimbursements-empty.csv",
-      adjustments: "adjustments-empty.csv",
+      inventory_ledger: "inventory-ledger-empty.csv",
     });
 
     expect(findings.length).toBe(3);
@@ -20,7 +20,7 @@ describe("returns_gap", () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
       returns: "returns-with-gap.csv",
       reimbursements: "reimbursements-empty.csv",
-      adjustments: "adjustments-empty.csv",
+      inventory_ledger: "inventory-ledger-empty.csv",
     });
 
     const defective = findings.find(
@@ -33,7 +33,7 @@ describe("returns_gap", () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
       returns: "returns-with-gap.csv",
       reimbursements: "reimbursements-empty.csv",
-      adjustments: "adjustments-empty.csv",
+      inventory_ledger: "inventory-ledger-empty.csv",
     });
 
     const customerDamaged = findings.find(
@@ -46,7 +46,7 @@ describe("returns_gap", () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
       returns: "returns-with-match.csv",
       reimbursements: "reimbursements-matched.csv",
-      adjustments: "adjustments-empty.csv",
+      inventory_ledger: "inventory-ledger-empty.csv",
     });
 
     expect(findings.length).toBe(0);
@@ -56,7 +56,7 @@ describe("returns_gap", () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
       returns: "returns-with-match.csv",
       reimbursements: "reimbursements-empty.csv",
-      adjustments: "adjustments-sellable.csv",
+      inventory_ledger: "inventory-ledger-sellable.csv",
     });
 
     expect(findings.length).toBe(0);
@@ -66,7 +66,7 @@ describe("returns_gap", () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
       returns: "returns-with-gap.csv",
       reimbursements: "reimbursements-empty.csv",
-      adjustments: "adjustments-empty.csv",
+      inventory_ledger: "inventory-ledger-empty.csv",
     });
 
     expect(findings.every((f) => f.row_ref !== "")).toBe(true);
@@ -76,7 +76,7 @@ describe("returns_gap", () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
       returns: "returns-with-gap.csv",
       reimbursements: "reimbursements-empty.csv",
-      adjustments: "adjustments-empty.csv",
+      inventory_ledger: "inventory-ledger-empty.csv",
     });
 
     expect(findings.every((f) => f.rule_version === "1.0.0")).toBe(true);

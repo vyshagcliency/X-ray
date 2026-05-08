@@ -28,4 +28,9 @@ export default defineConfig({
       "@myriaddreamin/typst-ts-web-compiler",
     ],
   },
+  additionalPackages: [
+    "@duckdb/node-api@1.5.2-r.1",
+    "@duckdb/node-bindings@1.5.2-r.1",
+    "@duckdb/node-bindings-linux-x64@1.5.2-r.1",
+  ],
 });

@@ -9,30 +9,32 @@ import type { Rule } from "./index";
 export const inventoryLost: Rule = {
   id: "inventory_lost",
   version: "1.0.0",
-  requiredReports: ["adjustments", "reimbursements"],
+  requiredReports: ["inventory_ledger", "reimbursements"],
   category: "lost_inventory",
 
   sql: /* sql */ `
     WITH lost_events AS (
       SELECT
-        "transaction-item-id" AS transaction_id,
-        fnsku,
-        sku,
-        "adjusted-date" AS adjusted_date,
-        ABS(quantity) AS quantity,
-        reason,
-        disposition,
+        "Reference ID" AS transaction_id,
+        "FNSKU" AS fnsku,
+        "MSKU" AS sku,
+        "Date" AS adjusted_date,
+        ABS("Quantity") AS quantity,
+        "Reason" AS reason,
+        "Disposition" AS disposition,
         row_number() OVER () AS row_ref
-      FROM read_csv($adjustments_url, auto_detect=true)
-      WHERE quantity < 0
-        AND reason IN ('E', 'M', 'D', 'U')
+      FROM read_csv($inventory_ledger_url, auto_detect=true)
+      WHERE "Event Type" = 'Adjustments'
+        AND "Quantity" < 0
+        AND "Reason" IN ('E', 'M', 'D', 'U')
     ),
     found_events AS (
-      SELECT fnsku, SUM(quantity) AS found_qty
-      FROM read_csv($adjustments_url, auto_detect=true)
-      WHERE quantity > 0
-        AND reason IN ('E', 'M', 'D', 'U', 'G', 'R')
-      GROUP BY fnsku
+      SELECT "FNSKU" AS fnsku, SUM("Quantity") AS found_qty
+      FROM read_csv($inventory_ledger_url, auto_detect=true)
+      WHERE "Event Type" = 'Adjustments'
+        AND "Quantity" > 0
+        AND "Reason" IN ('E', 'M', 'D', 'U', 'G', 'R')
+      GROUP BY "FNSKU"
     ),
     reimbursed AS (
       SELECT DISTINCT fnsku

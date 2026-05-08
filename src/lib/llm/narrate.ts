@@ -70,7 +70,7 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
       ?? `We identified ${cat.count} discrepancies totaling ${catTotal} in the ${cat.category} category.${urgentNote}`;
   }
 
-  const methodology_note = "This analysis was performed by cross-referencing your Returns, Reimbursements, and Adjustments reports using exact order-ID and SKU matching. Each finding represents a verifiable discrepancy backed by specific rows in your Seller Central data. Confidence levels reflect the strength of the evidence — high-confidence findings have direct, unambiguous matches.";
+  const methodology_note = "This analysis was performed by cross-referencing your Returns, Reimbursements, and Inventory Ledger reports using exact order-ID and SKU matching. Each finding represents a verifiable discrepancy backed by specific rows in your Seller Central data. Confidence levels reflect the strength of the evidence — high-confidence findings have direct, unambiguous matches.";
 
   return {
     executive_summary,

@@ -11,7 +11,7 @@ const SMOKE_DIR = path.resolve(__dirname);
 async function main() {
   const fixtureUrls: Record<string, string> = {
     returns: path.join(SMOKE_DIR, "returns.csv"),
-    adjustments: path.join(SMOKE_DIR, "adjustments.csv"),
+    inventory_ledger: path.join(SMOKE_DIR, "inventory-ledger.csv"),
     reimbursements: path.join(SMOKE_DIR, "reimbursements.csv"),
   };
 

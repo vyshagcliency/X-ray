@@ -5,7 +5,7 @@ import { inventoryLost } from "@/lib/rules/inventory-lost";
 describe("inventory_lost", () => {
   it("flags lost/damaged inventory with no reimbursement", async () => {
     const findings = await runRuleAgainstFixtures(inventoryLost, {
-      adjustments: "adjustments-lost.csv",
+      inventory_ledger: "inventory-ledger-lost.csv",
       reimbursements: "reimbursements-empty.csv",
     });
 
@@ -16,7 +16,7 @@ describe("inventory_lost", () => {
 
   it("assigns high confidence to reason E (warehouse lost)", async () => {
     const findings = await runRuleAgainstFixtures(inventoryLost, {
-      adjustments: "adjustments-lost.csv",
+      inventory_ledger: "inventory-ledger-lost.csv",
       reimbursements: "reimbursements-empty.csv",
     });
 
@@ -28,7 +28,7 @@ describe("inventory_lost", () => {
 
   it("assigns high confidence to reason D (damaged)", async () => {
     const findings = await runRuleAgainstFixtures(inventoryLost, {
-      adjustments: "adjustments-lost.csv",
+      inventory_ledger: "inventory-ledger-lost.csv",
       reimbursements: "reimbursements-empty.csv",
     });
 
@@ -38,7 +38,7 @@ describe("inventory_lost", () => {
 
   it("assigns medium confidence to reason M (misplaced)", async () => {
     const findings = await runRuleAgainstFixtures(inventoryLost, {
-      adjustments: "adjustments-lost.csv",
+      inventory_ledger: "inventory-ledger-lost.csv",
       reimbursements: "reimbursements-empty.csv",
     });
 
@@ -48,7 +48,7 @@ describe("inventory_lost", () => {
 
   it("does NOT flag inventory that was reimbursed", async () => {
     const findings = await runRuleAgainstFixtures(inventoryLost, {
-      adjustments: "adjustments-lost.csv",
+      inventory_ledger: "inventory-ledger-lost.csv",
       reimbursements: "reimbursements-inventory-matched.csv",
     });
 
@@ -57,7 +57,7 @@ describe("inventory_lost", () => {
 
   it("sets 18-month dispute window", async () => {
     const findings = await runRuleAgainstFixtures(inventoryLost, {
-      adjustments: "adjustments-lost.csv",
+      inventory_ledger: "inventory-ledger-lost.csv",
       reimbursements: "reimbursements-empty.csv",
     });
 
@@ -66,7 +66,7 @@ describe("inventory_lost", () => {
 
   it("includes row_ref in every finding", async () => {
     const findings = await runRuleAgainstFixtures(inventoryLost, {
-      adjustments: "adjustments-lost.csv",
+      inventory_ledger: "inventory-ledger-lost.csv",
       reimbursements: "reimbursements-empty.csv",
     });
 

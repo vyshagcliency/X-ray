@@ -9,7 +9,7 @@ import type { Rule } from "./index";
 export const returnsGap: Rule = {
   id: "returns_gap",
   version: "1.0.0",
-  requiredReports: ["returns", "reimbursements", "adjustments"],
+  requiredReports: ["returns", "reimbursements", "inventory_ledger"],
   category: "returns",
 
   sql: /* sql */ `
@@ -38,11 +38,12 @@ export const returnsGap: Rule = {
        AND r."approval-date"::DATE BETWEEN d.return_date::DATE AND d.return_date::DATE + INTERVAL 90 DAY
     ),
     returned_to_sellable AS (
-      SELECT DISTINCT a.sku
-      FROM read_csv($adjustments_url, auto_detect=true) a
-      JOIN damaged_returns d ON a.sku = d.sku
-      WHERE a.reason IN ('G', 'M', 'R')
-        AND a."adjusted-date"::DATE BETWEEN d.return_date::DATE AND d.return_date::DATE + INTERVAL 30 DAY
+      SELECT DISTINCT a."MSKU" AS sku
+      FROM read_csv($inventory_ledger_url, auto_detect=true) a
+      JOIN damaged_returns d ON a."MSKU" = d.sku
+      WHERE a."Event Type" = 'Adjustments'
+        AND a."Reason" IN ('G', 'M', 'R')
+        AND a."Date"::DATE BETWEEN d.return_date::DATE AND d.return_date::DATE + INTERVAL 30 DAY
     )
     SELECT
       d.order_id,

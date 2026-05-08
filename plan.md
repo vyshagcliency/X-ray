@@ -161,7 +161,7 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 *Partially deferred — jumped to building CX-facing code per user direction. Headers need verification against real Amazon data before launch.*
 
-- [~] Pull **current Amazon Seller Central report formats** — placeholder headers written in `src/lib/csv/headers.ts`; need verification against real CSVs before launch.
+- [x] Pull **current Amazon Seller Central report formats** — headers verified against real Amazon docs. "FBA Inventory Adjustments" deprecated Jan 2023; replaced with "Inventory Ledger - Detailed View" (new columns, Event Type filter). Renamed internal key `adjustments` → `inventory_ledger`. Moved `status` to optional on returns. Added optional headers to reimbursements. All rules, fixtures, and tests updated. (2026-05-08)
 - [ ] Confirm **Anthropic prompt caching** API shape (deferred: template-based narrative for now)
 - [ ] Confirm **Vercel AI SDK v5+** shape (deferred: template-based narrative for now)
 - [ ] Confirm **Typst syntax + `@myriaddreamin/typst.ts`** embed API (deferred: PDF rendering not yet built)
@@ -201,7 +201,7 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 - [-] `src/components/upload/UppyDashboard.tsx` (descoped: using FormData upload instead — see decisions.md)
 - [-] `src/app/api/upload-token/route.ts` (descoped: using service-role direct upload)
 - [-] `src/app/api/upload-complete/route.ts` (descoped: combined into single upload route)
-- [x] `src/app/(public)/upload/[id]/page.tsx` — page with 3 tiles for Returns, Adjustments, Reimbursements
+- [x] `src/app/(public)/upload/[id]/page.tsx` — page with 3 tiles for Returns, Inventory Ledger, Reimbursements
   - [x] Privacy bullets above tiles
   - [x] "Run audit" button disabled until all three validated
 - [x] `src/app/api/audit/upload/route.ts` — receives FormData with 3 CSVs, uploads to Supabase Storage, creates `raw_uploads` rows, enqueues `audit.run` Trigger.dev task *(replaces planned upload-token + upload-complete + audit/run three-route flow)*
@@ -560,3 +560,4 @@ These don't belong to a single phase — they're continuous discipline across al
 | 2026-04-18 | Phase 0 research checkpoint completed | All 6 items verified. Corrected Sonnet model ID (`claude-sonnet-4-6` → `claude-sonnet-4-5-20250929`). |
 | 2026-04-18 | Phase 0.6, 0.7 descoped; 0.5 deferred | User: "don't overdo observability, CI/CD etc — just care about CX and customer value." Jumped to building CX-facing Phase 1 code. |
 | 2026-04-21 | Phase 1 bulk build completed (1.1–1.5 partial, 1.7–1.9 partial) | Built landing, start, upload, pipeline, report, admin review, email. Multiple deviations documented: FormData instead of Uppy/TUS, monolithic parent task instead of child tasks, template-based LLM instead of API calls, `read_csv()` instead of Parquet conversion. See decisions.md change log for rationale. |
+| 2026-05-08 | CSV headers migrated to real Amazon formats | "FBA Inventory Adjustments" deprecated; replaced with "Inventory Ledger - Detailed View". Internal key renamed `adjustments` → `inventory_ledger`. DB migration added. All 3 detection rules updated. `status` moved to optional on returns. Optional headers added to reimbursements. All tests pass (21/21). |

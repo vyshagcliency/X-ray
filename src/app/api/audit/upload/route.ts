@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/db/supabase";
 import { tasks } from "@trigger.dev/sdk/v3";
 
-const VALID_REPORT_TYPES = ["reimbursements", "returns", "adjustments"] as const;
+const VALID_REPORT_TYPES = ["reimbursements", "returns", "inventory_ledger"] as const;
 
 export async function POST(req: NextRequest) {
   const auditId = req.nextUrl.searchParams.get("auditId");

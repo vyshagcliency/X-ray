@@ -3,7 +3,7 @@ export interface Rule {
   version: string;
   /** Which Parquet files this rule needs (by report type) */
   requiredReports: string[];
-  /** Pure SQL — parameterized with $returns_url, $reimbursements_url, $adjustments_url */
+  /** Pure SQL — parameterized with $returns_url, $reimbursements_url, $inventory_ledger_url */
   sql: string;
   /** Map a result row to a confidence level */
   confidence: (row: Record<string, unknown>) => "high" | "medium" | "low";

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ReportTile } from "@/components/upload/ReportTile";
 import { REPORT_SIGNATURES } from "@/lib/csv/headers";
 
-const REQUIRED_REPORTS = ["reimbursements", "returns", "adjustments"] as const;
+const REQUIRED_REPORTS = ["reimbursements", "returns", "inventory_ledger"] as const;
 
 const PRIVACY_BULLETS = [
   { icon: Lock, text: "Your files are encrypted in transit and at rest" },
