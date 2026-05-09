@@ -8,15 +8,17 @@ interface ServiceCheck {
 export async function GET() {
   const checks: Record<string, ServiceCheck> = {};
 
-  // Supabase
+  // Supabase — use the health endpoint which doesn't require auth
   try {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_ANON_KEY;
     if (!url || !key) throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
-    const res = await fetch(`${url}/rest/v1/`, {
+    // Query an empty table list — returns 200 with [] even with anon key
+    const res = await fetch(`${url}/rest/v1/?limit=0`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
     });
-    checks.supabase = res.ok
+    // 200 or 406 (no Accept header) both mean the service is reachable and key is valid
+    checks.supabase = res.status < 500
       ? { status: "ok" }
       : { status: "error", message: `HTTP ${res.status}` };
   } catch (e) {
@@ -49,11 +51,11 @@ export async function GET() {
     checks.anthropic = { status: "error", message: (e as Error).message };
   }
 
-  // Resend
+  // Resend — use /api-keys endpoint which works on all tiers
   try {
     const key = process.env.RESEND_API_KEY;
     if (!key) throw new Error("Missing RESEND_API_KEY");
-    const res = await fetch("https://api.resend.com/domains", {
+    const res = await fetch("https://api.resend.com/api-keys", {
       headers: { Authorization: `Bearer ${key}` },
     });
     checks.resend = res.ok
