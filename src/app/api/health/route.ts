@@ -51,14 +51,21 @@ export async function GET() {
     checks.anthropic = { status: "error", message: (e as Error).message };
   }
 
-  // Resend — use /api-keys endpoint which works on all tiers
+  // Resend — no dedicated health endpoint; check key is configured
+  // and service is reachable. 401/403 = reachable but key issue, not down.
   try {
     const key = process.env.RESEND_API_KEY;
     if (!key) throw new Error("Missing RESEND_API_KEY");
-    const res = await fetch("https://api.resend.com/api-keys", {
-      headers: { Authorization: `Bearer ${key}` },
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}), // Empty body — will 422 with valid key, 401 with bad key
     });
-    checks.resend = res.ok
+    // 422 = key works, body invalid (expected). 401/403 = key issue.
+    checks.resend = res.status === 422 || res.ok
       ? { status: "ok" }
       : { status: "error", message: `HTTP ${res.status}` };
   } catch (e) {
