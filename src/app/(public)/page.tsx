@@ -203,6 +203,37 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Video placeholder */}
+      <section className="bg-white py-12">
+        <div className="mx-auto max-w-3xl px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <div className="overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30">
+              <div className="flex aspect-video flex-col items-center justify-center gap-3">
+                <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="size-8 text-primary"
+                  >
+                    <path
+                      d="M8 5.14v14.72a1 1 0 0 0 1.5.86l11-7.36a1 1 0 0 0 0-1.72l-11-7.36A1 1 0 0 0 8 5.14z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  See how it works in 60 seconds
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* How it works */}
       <section className="bg-slate-50">
         <div className="mx-auto max-w-4xl px-6 py-20">

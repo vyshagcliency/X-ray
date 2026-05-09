@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/db/supabase";
 import { tasks } from "@trigger.dev/sdk/v3";
+import { uploadRateLimit } from "@/lib/security/rate-limit";
 
 const VALID_REPORT_TYPES = ["reimbursements", "returns", "inventory_ledger"] as const;
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 uploads per IP per day
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { success: withinLimit } = await uploadRateLimit.limit(ip);
+  if (!withinLimit) {
+    return NextResponse.json(
+      { error: "Too many uploads. Please try again later." },
+      { status: 429 },
+    );
+  }
+
   const auditId = req.nextUrl.searchParams.get("auditId");
   if (!auditId) {
     return NextResponse.json({ error: "Missing auditId" }, { status: 400 });

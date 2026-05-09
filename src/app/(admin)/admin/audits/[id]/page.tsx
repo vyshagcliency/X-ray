@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDollars } from "@/lib/format";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteAuditButton } from "@/components/admin/DeleteAuditButton";
 
 export const metadata = {
   robots: "noindex, nofollow",
@@ -160,6 +161,11 @@ export default async function AuditDetailPage({
             {new Date(deletionReqs[0].created_at).toLocaleDateString()} —
             Status: {deletionReqs[0].status}
           </p>
+          {deletionReqs[0].status === "pending" && audit.status !== "deleted" && (
+            <div className="mt-3">
+              <DeleteAuditButton auditId={id} />
+            </div>
+          )}
         </div>
       )}
 

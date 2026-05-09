@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/db/supabase";
+import { startRateLimit } from "@/lib/security/rate-limit";
 
 const startSchema = z.object({
   email: z
@@ -66,6 +67,12 @@ export async function startAudit(formData: FormData) {
 
   if (blocked) {
     return { error: "Please use a work email address" };
+  }
+
+  // Rate limit: 5 audits per domain per 30 days
+  const { success: withinLimit } = await startRateLimit.limit(domain);
+  if (!withinLimit) {
+    return { error: "Too many audits from this domain. Please try again later." };
   }
 
   // Create the audit

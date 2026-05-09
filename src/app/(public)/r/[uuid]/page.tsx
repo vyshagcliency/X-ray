@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, AlertTriangle, ArrowRight } from "lucide-react";
+import { UrgencyChart } from "@/components/report/UrgencyChart";
 
 interface Finding {
   id: string;
@@ -112,6 +113,14 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
           </p>
         </section>
       )}
+
+      {/* Urgency timeline */}
+      <UrgencyChart
+        findings={typedFindings.map((f) => ({
+          amount_cents: f.amount_cents,
+          window_days_remaining: f.window_days_remaining,
+        }))}
+      />
 
       {/* Category cards */}
       <section className="mt-8 grid gap-4 sm:grid-cols-2">

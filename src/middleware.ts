@@ -32,6 +32,18 @@ export function middleware(request: NextRequest) {
     "Strict-Transport-Security",
     "max-age=63072000; includeSubDomains; preload",
   );
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https:",
+      "connect-src 'self' https://*.supabase.co",
+      "font-src 'self'",
+      "frame-ancestors 'none'",
+    ].join("; "),
+  );
 
   return response;
 }
