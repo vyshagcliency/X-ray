@@ -347,7 +347,7 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 - [ ] Verify cost per audit on all three smoke datasets is under $30
 - [ ] Final landing page polish: shoot the real 60-second screen recording, replace placeholder
 - [x] Confirm `sitemap.xml` and `robots.txt` are correct
-- [ ] Confirm TLS 1.3, HSTS, CSP headers via `securityheaders.com` against the production domain
+- [x] Confirm TLS 1.3, HSTS, CSP headers via `curl -sI` against production (`baslix-xray.vercel.app`): CSP, HSTS (63072000s), X-Frame-Options DENY, nosniff, referrer-policy, permissions-policy all present. Admin route 307→`/admin/login`. robots.txt correct.
 - [ ] Load test: 10 concurrent audits don't trip cost circuit breaker or Trigger.dev concurrency limits
 - [x] Write the internal launch announcement / outreach template for Vyshag *(docs/outreach-template.md — cold email + day 3 + day 7 follow-ups)*
 
