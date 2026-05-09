@@ -21,81 +21,68 @@ if (!parsed.success) {
 ```ts
 // success
 Response.json({ data: ... }, { status: 200 })
+// or
+Response.json({ success: true })
 
 // error
-Response.json({ error: string, code: string }, { status: 4xx | 5xx })
+Response.json({ error: string }, { status: 4xx | 5xx })
 ```
 
 Never expose: stack traces, internal error messages, file paths, DB error strings. Log them server-side, return a safe message.
-
-Error codes are `SCREAMING_SNAKE_CASE` strings: `VALIDATION_ERROR`, `RATE_LIMITED`, `BLOCKED_DOMAIN`, `AUDIT_NOT_FOUND`, `UNAUTHORIZED`, `INTERNAL_ERROR`.
 
 ## Rate limiting — required on every public route
 
 Every route reachable without admin auth must run the rate limiter before doing any work:
 
 ```ts
-import { rateLimit } from "@/lib/security/rate-limit"
+import { uploadRateLimit } from "@/lib/security/rate-limit"
 
-const limit = await rateLimit(req, { key: "domain", window: "30d", max: 5 })
-if (!limit.success) {
-  return Response.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
+const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+const { success: withinLimit } = await uploadRateLimit.limit(ip)
+if (!withinLimit) {
+  return NextResponse.json({ error: "Too many uploads. Please try again later." }, { status: 429 })
 }
 ```
 
-**Limits (from PRD §10):**
-- Per email domain: 5 audits per 30 days
-- Per IP: 10 submissions per day
-- Per audit: 30 upload-complete requests (prevents stuck clients)
-
-Check block list before consuming a rate-limit slot (blocked domains don't count toward the limit, they just get rejected).
+**Limits:**
+- Per email domain: 5 audits per 30 days (in start server action)
+- Per IP: 10 uploads per day (in upload route)
+- Per IP: 30 API requests per minute (available for general routes)
 
 ## Auth — admin routes
 
-Every route under `/api/admin/**` must verify the Supabase session and assert `role = 'admin'` before any DB access:
+Admin routes rely on the middleware cookie check. The middleware in `src/middleware.ts` redirects any unauthenticated request to `/admin/login`. API routes under `/api/admin/**` can additionally verify the cookie:
 
 ```ts
-import { requireAdmin } from "@/lib/admin/auth"
-
-const { user, error } = await requireAdmin(req)
-if (error) return Response.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 })
+const adminSession = request.cookies.get("admin-session")
+if (!adminSession?.value) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+}
 ```
 
-Never trust client-supplied `user_id` or `role` params. Always read from the verified session.
+## Actual API routes (Phase 1)
 
-## Upload token route (`/api/upload-token`)
+### Public routes
+- `POST /api/audit/upload?auditId=...` — receives FormData with 3 CSVs (returns, reimbursements, inventory_ledger), uploads to Supabase Storage, creates `raw_uploads` rows, enqueues `audit.run` Trigger.dev task. Rate limited by IP.
+- `GET /api/audit/status?id=...` — returns audit status for processing page polling.
+- `GET /api/audit/pdf?id=...` — serves signed PDF URL or on-demand React-PDF render.
+- `POST /api/deletion` — writes `deletion_requests` row. Returns 200 regardless (don't reveal whether audit exists).
+- `GET /api/health` — touches each external service once.
 
-- Only issues a JWT if `audit_id` exists in `audits` table with status `pending_upload`
-- JWT scoped to path `raw/{audit_id}/{report_type}/{uuid}.csv` — no wildcards
-- JWT expires in 30 minutes
-- Log issuance in `audit_events`
+### Admin routes
+- `POST /api/admin/login` — Supabase Auth + admin role check + httpOnly cookie.
+- `POST /api/admin/logout` — clears cookie.
+- `POST /api/admin/approve` — flips audit to `completed`, triggers `notify.email`.
+- `POST /api/admin/reject` — sets audit to `failed`, persists reason note.
+- `POST /api/admin/delete-audit` — cascade wipes storage, findings, cost_events, zeros PII, marks deletion processed.
 
-## Upload complete route (`/api/upload-complete`)
-
-- Validates `audit_id`, `report_type`, `storage_key`, `client_row_count`
-- Verifies the Storage object exists at the claimed path (don't trust the client)
-- Inserts `raw_uploads` row
-- Checks if all required reports for this audit are now uploaded; if yes, marks audit ready-to-run
-- Enforces per-audit upload limit (max 30 calls)
-
-## Audit run route (`/api/audit/run`)
-
-- Validates all required reports are uploaded and validated
-- Checks domain is not blocked
-- Enqueues `audit.run` Trigger.dev task with idempotency key `audit:{audit_id}`
-- Updates audit status to `processing`
-- Returns `{ runId }` for the processing page to subscribe to
-
-## Deletion route (`/api/deletion`)
-
-- Accepts just an email address
-- Inserts a `deletion_requests` row (manual processing in Phase 1)
-- Returns 200 regardless (don't reveal whether email exists)
+### Server actions
+- `src/app/(public)/start/actions.ts` — `startAudit()` validates email + brand name, checks block list + disposable domains + domain rate limit, creates audit row, redirects to upload page.
 
 ## What NOT to do
 
 - Never `console.log` request bodies or CSV-derived data
 - Never return raw Supabase errors
 - Never expose `service_role` key usage in responses
-- Never accept `audit_id` from a public-facing form without verifying it belongs to the right email
-- No long-polling or WebSocket in API routes — use Trigger.dev realtime for progress
+- Never accept `audit_id` from a public-facing form without verifying it belongs to the right status
+- No long-polling or WebSocket in API routes — use polling via `/api/audit/status` for progress

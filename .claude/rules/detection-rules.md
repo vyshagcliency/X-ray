@@ -19,43 +19,48 @@ import type { Rule } from "./index"
 export const returnsGap: Rule = {
   id: "returns_gap",
   version: "1.0.0",
-  requiredReports: ["returns", "reimbursements", "adjustments"],
-  optionalReports: [],
+  requiredReports: ["returns", "reimbursements", "inventory_ledger"],
+  category: "returns",
 
-  // Pure SQL. $returns_url, $reimbursements_url, etc. are parameterised signed URLs.
-  // DuckDB opens Parquet via read_parquet('<url>') — no files on disk, no temp tables.
+  // Pure SQL. $returns_url, $reimbursements_url, $inventory_ledger_url are substituted with file paths or signed URLs.
+  // DuckDB opens CSVs via read_csv(<url>, auto_detect=true) — no Parquet conversion in Phase 1.
   sql: /* sql */ `
     WITH damaged_returns AS (
-      SELECT order_id, sku, fnsku, return_date, refund_cents, quantity, row_ref
-      FROM read_parquet($returns_url)
-      WHERE disposition IN ('CUSTOMER_DAMAGED','DEFECTIVE','CARRIER_DAMAGED','DAMAGED')
+      SELECT
+        "order-id" AS order_id,
+        sku, fnsku,
+        "return-date" AS return_date,
+        quantity,
+        "detailed-disposition" AS disposition,
+        row_number() OVER () AS row_ref
+      FROM read_csv($returns_url, auto_detect=true)
+      WHERE "detailed-disposition" IN ('CUSTOMER_DAMAGED','DEFECTIVE','CARRIER_DAMAGED','DAMAGED')
     ),
     ...
-    SELECT
-      d.order_id,
-      d.sku,
-      d.refund_cents           AS amount_cents,
-      d.return_date + INTERVAL 60 DAY AS window_closes_on,
-      d.row_ref                AS row_ref
-    FROM damaged_returns d
-    LEFT JOIN ...
-    WHERE ...
   `,
 
   // Confidence is the only post-SQL logic allowed — it maps a row's attributes to an enum.
-  confidenceFn: (row) =>
-    ["DEFECTIVE", "CUSTOMER_DAMAGED"].includes(row.disposition) ? "high" : "medium",
+  confidence: (row) =>
+    row.disposition === "DEFECTIVE" ? "high" : "medium",
 }
 ```
 
 ## Mandatory fields in every SQL result set
 
 Every rule's SELECT must return:
-- `amount_cents` — `bigint`, the recoverable amount, **computed entirely in SQL**
-- `window_closes_on` — `date`, the last day to file, **computed in SQL** from source event date + policy window
-- `row_ref` — JSON string `{ upload_id: string, row_number: number }` — the exact source row for the evidence trail
+- `window_closes_on` — date, the last day to file, **computed in SQL** from source event date + policy window
+- `row_ref` — text, derived from `row_number() OVER ()` — the source row position for the evidence trail
 
-If a rule's finding involves multiple source rows (e.g., a return row + a reimbursement row that was lower), return both in `row_ref` as an array.
+Amount estimation is done downstream by `runRule`'s `estimateAmountCents` callback (defaults to $15/finding). Phase 2 will add price lookup from All Listings Report.
+
+## Report types
+
+Three report types in Phase 1:
+- `returns` — FBA Customer Returns Report (headers: `return-date`, `order-id`, `sku`, `asin`, `fnsku`, `product-name`, `quantity`, `fulfillment-center-id`, `detailed-disposition`, `reason`, `license-plate-number`, `customer-comments`; optional: `status`)
+- `reimbursements` — FBA Reimbursements Report (headers: `approval-date`, `reimbursement-id`, `case-id`, `amazon-order-id`, `reason`, `sku`, `fnsku`, `asin`, `condition`, `currency-unit`, `amount-per-unit`, `amount-total`, `quantity-reimbursed-cash`, `quantity-reimbursed-inventory`, `quantity-reimbursed-total`)
+- `inventory_ledger` — Inventory Ledger Detailed View (headers: `Date`, `FNSKU`, `ASIN`, `MSKU`, `Title`, `Event Type`, `Reference ID`, `Quantity`, `Fulfillment Center`, `Disposition`, `Reason`; optional: `Country`)
+
+**Note:** Amazon deprecated "FBA Inventory Adjustments" in Jan 2023. The internal key was renamed from `adjustments` to `inventory_ledger` (2026-05-08).
 
 ## Testing — fixture first, always
 
@@ -68,30 +73,21 @@ import { runRuleAgainstFixtures } from "../helpers"
 import { returnsGap } from "@/lib/rules/returns-gap"
 
 describe("returns_gap", () => {
-  it("flags a damaged return with no corresponding reimbursement", async () => {
+  it("flags damaged returns with no corresponding reimbursement", async () => {
     const findings = await runRuleAgainstFixtures(returnsGap, {
-      returns: "fixtures/returns-with-gap.parquet",
-      reimbursements: "fixtures/reimbursements-empty.parquet",
-      adjustments: "fixtures/adjustments-empty.parquet",
+      returns: "returns-with-gap.csv",
+      reimbursements: "reimbursements-empty.csv",
+      inventory_ledger: "inventory-ledger-empty.csv",
     })
-    expect(findings).toHaveLength(1)
-    expect(findings[0].amount_cents).toBe(4999n)
-    expect(findings[0].confidence).toBe("high")
-    expect(findings[0].window_closes_on).toBeDefined()
-  })
-
-  it("does NOT flag a return that was already reimbursed", async () => {
-    const findings = await runRuleAgainstFixtures(returnsGap, {
-      returns: "fixtures/returns-with-gap.parquet",
-      reimbursements: "fixtures/reimbursements-matched.parquet",
-      adjustments: "fixtures/adjustments-empty.parquet",
-    })
-    expect(findings).toHaveLength(0)
+    expect(findings.length).toBe(3)
+    expect(findings.every(f => f.rule_id === "returns_gap")).toBe(true)
   })
 })
 ```
 
-Fixture Parquet files live in `tests/fixtures/`. Helper `runRuleAgainstFixtures` creates an in-process DuckDB, runs the rule SQL with the fixture files, and returns typed findings. No mocking, no faking — real DuckDB against real Parquet.
+Fixture CSV files live in `tests/fixtures/`. Helper `runRuleAgainstFixtures` creates an in-process DuckDB, runs the rule SQL with the fixture files, and returns typed findings. No mocking, no faking — real DuckDB against real CSV.
+
+Smoke test datasets for 3 synthetic brands live in `tests/smoke/{brand-slug}/`. Generator script: `scripts/generate-smoke-data.mjs` (deterministic, seeded PRNG).
 
 ## Rule registry
 
@@ -101,38 +97,33 @@ export interface Rule {
   id: string
   version: string                        // semver — bump on any logic change
   requiredReports: ReportType[]
-  optionalReports?: ReportType[]
+  category: string
   sql: string
-  confidenceFn: (row: RuleResultRow) => "high" | "medium" | "low"
+  confidence: (row: Record<string, unknown>) => "high" | "medium" | "low"
 }
 
-export const rules: Rule[] = [
-  returnsGap,        // Phase 1
-  inventoryLost,     // Phase 1
-  refundMismatch,    // Phase 1
-  // ...
+export const RULES: Rule[] = [
+  returnsGap,              // Phase 1 — PRD §5.1
+  inventoryLost,           // Phase 1 — PRD §5.2
+  refundReimbursementMismatch, // Phase 1 — PRD §5.3
 ]
 ```
 
-## Parquet → DuckDB patterns
+## CSV → DuckDB patterns
 
-DuckDB reads Parquet directly from Supabase Storage signed URLs. No download, no temp files:
+DuckDB reads CSVs directly from Supabase Storage signed URLs (Phase 1) or local file paths (tests):
 
 ```ts
 // src/lib/duckdb/run-rule.ts
-const db = await DuckDBInstance.create(":memory:")
-const conn = await db.connect()
-await conn.run(`
-  INSTALL httpfs; LOAD httpfs;
-  SET s3_region='...'; -- if needed
-`)
-const stmt = await conn.prepare(rule.sql)
-const result = await stmt.run({
-  returns_url: signedUrls.returns,
-  reimbursements_url: signedUrls.reimbursements,
-  // ...
-})
+const { connection, instance } = await createDuckDB()
+let sql = rule.sql
+for (const [type, url] of Object.entries(csvUrls)) {
+  sql = sql.replaceAll(`$${type}_url`, `'${url}'`)
+}
+const result = await connection.runAndReadAll(sql)
 ```
+
+Phase 2 may add CSV → Parquet conversion via `COPY ... TO 'file.parquet'` for faster re-reads on large datasets.
 
 ## Versioning
 
@@ -140,14 +131,14 @@ const result = await stmt.run({
 - Bump patch (`1.0.0` → `1.0.1`) for bug fixes (finding an error in the join condition).
 - Bump minor (`1.0.0` → `1.1.0`) for expanded detection (new disposition codes added).
 - Bump major (`1.0.0` → `2.0.0`) for logic changes that would produce different findings on the same data.
-- All Trigger.dev `detect.rule` tasks write `rule_version` from the registry — not hardcoded in the task.
-- Old reports remain reproducible via the stored `rule_versions` jsonb on each `audits` row.
+- `audit-run.ts` writes `rule_versions` from the registry to each `audits` row.
+- Old reports remain reproducible via the stored `rule_versions` jsonb.
 
 ## What NOT to do
 
-- No arithmetic in TypeScript on rule outputs. Amount is `amount_cents` from SQL.
+- No arithmetic in TypeScript on rule outputs. Amount estimation is the one exception (via `estimateAmountCents` callback), and it does NOT modify SQL output.
 - No filtering result rows by amount ("only flag if > $100"). Put that in the SQL `WHERE` clause.
 - No joining SQL results with other DuckDB queries in TypeScript. Do it in a single SQL statement.
-- No LLM calls inside a detection rule. LLM is downstream (`narrate.llm`, `draft.disputes`).
+- No LLM calls inside a detection rule. LLM is downstream (`narrate.ts`, `draft-dispute.ts`).
 - No side effects inside a rule SQL (no writes, no temp tables persisted).
 - Don't add a rule without a fixture test. No exceptions.

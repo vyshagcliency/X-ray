@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Companion to:** prd.md, userstories.md
 **Status:** Draft for build
-**Last updated:** 2026-04-21
+**Last updated:** 2026-05-09
 
 ---
 
@@ -109,7 +109,7 @@ A companion file `decisions.md` captures the one-line "locked" version of each c
 | Charts | **shadcn/ui chart (Recharts)** | Urgency timeline + category donut in the report. | D3 direct — overkill for 4 charts. |
 | Markdown → HTML | **react-markdown + remark-gfm** | LLM prose → rendered safely. | — |
 | Sanitization | **isomorphic-dompurify** | Any LLM output rendered as HTML passes through this. | — |
-| Security headers | **Nosecone** | Same as ChannelScope. CSP + HSTS + Permissions-Policy. | — |
+| Security headers | **Inline CSP in middleware** | Same as ChannelScope. CSP + HSTS + Permissions-Policy. | — |
 | Concurrency | **p-limit** | Cap parallel detection workers + LLM calls per audit. | — |
 | Testing | **Vitest** | Every detection rule has a unit test with synthetic input → expected findings (US-4.5). | — |
 | Error tracking | **Sentry** | Native Next.js + Trigger.dev integration (Trigger publishes an official guide). Source-mapped stack traces across browser + server + worker. | Axiom (log-mgmt focused, weak on errors), Rollbar (dated). |
@@ -130,7 +130,7 @@ A companion file `decisions.md` captures the one-line "locked" version of each c
 - Vercel AI SDK + Claude + prompt caching + Helicone
 - Promptfoo for LLM regression tests
 - Upstash Redis for rate limiting
-- Nosecone headers + isomorphic-dompurify
+- Inline CSP in middleware headers + isomorphic-dompurify
 - react-markdown + remark-gfm for LLM prose rendering
 - Vitest test harness
 - ESLint v9 flat + Prettier
@@ -193,7 +193,7 @@ All tables use `uuid` PKs, `created_at timestamptz default now()`, `updated_at` 
 |---|---|---|
 | `id` | `uuid` pk | |
 | `audit_id` | `uuid` fk | |
-| `report_type` | `report_type enum` | `returns`, `adjustments`, `reimbursements`, `listings`, `settlement`, `fee_preview`, `removal_orders`, `manage_inventory`. |
+| `report_type` | `report_type enum` | `returns`, `inventory_ledger`, `reimbursements`, `listings`, `settlement`, `fee_preview`, `removal_orders`, `manage_inventory`. |
 | `storage_key` | `text` | Path in Supabase Storage. |
 | `size_bytes` | `bigint` | |
 | `row_count` | `int` | Populated post-parse. |
@@ -206,12 +206,13 @@ All tables use `uuid` PKs, `created_at timestamptz default now()`, `updated_at` 
 
 ### 4.3 Working set — Parquet files in Storage, NOT Postgres tables
 
-This is the DuckDB-driven shift. The "working set" for detection rules lives in **Parquet files in Supabase Storage**, one per report type per audit, at `parquet/{audit_id}/{report_type}.parquet`. Columns are the canonical schema per report type (same fields as the old `normalized_*` list):
+This is the DuckDB-driven shift. The "working set" for detection rules lives in **CSV files in Supabase Storage** (Phase 1) or Parquet files (Phase 2+), one per report type per audit, at `raw/{audit_id}/{report_type}/filename.csv`. DuckDB reads them directly via `read_csv(auto_detect=true)` using signed URLs.
 
-- `returns.parquet` — order_id, sku, fnsku, asin, return_date, disposition, refund_cents, quantity, row_ref
-- `adjustments.parquet` — adjustment_id, fnsku, sku, date, reason_code, quantity, row_ref
-- `reimbursements.parquet` — reimbursement_id, order_id, sku, fnsku, amount_cents, reason, posted_date, row_ref
-- `listings.parquet` — asin, sku, price_cents, fulfillment_channel, category_hint, dimensions_jsonb
+Phase 1 report schemas (CSV headers match Amazon Seller Central exports):
+- `returns` — return-date, order-id, sku, asin, fnsku, product-name, quantity, fulfillment-center-id, detailed-disposition, reason, status (optional), license-plate-number, customer-comments
+- `inventory_ledger` — Date, FNSKU, ASIN, MSKU, Title, Event Type, Reference ID, Quantity, Fulfillment Center, Disposition, Reason, Country (optional)
+- `reimbursements` — approval-date, reimbursement-id, case-id, amazon-order-id, reason, sku, fnsku, asin, condition, currency-unit, amount-per-unit, amount-total, quantity-reimbursed-cash, quantity-reimbursed-inventory, quantity-reimbursed-total
+- `listings` (Phase 2) — asin, sku, price, fulfillment-channel, item-name
 - `settlement.parquet` — date, sku, asin, amount_type, amount_description, amount_cents, quantity (optional)
 - `fee_preview.parquet` — asin, measured_length_in, measured_width_in, measured_height_in, measured_weight_lb, size_tier, fee_cents (optional)
 - `removals.parquet` — order_id, created_date, shipped_date, delivered_date, tracking, units, unit_value_cents (optional)
@@ -219,7 +220,7 @@ This is the DuckDB-driven shift. The "working set" for detection rules lives in 
 
 Each Parquet row carries `row_ref` — a stable reference to `{ upload_id, row_number }` in the original CSV — so any finding traces to a source row for audit trail (PRD §7.3).
 
-Detection rules open these files via signed URL + `duckdb.sql("SELECT ... FROM read_parquet('<signed_url>')")`. No row ever lands in Postgres; only findings do.
+Detection rules open these files via signed URL + `duckdb.sql("SELECT ... FROM read_csv('<signed_url>', auto_detect=true)")`. No row ever lands in Postgres; only findings do.
 
 **Retention:** Parquet files survive the 30-day raw-CSV purge. They are 10–20× smaller than the CSVs they derived from (a 150MB CSV becomes ~10MB Parquet), so indefinite retention is ~free and enables re-running old audits against new rule versions.
 
@@ -299,7 +300,7 @@ audit.run (parent)
   │
   ├─► detect.rule           batchTriggerAndWait × M rules     (M = 3 in Phase 1, 10 in Phase 3)
   │     - each rule is a pure SQL query against the Parquet files
-  │     - DuckDB opens the files via signed URL (read_parquet('<signed_url>'))
+  │     - DuckDB opens the files via signed URL (read_csv('<signed_url>', auto_detect=true))
   │     - rules run in parallel; p-limit(4) per-worker concurrency
   │     - each rule INSERTs its findings into Postgres
   │     - each finding carries rule_version + row_ref array
@@ -357,53 +358,53 @@ Every Trigger.dev child is called with an `idempotencyKey` = `{audit_id}:{stage}
 PRD §5.1 — customer return reimbursement gaps. This is the entire rule:
 
 ```ts
-// src/lib/rules/returns-gap.ts
+// src/lib/rules/returns-gap.ts (simplified — see actual file for full SQL)
 export const returnsGap: Rule = {
   id: "returns_gap",
   version: "1.0.0",
-  requiredReports: ["returns", "reimbursements", "adjustments"],
+  requiredReports: ["returns", "reimbursements", "inventory_ledger"],
+  category: "returns",
 
   sql: /* sql */ `
     WITH damaged_returns AS (
-      SELECT order_id, sku, fnsku, return_date, refund_cents, quantity, row_ref
+      SELECT
+        "order-id" AS order_id, sku, fnsku,
+        "return-date" AS return_date, quantity,
+        "detailed-disposition" AS disposition,
+        row_number() OVER () AS row_ref
       FROM read_csv($returns_url, auto_detect=true)
-      WHERE disposition IN ('CUSTOMER_DAMAGED', 'DEFECTIVE', 'CARRIER_DAMAGED', 'DAMAGED')
+      WHERE "detailed-disposition" IN ('CUSTOMER_DAMAGED','DEFECTIVE','CARRIER_DAMAGED','DAMAGED')
     ),
     matched_reimbursements AS (
-      SELECT DISTINCT r.order_id, r.sku
+      SELECT DISTINCT r."amazon-order-id" AS order_id, r.sku
       FROM read_csv($reimbursements_url, auto_detect=true) r
       JOIN damaged_returns d
-        ON r.order_id = d.order_id
-       AND r.sku = d.sku
-       AND r.posted_date BETWEEN d.return_date AND d.return_date + INTERVAL 60 DAY
+        ON r."amazon-order-id" = d.order_id AND r.sku = d.sku
+        AND r."approval-date"::DATE BETWEEN d.return_date::DATE AND d.return_date::DATE + INTERVAL 90 DAY
     ),
     returned_to_sellable AS (
-      SELECT DISTINCT a.sku
-      FROM read_csv($adjustments_url, auto_detect=true) a
-      JOIN damaged_returns d ON a.sku = d.sku
-      WHERE a.reason_code IN ('R', 'G')  -- found/sellable
-        AND a.date BETWEEN d.return_date AND d.return_date + INTERVAL 30 DAY
+      SELECT DISTINCT a."MSKU" AS sku
+      FROM read_csv($inventory_ledger_url, auto_detect=true) a
+      JOIN damaged_returns d ON a."MSKU" = d.sku
+      WHERE a."Event Type" = 'Adjustments' AND a."Reason" IN ('G', 'M', 'R')
+        AND a."Date"::DATE BETWEEN d.return_date::DATE AND d.return_date::DATE + INTERVAL 30 DAY
     )
-    SELECT
-      d.order_id,
-      d.sku,
-      d.refund_cents                           AS amount_cents,
-      d.return_date + INTERVAL 60 DAY          AS window_closes_on,
-      d.row_ref
+    SELECT d.order_id, d.sku, d.disposition, d.return_date,
+      d.return_date::DATE + INTERVAL 90 DAY AS window_closes_on,
+      d.row_ref::TEXT AS row_ref
     FROM damaged_returns d
     LEFT JOIN matched_reimbursements mr ON mr.order_id = d.order_id AND mr.sku = d.sku
-    LEFT JOIN returned_to_sellable rs  ON rs.sku = d.sku
-    WHERE mr.order_id IS NULL
-      AND rs.sku IS NULL
+    LEFT JOIN returned_to_sellable rs ON rs.sku = d.sku
+    WHERE mr.order_id IS NULL AND rs.sku IS NULL
   `,
 
   confidence: (row) => row.disposition === "DEFECTIVE" ? "high" : "medium",
 }
 ```
 
-That is the whole rule. The engine executes the SQL against the audit's CSV files (or Parquet, when conversion is added) with DuckDB, maps each returned row to a `findings` insert, and records `rule_version = "1.0.0"` on each row. Vitest tests feed in fixture CSV files and assert the returned rows. **No arithmetic in JavaScript anywhere** — the calculation lives in SQL, which is the most reviewable form of financial logic.
+That is the whole rule. The engine executes the SQL against the audit's CSV files with DuckDB via `read_csv(auto_detect=true)`, maps each returned row to a `findings` insert via the `estimateAmountCents` callback ($15 default), and records `rule_version = "1.0.0"` on each row. Vitest tests feed in fixture CSV files and assert the returned rows. **No arithmetic in JavaScript anywhere** — the calculation lives in SQL, which is the most reviewable form of financial logic.
 
-**Note (2026-04-21):** The current MVP uses `read_csv(auto_detect=true)` instead of `read_parquet()`. DuckDB reads CSVs directly via signed URLs. When Parquet conversion is added (see §4.3), these will switch to `read_parquet()` for better performance on re-reads.
+Phase 2 will add CSV → Parquet conversion for faster re-reads on larger datasets.
 
 Compared to the Postgres-based path this replaces: ~10× less code per rule, trivially reviewable by a finance person, and the rule runs in hundreds of milliseconds even against the full 18-month dataset.
 
@@ -566,7 +567,7 @@ Each promise in PRD §9.2 is enforced by a specific mechanism:
 | Promise | Mechanism |
 |---|---|
 | Encryption at rest | Supabase default (AES-256) |
-| Encryption in transit | TLS 1.3 enforced via Nosecone HSTS + Vercel defaults |
+| Encryption in transit | TLS 1.3 enforced via Inline CSP in middleware HSTS + Vercel defaults |
 | 30-day deletion of **raw CSV files** | Daily Trigger.dev scheduled task `purge.raw-uploads` — deletes Storage objects under `raw/{audit_id}/...` and sets `purged_at` |
 | Parquet retention (disclosed) | Columnar derivative retained so the report remains accessible and re-runnable; covered in the on-page privacy language in §4.3 |
 | Never shared with third parties | Zero webhooks, zero analytics tooling that ingests finding data, no CRM integrations (per PRD non-goals) |
@@ -595,7 +596,7 @@ All via Upstash `@upstash/ratelimit`:
 
 ### 10.5 CSP
 
-Nosecone config:
+Inline CSP in middleware config:
 - `default-src 'self'`
 - `connect-src 'self' https://*.supabase.co https://api.helicone.ai https://api.resend.com wss://*.trigger.dev`
 - `img-src 'self' data: https://*.supabase.co`
@@ -696,7 +697,8 @@ src/
       circuit-breaker.ts         enforce MAX_COST_PER_AUDIT_CENTS
     security/
       dompurify.ts               isomorphic config
-      nosecone.ts                CSP config
+      rate-limit.ts              Upstash rate limiter wrappers
+      dompurify.ts               Isomorphic DOMPurify config
       rate-limit.ts              Upstash wrappers
     admin/
       auth.ts                    middleware helpers
@@ -732,7 +734,7 @@ Source: PRD §11 Phase 1, user stories US-1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 3.3, 3.5
 
 Engineering order (one engineer + Vyshag):
 
-1. **Foundation** — Next.js scaffold, Supabase project, Trigger.dev project, env plumbing, Nosecone, rate-limit, block-list table.
+1. **Foundation** — Next.js scaffold, Supabase project, Trigger.dev project, env plumbing, Inline CSP in middleware, rate-limit, block-list table.
 2. **Database migrations** — every table from §4. RLS policies. Seed admin user.
 3. **Landing + start form** — US-1.1, 1.2, 2.1, 2.2.
 4. **Upload page (3 required reports)** — US-3.1, 3.2, 3.3, 3.5 with Uppy + Supabase TUS.
