@@ -23,7 +23,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Baslix X-Ray <reports@trybaslix.com>",
+      from: "Baslix X-Ray <audit@baslix.com>",
       to: [to],
       subject,
       html,
