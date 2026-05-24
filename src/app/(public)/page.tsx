@@ -71,8 +71,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Nav */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+      <nav className="bg-[#0f172a]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4 lg:px-12">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
@@ -81,10 +81,16 @@ export default function LandingPage() {
               height={32}
               className="size-8"
             />
-            <span className="text-xl font-bold tracking-tight">Baslix</span>
+            <span className="text-xl font-bold tracking-tight text-white">
+              baslix
+            </span>
           </Link>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/start">Start Free Audit</Link>
+          <Button
+            size="sm"
+            asChild
+            className="rounded-full border border-white/20 bg-transparent px-5 text-white hover:bg-white/10"
+          >
+            <Link href="/start">Get Started</Link>
           </Button>
         </div>
       </nav>
@@ -342,8 +348,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-8">
+      <footer className="bg-[#0f172a] text-white/70">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-8 lg:px-12">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2">
               <Image
@@ -353,18 +359,18 @@ export default function LandingPage() {
                 height={20}
                 className="size-5"
               />
-              <span className="text-sm font-semibold">Baslix</span>
+              <span className="text-sm font-semibold text-white">baslix</span>
             </Link>
-            <div className="flex gap-6 text-sm text-muted-foreground">
-              <Link href="/privacy" className="hover:underline">
+            <div className="flex gap-6 text-sm">
+              <Link href="/privacy" className="hover:text-white hover:underline">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="hover:underline">
+              <Link href="/terms" className="hover:text-white hover:underline">
                 Terms of Service
               </Link>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm">
             &copy; {new Date().getFullYear()} Baslix
           </p>
         </div>
