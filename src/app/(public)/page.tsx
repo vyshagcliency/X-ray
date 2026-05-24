@@ -72,7 +72,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
       {/* Nav */}
       <nav className="bg-[#0f172a]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4 lg:px-12">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
@@ -349,7 +349,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-[#0f172a] text-white/70">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-8 lg:px-12">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-8">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2">
               <Image
