@@ -154,7 +154,7 @@ export default function LandingPage() {
               overcharge, and expiring dispute window &mdash; with evidence
               to file claims.
             </p>
-            <div className="mt-10">
+            <div className="mt-10 flex items-center gap-5">
               <Link
                 href="/start"
                 className="inline-flex items-center justify-center rounded-lg bg-blue-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-400 hover:shadow-blue-400/30"
@@ -162,21 +162,18 @@ export default function LandingPage() {
                 Start your free audit
                 <ArrowRight className="ml-2 size-5" />
               </Link>
-              {/* No signup text + arrow pointing up to CTA */}
-              <div className="relative mt-5 w-fit pl-6">
-                <span className="text-sm italic text-slate-500">
-                  No signup required
-                </span>
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none" className="absolute -top-8 right-[-34px] text-slate-500">
+              {/* Arrow pointing left to CTA + no signup text */}
+              <div className="flex items-center gap-1">
+                <svg width="28" height="20" viewBox="0 0 28 20" fill="none" className="text-slate-500">
                   <path
-                    d="M4 28Q10 20 16 14Q21 9 25 5"
+                    d="M26 14Q18 12 12 10Q8 8 5 5"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     fill="none"
                   />
                   <path
-                    d="M21 3L26 5L23 10"
+                    d="M8 2L4 5L8 8"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
@@ -184,6 +181,9 @@ export default function LandingPage() {
                     fill="none"
                   />
                 </svg>
+                <span className="text-sm italic text-slate-500">
+                  No signup required
+                </span>
               </div>
             </div>
           </div>
