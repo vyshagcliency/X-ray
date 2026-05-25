@@ -141,19 +141,20 @@ export default function LandingPage() {
           {/* Left — 3/5 */}
           <div className="flex flex-col items-start justify-center lg:col-span-3">
             <span className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-blue-400">
-              Free forensic audit for FBA sellers
+              100% free &mdash; no strings attached
             </span>
             <h1 className="mt-6 text-5xl font-semibold leading-[1.08] tracking-tight text-white lg:text-6xl">
-              Find every dollar
+              Amazon owes you money.
               <br />
-              <span className="text-[#a5b4fc]">Amazon owes you.</span>
+              <span className="text-[#a5b4fc]">Let&apos;s prove it.</span>
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-slate-400">
-              Upload 4 reports from Seller Central. In minutes, get a forensic
-              audit of 18 months of FBA activity: missed reimbursements,
-              overcharges, and closing dispute windows.
+              Upload 4 Seller Central reports. In under 8 minutes, get a
+              forensic audit showing every missed reimbursement, fee
+              overcharge, and expiring dispute window &mdash; with evidence
+              to file claims.
             </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="mt-10">
               <Link
                 href="/start"
                 className="inline-flex items-center justify-center rounded-lg bg-blue-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-400 hover:shadow-blue-400/30"
@@ -161,9 +162,35 @@ export default function LandingPage() {
                 Start your free audit
                 <ArrowRight className="ml-2 size-5" />
               </Link>
-              <span className="text-sm text-slate-500">
-                No signup required
-              </span>
+              {/* Hand-drawn arrow + no signup */}
+              <div className="mt-3 flex items-center gap-1 pl-2">
+                <svg width="48" height="32" viewBox="0 0 48 32" fill="none" className="text-slate-500">
+                  <path
+                    d="M4 28C8 24 14 14 22 10C28 7 34 8 38 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeDasharray="0"
+                    style={{ filter: 'url(#sketchy)' }}
+                  />
+                  <path
+                    d="M34 4L39 6L35 10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <defs>
+                    <filter id="sketchy">
+                      <feTurbulence baseFrequency="0.05" numOctaves="2" seed="2" />
+                      <feDisplacementMap in="SourceGraphic" scale="1.5" />
+                    </filter>
+                  </defs>
+                </svg>
+                <span className="text-sm italic text-slate-500">
+                  No signup required
+                </span>
+              </div>
             </div>
           </div>
 
