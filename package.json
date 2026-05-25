@@ -39,6 +39,9 @@
     "tailwind-merge": "^3.5.0",
     "zod": "^3.25.0"
   },
+  "engines": {
+    "node": ">=20 <24"
+  },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
