@@ -175,7 +175,7 @@ export default function LandingPage() {
                   />
                   {/* Arrowhead */}
                   <path
-                    d="M10 0L5 3.5L10 7"
+                    d="M11 0L5 3L9 7.5"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
