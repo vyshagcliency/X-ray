@@ -138,7 +138,7 @@ export default function LandingPage() {
           <div className="size-[600px] rounded-full bg-blue-500/[0.07] blur-[120px]" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[70vh] max-w-7xl gap-12 px-6 py-20 lg:grid-cols-5 lg:gap-16 lg:py-28">
+        <div className="relative mx-auto grid min-h-[70vh] max-w-[90rem] gap-12 px-6 pb-20 pt-12 lg:grid-cols-5 lg:gap-16 lg:pb-28 lg:pt-16">
           {/* Left — 3/5 */}
           <div className="flex flex-col items-start justify-center lg:col-span-3">
             <span className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-blue-400">
