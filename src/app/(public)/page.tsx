@@ -445,88 +445,80 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Detection cards — baslix Services-style container */}
-          <div className="mx-auto mt-12 max-w-5xl overflow-hidden rounded-2xl shadow-xl shadow-blue-500/10">
-            {/* Card background */}
-            <div className="relative border border-white/[0.08] rounded-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f] via-[#0f2744] to-[#0a1929]" />
-              {/* Noise texture */}
+          {/* Detection cards — individual cards */}
+          <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-3">
+            {auditCategories.map((c, i) => (
               <div
-                className="absolute inset-0 opacity-[0.12]"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-                }}
-              />
-              {/* Accent glows */}
-              <div className="absolute -right-24 -top-24 size-72 rounded-full bg-blue-500/15 blur-3xl" />
-              <div className="absolute -bottom-20 -left-20 size-56 rounded-full bg-cyan-500/10 blur-3xl" />
-              {/* Top accent line */}
-              <div className="absolute inset-x-0 top-0 z-10 h-[2px] bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
+                key={c.label}
+                className="reveal-item group relative overflow-hidden rounded-2xl border border-white/[0.08] opacity-0 translate-y-4 transition-all duration-700 hover:border-blue-500/30"
+                style={{ transitionDelay: `${i * 150}ms` }}
+              >
+                {/* Card bg */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f] via-[#0f2744] to-[#0a1929]" />
+                {/* Noise texture */}
+                <div
+                  className="absolute inset-0 opacity-[0.12]"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                  }}
+                />
+                {/* Accent glow on hover */}
+                <div className="absolute -right-16 -top-16 size-48 rounded-full bg-blue-500/0 blur-3xl transition-all duration-500 group-hover:bg-blue-500/10" />
+                {/* Top accent line */}
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent transition-opacity duration-500 group-hover:via-blue-400/40" />
 
-              <div className="relative grid gap-px sm:grid-cols-3">
-                {auditCategories.map((c, i) => (
-                  <div
-                    key={c.label}
-                    className="reveal-item flex flex-col p-6 opacity-0 translate-y-4 transition-all duration-700 lg:p-8"
-                    style={{ transitionDelay: `${i * 150}ms` }}
-                  >
-                    <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/20">
-                      <c.icon className="size-6 text-blue-400" strokeWidth={1.5} />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold text-white">
-                      {c.label}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                      {c.detail}
-                    </p>
-                    <p className="mt-3 text-xs font-medium text-blue-400">
+                <div className="relative flex flex-col p-6 lg:p-7">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/20">
+                    <c.icon className="size-5 text-blue-400" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-white">
+                    {c.label}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">
+                    {c.detail}
+                  </p>
+                  {/* Stat bar */}
+                  <div className="mt-5 border-t border-white/[0.06] pt-4">
+                    <p className="text-xs font-medium text-blue-400">
                       {c.stat}
                     </p>
                   </div>
-                ))}
+                </div>
               </div>
+            ))}
+          </div>
 
-              {/* Divider */}
-              <div className="relative mx-6 lg:mx-8">
-                <div className="h-px bg-white/[0.08]" />
-              </div>
-
-              {/* Trust signals inside the same card */}
-              <div className="relative grid gap-px sm:grid-cols-3">
-                {[
-                  {
-                    icon: Shield,
-                    title: "Your data stays private",
-                    text: "Raw files deleted after 30 days. Never shared. Never used for training.",
-                  },
-                  {
-                    icon: Clock,
-                    title: "Results in minutes",
-                    text: "Most audits complete in 3\u20138 minutes. We\u2019ll email you when it\u2019s ready.",
-                  },
-                  {
-                    icon: DollarSign,
-                    title: "Real numbers, not estimates",
-                    text: "Every dollar figure traces to a specific transaction in your data.",
-                  },
-                ].map((signal, i) => (
-                  <div
-                    key={signal.title}
-                    className="reveal-item flex items-start gap-3.5 p-6 opacity-0 translate-y-4 transition-all duration-700 lg:p-8"
-                    style={{ transitionDelay: `${(i + 3) * 150}ms` }}
-                  >
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
-                      <signal.icon className="size-5 text-slate-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-white">{signal.title}</h3>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                        {signal.text}
-                      </p>
-                    </div>
+          {/* Trust signals — compact strip below */}
+          <div className="mx-auto mt-10 max-w-5xl rounded-xl border border-white/[0.06] bg-white/[0.03]">
+            <div className="grid divide-y divide-white/[0.06] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              {[
+                {
+                  icon: Shield,
+                  title: "Your data stays private",
+                  text: "Raw files deleted after 30 days. Never shared.",
+                },
+                {
+                  icon: Clock,
+                  title: "Results in minutes",
+                  text: "Most audits complete in 3\u20138 minutes.",
+                },
+                {
+                  icon: DollarSign,
+                  title: "Real numbers, not estimates",
+                  text: "Every figure traces to your data.",
+                },
+              ].map((signal) => (
+                <div
+                  key={signal.title}
+                  className="flex items-center gap-3 px-5 py-4"
+                >
+                  <signal.icon className="size-4 shrink-0 text-slate-500" />
+                  <div>
+                    <span className="text-xs font-semibold text-slate-300">{signal.title}</span>
+                    <span className="ml-1 text-xs text-slate-500">&mdash; {signal.text}</span>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
