@@ -137,18 +137,18 @@ export default function LandingPage() {
           <div className="size-[600px] rounded-full bg-blue-500/[0.07] blur-[120px]" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[70vh] max-w-[82rem] gap-12 px-6 pb-20 pt-12 lg:grid-cols-5 lg:gap-16 lg:pb-28 lg:pt-16">
+        <div className="relative mx-auto grid min-h-[70vh] max-w-[82rem] gap-12 pb-20 pl-6 pr-2 pt-12 lg:grid-cols-5 lg:gap-16 lg:pb-28 lg:pl-8 lg:pr-0 lg:pt-16">
           {/* Left — 3/5 */}
           <div className="flex flex-col items-start justify-center lg:col-span-3">
             <span className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-blue-400">
               100% free &mdash; no strings attached
             </span>
-            <h1 className="mt-6 text-5xl font-semibold leading-[1.08] tracking-tight text-white lg:text-[4.25rem] xl:text-7xl">
+            <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl">
               <span className="whitespace-nowrap">Amazon owes you money.</span>
               <br />
               <span className="text-[#a5b4fc]">Let&apos;s prove it.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-slate-400">
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
               Upload 4 Seller Central reports. In under 8 minutes, get a
               forensic audit showing every missed reimbursement, fee
               overcharge, and expiring dispute window &mdash; with evidence
