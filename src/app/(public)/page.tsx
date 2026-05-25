@@ -102,7 +102,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
       {/* Nav */}
       <nav className="h-12 border-b border-white/[0.06] bg-[#0f172a] lg:h-14">
-        <div className="mx-auto flex h-full items-center justify-between px-5 lg:px-6">
+        <div className="mx-auto flex h-full items-center justify-between px-8 lg:px-12">
           <a href="https://baslix.com" className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
@@ -224,56 +224,163 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Results metrics — light */}
-      <section className="bg-white py-16 lg:py-24">
-        <div className="mx-auto grid max-w-5xl gap-8 px-6 text-center sm:grid-cols-3">
-          {[
-            { value: "1–3%", label: "Average FBA leakage rate" },
-            { value: "18 mo", label: "Of transaction data scanned" },
-            { value: "< 8 min", label: "From upload to full report" },
-          ].map((metric) => (
-            <div key={metric.label}>
-              <p className="text-6xl font-bold tracking-tight text-[#1E3A8A] lg:text-7xl">
-                {metric.value}
-              </p>
-              <p className="mt-3 text-sm font-medium text-slate-500">
-                {metric.label}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Results metrics + How it works — white bg with design elements */}
+      <section className="relative overflow-hidden bg-white py-16 lg:py-24" ref={howRef}>
+        {/* ── Background design elements (inspired by baslix SolutionSection) ── */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {/* Subtle grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.015]"
+            style={{
+              backgroundImage: `linear-gradient(to right, #1E3A8A 1px, transparent 1px),
+                                linear-gradient(to bottom, #1E3A8A 1px, transparent 1px)`,
+              backgroundSize: '60px 60px',
+              maskImage: 'radial-gradient(ellipse 80% 70% at 50% 50%, black 0%, transparent 100%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 50%, black 0%, transparent 100%)',
+            }}
+          />
 
-      {/* How it works — dark navy */}
-      <section className="bg-[#0f172a] py-16 lg:py-24" ref={howRef}>
-        <div className="mx-auto max-w-5xl px-6">
-          <p className="text-center text-xs font-medium uppercase tracking-wide text-blue-400">
-            How it works
-          </p>
-          <h2 className="mt-3 text-center text-3xl font-semibold tracking-tight text-white lg:text-4xl">
-            Three steps. No friction.
-          </h2>
-          <div className="mt-14 grid gap-10 sm:grid-cols-3">
-            {steps.map((step, i) => (
-              <div
-                key={step.title}
-                className="reveal-item flex flex-col items-center text-center opacity-0 translate-y-4 transition-all duration-700"
-                style={{ transitionDelay: `${i * 150}ms` }}
-              >
-                <span className="text-xs font-medium text-slate-500">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div className="mt-3 flex size-14 items-center justify-center rounded-xl border border-white/10 bg-white/10">
-                  <step.icon className="size-6 text-white" />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold text-white">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                  {step.description}
+          {/* Isometric cube grid (desktop only) */}
+          <div
+            className="absolute inset-0 hidden lg:block"
+            style={{
+              maskImage: 'radial-gradient(ellipse 90% 85% at 50% 50%, black 0%, transparent 100%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 90% 85% at 50% 50%, black 0%, transparent 100%)',
+            }}
+          >
+            <svg className="absolute inset-0 h-full w-full" style={{ minWidth: 1792, minHeight: 1920 }}>
+              {Array.from({ length: 20 }, (_, row) =>
+                Array.from({ length: 16 }, (_, col) => {
+                  const xOff = row % 2 === 0 ? 0 : 56;
+                  const x = col * 112 + xOff - 112;
+                  const y = row * 96 - 128;
+                  return (
+                    <g key={`${row}-${col}`} transform={`translate(${x}, ${y})`}>
+                      <path d="M56 0 L112 32 L112 96 L56 128 L0 96 L0 32 Z" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.10" />
+                      <path d="M56 64 L56 128" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.10" />
+                      <path d="M56 64 L0 32" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.10" />
+                      <path d="M56 64 L112 32" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.10" />
+                    </g>
+                  );
+                })
+              )}
+            </svg>
+            {/* Animated sweep layers */}
+            <div className="cube-sweep absolute inset-0" />
+            <div className="cube-sweep2 absolute inset-0" />
+          </div>
+
+          {/* Central ambient glow */}
+          <div
+            className="absolute left-1/2 top-[35%] h-[700px] w-[1000px] -translate-x-1/2 rounded-full blur-[120px]"
+            style={{ background: 'radial-gradient(ellipse, hsl(215 50% 94%) 0%, hsl(220 30% 97%) 50%, transparent 75%)' }}
+          />
+
+          {/* Flowing curves — left */}
+          <svg className="absolute -left-[10%] top-[15%] h-[800px] w-[600px] opacity-[0.04]" viewBox="0 0 600 800" fill="none">
+            <path d="M500 0C500 0 600 200 450 350C300 500 400 650 300 800" stroke="url(#curveL)" strokeWidth="1.5" />
+            <path d="M550 0C550 0 650 250 500 400C350 550 450 700 350 850" stroke="url(#curveL)" strokeWidth="1" opacity="0.6" />
+            <defs>
+              <linearGradient id="curveL" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1E3A8A" stopOpacity="0" />
+                <stop offset="30%" stopColor="#1E3A8A" stopOpacity="1" />
+                <stop offset="70%" stopColor="#1E3A8A" stopOpacity="1" />
+                <stop offset="100%" stopColor="#1E3A8A" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Flowing curves — right */}
+          <svg className="absolute -right-[8%] top-[20%] h-[700px] w-[500px] opacity-[0.035]" viewBox="0 0 500 700" fill="none">
+            <path d="M0 0C0 0 -100 180 50 300C200 420 100 550 200 700" stroke="url(#curveR)" strokeWidth="1.5" />
+            <path d="M-50 50C-50 50 -150 220 0 350C150 480 50 600 150 750" stroke="url(#curveR)" strokeWidth="1" opacity="0.5" />
+            <defs>
+              <linearGradient id="curveR" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1E3A8A" stopOpacity="0" />
+                <stop offset="25%" stopColor="#1E3A8A" stopOpacity="1" />
+                <stop offset="75%" stopColor="#1E3A8A" stopOpacity="1" />
+                <stop offset="100%" stopColor="#1E3A8A" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Dot accent pattern — top */}
+          <div
+            className="absolute left-1/2 top-[6%] h-[100px] w-[400px] -translate-x-1/2 opacity-[0.06]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #1E3A8A 1px, transparent 1px)',
+              backgroundSize: '20px 20px',
+              maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+              WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+            }}
+          />
+
+          {/* Soft corner glows */}
+          <div
+            className="absolute left-[8%] top-[12%] h-[250px] w-[250px] rounded-full opacity-40 blur-[80px]"
+            style={{ background: 'radial-gradient(circle, hsl(220 45% 93%) 0%, transparent 70%)' }}
+          />
+          <div
+            className="absolute bottom-[15%] right-[10%] h-[200px] w-[200px] rounded-full opacity-35 blur-[70px]"
+            style={{ background: 'radial-gradient(circle, hsl(210 40% 94%) 0%, transparent 70%)' }}
+          />
+        </div>
+
+        {/* ── Content ── */}
+        <div className="relative">
+          {/* Metrics */}
+          <div className="mx-auto grid max-w-5xl gap-8 px-6 text-center sm:grid-cols-3">
+            {[
+              { value: "1–3%", label: "Average FBA leakage rate" },
+              { value: "18 mo", label: "Of transaction data scanned" },
+              { value: "< 8 min", label: "From upload to full report" },
+            ].map((metric) => (
+              <div key={metric.label}>
+                <p className="text-6xl font-bold tracking-tight text-[#1E3A8A] lg:text-7xl">
+                  {metric.value}
+                </p>
+                <p className="mt-3 text-sm font-medium text-slate-500">
+                  {metric.label}
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* Divider */}
+          <div className="mx-auto my-16 max-w-xs lg:my-20">
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+          </div>
+
+          {/* How it works */}
+          <div className="mx-auto max-w-5xl px-6">
+            <p className="text-center text-xs font-medium uppercase tracking-wide text-[#1E3A8A]">
+              How it works
+            </p>
+            <h2 className="mt-3 text-center text-3xl font-semibold tracking-tight text-slate-900 lg:text-4xl">
+              Three steps. <span className="text-[#1E3A8A]">No friction.</span>
+            </h2>
+            <div className="mt-14 grid gap-10 sm:grid-cols-3">
+              {steps.map((step, i) => (
+                <div
+                  key={step.title}
+                  className="reveal-item flex flex-col items-center text-center opacity-0 translate-y-4 transition-all duration-700"
+                  style={{ transitionDelay: `${i * 150}ms` }}
+                >
+                  <span className="text-xs font-medium text-slate-400">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="mt-3 flex size-14 items-center justify-center rounded-xl border border-[#1E3A8A]/10 bg-[#1E3A8A]/5">
+                    <step.icon className="size-6 text-[#1E3A8A]" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-slate-900">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {step.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -447,6 +554,20 @@ export default function LandingPage() {
         .reveal-item.revealed {
           opacity: 1 !important;
           transform: translateY(0) !important;
+        }
+        .cube-sweep {
+          background: linear-gradient(135deg, transparent 0%, transparent 40%, rgba(30,58,138,0.05) 50%, transparent 60%, transparent 100%);
+          background-size: 300% 300%;
+          animation: cubeSweep 8s ease-in-out infinite;
+        }
+        .cube-sweep2 {
+          background: linear-gradient(315deg, transparent 0%, transparent 40%, rgba(30,58,138,0.035) 50%, transparent 60%, transparent 100%);
+          background-size: 300% 300%;
+          animation: cubeSweep 8s ease-in-out infinite 4s;
+        }
+        @keyframes cubeSweep {
+          0%, 100% { background-position: 0% 0%; }
+          50% { background-position: 100% 100%; }
         }
       `}</style>
     </div>
