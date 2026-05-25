@@ -138,9 +138,9 @@ export default function LandingPage() {
           <div className="size-[600px] rounded-full bg-blue-500/[0.07] blur-[120px]" />
         </div>
 
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 lg:grid-cols-5 lg:gap-16 lg:py-24">
+        <div className="relative mx-auto grid min-h-[70vh] max-w-7xl gap-12 px-6 py-20 lg:grid-cols-5 lg:gap-16 lg:py-28">
           {/* Left — 3/5 */}
-          <div className="flex flex-col justify-center lg:col-span-3">
+          <div className="flex flex-col items-start justify-center lg:col-span-3">
             <span className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-blue-400">
               Free forensic audit for FBA sellers
             </span>
@@ -154,13 +154,13 @@ export default function LandingPage() {
               audit of 18 months of FBA activity: missed reimbursements,
               overcharges, and closing dispute windows.
             </p>
-            <div className="mt-10 flex items-center gap-4">
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <Link
                 href="/start"
-                className="inline-flex items-center rounded-lg bg-white px-6 py-3 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100"
+                className="inline-flex items-center justify-center rounded-lg bg-blue-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-400 hover:shadow-blue-400/30"
               >
                 Start your free audit
-                <ArrowRight className="ml-2 size-4" />
+                <ArrowRight className="ml-2 size-5" />
               </Link>
               <span className="text-sm text-slate-500">
                 No signup required
@@ -233,7 +233,7 @@ export default function LandingPage() {
             { value: "< 8 min", label: "From upload to full report" },
           ].map((metric) => (
             <div key={metric.label}>
-              <p className="text-6xl font-bold tracking-tight text-[#0a1929] lg:text-7xl">
+              <p className="text-6xl font-bold tracking-tight text-[#1E3A8A] lg:text-7xl">
                 {metric.value}
               </p>
               <p className="mt-3 text-sm font-medium text-slate-500">
