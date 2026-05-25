@@ -163,17 +163,19 @@ export default function LandingPage() {
                 <ArrowRight className="ml-2 size-5" />
               </Link>
               {/* Arrow pointing left to CTA + no signup text */}
-              <div className="-ml-1 flex items-center gap-0.5">
-                <svg width="44" height="22" viewBox="0 0 44 22" fill="none" className="text-slate-500">
+              <div className="ml-2 flex items-center gap-0">
+                <svg width="52" height="28" viewBox="0 0 52 28" fill="none" className="text-slate-500">
+                  {/* Curvy line from right to left */}
                   <path
-                    d="M42 16Q32 13 24 10Q16 7 8 4"
+                    d="M50 20C42 22 32 18 22 12C14 7 10 4 6 3"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     fill="none"
                   />
+                  {/* Arrowhead */}
                   <path
-                    d="M12 1L7 4L12 8"
+                    d="M10 0L5 3.5L10 7"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
