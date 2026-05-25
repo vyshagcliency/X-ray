@@ -224,8 +224,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Results metrics — dark */}
-      <section className="bg-[#0a1929] py-16 lg:py-24">
+      {/* Results metrics — light */}
+      <section className="bg-white py-16 lg:py-24">
         <div className="mx-auto grid max-w-5xl gap-8 px-6 text-center sm:grid-cols-3">
           {[
             { value: "1–3%", label: "Average FBA leakage rate" },
@@ -233,10 +233,10 @@ export default function LandingPage() {
             { value: "< 8 min", label: "From upload to full report" },
           ].map((metric) => (
             <div key={metric.label}>
-              <p className="text-6xl font-bold tracking-tight text-blue-400 lg:text-7xl">
+              <p className="text-6xl font-bold tracking-tight text-[#0a1929] lg:text-7xl">
                 {metric.value}
               </p>
-              <p className="mt-3 text-sm font-medium text-slate-400">
+              <p className="mt-3 text-sm font-medium text-slate-500">
                 {metric.label}
               </p>
             </div>
