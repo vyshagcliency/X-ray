@@ -137,13 +137,13 @@ export default function LandingPage() {
           <div className="size-[600px] rounded-full bg-blue-500/[0.07] blur-[120px]" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[70vh] max-w-7xl gap-12 px-6 pb-20 pt-12 lg:grid-cols-5 lg:gap-16 lg:pb-28 lg:pt-16">
+        <div className="relative mx-auto grid min-h-[70vh] max-w-[82rem] gap-12 px-6 pb-20 pt-12 lg:grid-cols-5 lg:gap-16 lg:pb-28 lg:pt-16">
           {/* Left — 3/5 */}
           <div className="flex flex-col items-start justify-center lg:col-span-3">
             <span className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-blue-400">
               100% free &mdash; no strings attached
             </span>
-            <h1 className="mt-6 text-5xl font-semibold leading-[1.08] tracking-tight text-white lg:text-6xl">
+            <h1 className="mt-6 text-5xl font-semibold leading-[1.08] tracking-tight text-white lg:text-[4.25rem] xl:text-7xl">
               Amazon owes you money.
               <br />
               <span className="text-[#a5b4fc]">Let&apos;s prove it.</span>
@@ -162,34 +162,28 @@ export default function LandingPage() {
                 Start your free audit
                 <ArrowRight className="ml-2 size-5" />
               </Link>
-              {/* Hand-drawn arrow + no signup */}
-              <div className="mt-3 flex items-center gap-1 pl-2">
-                <svg width="48" height="32" viewBox="0 0 48 32" fill="none" className="text-slate-500">
+              {/* No signup text + clean arrow pointing up to CTA */}
+              <div className="mt-4 flex items-start gap-0.5 pl-4">
+                <span className="text-sm italic text-slate-500">
+                  No signup required
+                </span>
+                <svg width="32" height="28" viewBox="0 0 32 28" fill="none" className="-mt-5 text-slate-500">
                   <path
-                    d="M4 28C8 24 14 14 22 10C28 7 34 8 38 6"
+                    d="M3 26Q8 18 14 14Q20 10 26 6"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
-                    strokeDasharray="0"
-                    style={{ filter: 'url(#sketchy)' }}
+                    fill="none"
                   />
                   <path
-                    d="M34 4L39 6L35 10"
+                    d="M22 4L27 6L24 10"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    fill="none"
                   />
-                  <defs>
-                    <filter id="sketchy">
-                      <feTurbulence baseFrequency="0.05" numOctaves="2" seed="2" />
-                      <feDisplacementMap in="SourceGraphic" scale="1.5" />
-                    </filter>
-                  </defs>
                 </svg>
-                <span className="text-sm italic text-slate-500">
-                  No signup required
-                </span>
               </div>
             </div>
           </div>
