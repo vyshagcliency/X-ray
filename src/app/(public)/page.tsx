@@ -103,7 +103,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="h-12 border-b border-white/[0.06] bg-[#0f172a] lg:h-14">
         <div className="mx-auto flex h-full items-center justify-between px-3">
-          <Link href="/" className="flex items-center gap-2.5">
+          <a href="https://baslix.com" className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
               alt="Baslix"
@@ -114,7 +114,7 @@ export default function LandingPage() {
             <span className="text-xl font-bold tracking-tight text-white">
               baslix
             </span>
-          </Link>
+          </a>
           <Link
             href="/start"
             className="rounded-md bg-white px-4 py-1.5 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-100"
