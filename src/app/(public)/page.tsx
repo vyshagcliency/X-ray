@@ -144,7 +144,7 @@ export default function LandingPage() {
               100% free &mdash; no strings attached
             </span>
             <h1 className="mt-6 text-5xl font-semibold leading-[1.08] tracking-tight text-white lg:text-[4.25rem] xl:text-7xl">
-              Amazon owes you money.
+              <span className="whitespace-nowrap">Amazon owes you money.</span>
               <br />
               <span className="text-[#a5b4fc]">Let&apos;s prove it.</span>
             </h1>
