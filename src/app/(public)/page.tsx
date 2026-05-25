@@ -102,7 +102,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
       {/* Nav */}
       <nav className="h-12 border-b border-white/[0.06] bg-[#0f172a] lg:h-14">
-        <div className="mx-auto flex h-full items-center justify-between px-2">
+        <div className="mx-auto flex h-full items-center justify-between px-3">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
