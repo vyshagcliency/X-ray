@@ -162,21 +162,21 @@ export default function LandingPage() {
                 Start your free audit
                 <ArrowRight className="ml-2 size-5" />
               </Link>
-              {/* No signup text + clean arrow pointing up to CTA */}
-              <div className="mt-4 flex items-start gap-0.5 pl-4">
+              {/* No signup text + arrow pointing up to CTA */}
+              <div className="relative mt-2 w-fit pl-4">
                 <span className="text-sm italic text-slate-500">
                   No signup required
                 </span>
-                <svg width="32" height="28" viewBox="0 0 32 28" fill="none" className="-mt-5 text-slate-500">
+                <svg width="28" height="24" viewBox="0 0 28 24" fill="none" className="absolute -top-5 right-[-30px] text-slate-500">
                   <path
-                    d="M3 26Q8 18 14 14Q20 10 26 6"
+                    d="M3 22Q7 14 13 10Q18 7 23 4"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     fill="none"
                   />
                   <path
-                    d="M22 4L27 6L24 10"
+                    d="M19 2L24 4L21 8"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
