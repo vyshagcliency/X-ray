@@ -437,9 +437,9 @@ export default function LandingPage() {
 
       {/* Reveal animation styles */}
       <style jsx global>{`
-        .revealed .reveal-item {
-          opacity: 1;
-          transform: translateY(0);
+        .reveal-item.revealed {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
         }
       `}</style>
     </div>
