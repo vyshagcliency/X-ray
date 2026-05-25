@@ -95,7 +95,6 @@ function useReveal() {
 export default function LandingPage() {
   const howRef = useReveal();
   const scanRef = useReveal();
-  const trustRef = useReveal();
   const ctaRef = useReveal();
 
   return (
@@ -385,76 +384,151 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* What we scan for — light */}
-      <section className="py-16 lg:py-24" ref={scanRef}>
-        <div className="mx-auto max-w-5xl px-6">
-          <p className="text-center text-xs font-medium uppercase tracking-wide text-blue-500">
-            Detection categories
-          </p>
-          <h2 className="mt-3 text-center text-3xl font-semibold tracking-tight text-slate-900 lg:text-4xl">
-            What we <span className="text-blue-500">scan for</span>
-          </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {auditCategories.map((c, i) => (
-              <div
-                key={c.label}
-                className="reveal-item rounded-2xl bg-white p-6 shadow-lg opacity-0 translate-y-4 transition-all duration-700 hover:shadow-xl"
-                style={{ transitionDelay: `${i * 150}ms` }}
-              >
-                <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50">
-                  <c.icon className="size-6 text-blue-500" />
-                </div>
-                <p className="mt-4 text-lg font-semibold text-slate-900">
-                  {c.label}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {c.detail}
-                </p>
-                <p className="mt-3 text-xs font-medium text-blue-500">
-                  {c.stat}
-                </p>
-              </div>
-            ))}
+      {/* What we scan for + Trust signals — dark navy with cube grid */}
+      <section className="relative overflow-hidden py-16 lg:py-28" style={{ backgroundColor: '#0f172a' }} ref={scanRef}>
+        {/* ── Background: cube grid + sweeps + glows ── */}
+        <div className="pointer-events-none absolute inset-0">
+          {/* Isometric cube grid (desktop) */}
+          <div
+            className="absolute inset-0 hidden lg:block"
+            style={{
+              maskImage: 'radial-gradient(ellipse 90% 80% at 50% 50%, black 0%, transparent 100%)',
+              WebkitMaskImage: 'radial-gradient(ellipse 90% 80% at 50% 50%, black 0%, transparent 100%)',
+            }}
+          >
+            <svg className="absolute inset-0 h-full w-full" style={{ minWidth: 1792, minHeight: 1344 }}>
+              {Array.from({ length: 14 }, (_, row) =>
+                Array.from({ length: 16 }, (_, col) => {
+                  const xOff = row % 2 === 0 ? 0 : 56;
+                  const x = col * 112 + xOff - 112;
+                  const y = row * 96 - 128;
+                  return (
+                    <g key={`${row}-${col}`} transform={`translate(${x}, ${y})`}>
+                      <path d="M56 0 L112 32 L112 96 L56 128 L0 96 L0 32 Z" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.15" />
+                      <path d="M56 64 L56 128" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.15" />
+                      <path d="M56 64 L0 32" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.15" />
+                      <path d="M56 64 L112 32" fill="none" stroke="#0d2847" strokeWidth="0.8" strokeOpacity="0.15" />
+                    </g>
+                  );
+                })
+              )}
+            </svg>
+            <div className="scan-sweep absolute inset-0" />
+            <div className="scan-sweep2 absolute inset-0" />
           </div>
-        </div>
-      </section>
 
-      {/* Trust signals — light continuation */}
-      <section className="bg-[#f8fafc] py-16 lg:py-24" ref={trustRef}>
-        <div className="mx-auto grid max-w-5xl gap-8 px-6 sm:grid-cols-3">
-          {[
-            {
-              icon: Shield,
-              title: "Your data stays private",
-              text: "Raw files deleted after 30 days. Never shared. Never used for training.",
-            },
-            {
-              icon: Clock,
-              title: "Results in minutes",
-              text: "Most audits complete in 3\u20138 minutes. We\u2019ll email you when it\u2019s ready.",
-            },
-            {
-              icon: DollarSign,
-              title: "Real numbers, not estimates",
-              text: "Every dollar figure traces to a specific transaction in your data.",
-            },
-          ].map((signal, i) => (
-            <div
-              key={signal.title}
-              className="reveal-item flex items-start gap-3.5 opacity-0 translate-y-4 transition-all duration-700"
-              style={{ transitionDelay: `${i * 150}ms` }}
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-50">
-                <signal.icon className="size-5 text-blue-500" />
+          {/* Gradient overlays for depth */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-transparent to-[#0f172a] opacity-50" />
+
+          {/* Ambient glow */}
+          <div
+            className="absolute left-1/2 top-0 h-[400px] w-[800px] -translate-x-1/2 rounded-full opacity-15 blur-[120px]"
+            style={{ background: 'radial-gradient(ellipse, #1e40af 0%, transparent 70%)' }}
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+          {/* Section header */}
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <div className="h-px w-8 bg-gradient-to-r from-transparent to-blue-500/50" />
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-400">
+                Detection Categories
+              </span>
+              <div className="h-px w-8 bg-gradient-to-l from-transparent to-blue-500/50" />
+            </div>
+            <h2 className="text-3xl font-semibold tracking-tight text-white lg:text-4xl">
+              What we <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">scan for</span>
+            </h2>
+            <p className="mt-4 text-sm text-slate-400 lg:text-base">
+              Every detection rule runs independently. A failing rule never blocks the rest of your report.
+            </p>
+          </div>
+
+          {/* Detection cards — baslix Services-style container */}
+          <div className="mx-auto mt-12 max-w-5xl overflow-hidden rounded-2xl shadow-xl shadow-blue-500/10">
+            {/* Card background */}
+            <div className="relative border border-white/[0.08] rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f] via-[#0f2744] to-[#0a1929]" />
+              {/* Noise texture */}
+              <div
+                className="absolute inset-0 opacity-[0.12]"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                }}
+              />
+              {/* Accent glows */}
+              <div className="absolute -right-24 -top-24 size-72 rounded-full bg-blue-500/15 blur-3xl" />
+              <div className="absolute -bottom-20 -left-20 size-56 rounded-full bg-cyan-500/10 blur-3xl" />
+              {/* Top accent line */}
+              <div className="absolute inset-x-0 top-0 z-10 h-[2px] bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
+
+              <div className="relative grid gap-px sm:grid-cols-3">
+                {auditCategories.map((c, i) => (
+                  <div
+                    key={c.label}
+                    className="reveal-item flex flex-col p-6 opacity-0 translate-y-4 transition-all duration-700 lg:p-8"
+                    style={{ transitionDelay: `${i * 150}ms` }}
+                  >
+                    <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/20">
+                      <c.icon className="size-6 text-blue-400" strokeWidth={1.5} />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-white">
+                      {c.label}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                      {c.detail}
+                    </p>
+                    <p className="mt-3 text-xs font-medium text-blue-400">
+                      {c.stat}
+                    </p>
+                  </div>
+                ))}
               </div>
-              <div>
-                <h3 className="font-medium text-slate-900">{signal.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                  {signal.text}
-                </p>
+
+              {/* Divider */}
+              <div className="relative mx-6 lg:mx-8">
+                <div className="h-px bg-white/[0.08]" />
+              </div>
+
+              {/* Trust signals inside the same card */}
+              <div className="relative grid gap-px sm:grid-cols-3">
+                {[
+                  {
+                    icon: Shield,
+                    title: "Your data stays private",
+                    text: "Raw files deleted after 30 days. Never shared. Never used for training.",
+                  },
+                  {
+                    icon: Clock,
+                    title: "Results in minutes",
+                    text: "Most audits complete in 3\u20138 minutes. We\u2019ll email you when it\u2019s ready.",
+                  },
+                  {
+                    icon: DollarSign,
+                    title: "Real numbers, not estimates",
+                    text: "Every dollar figure traces to a specific transaction in your data.",
+                  },
+                ].map((signal, i) => (
+                  <div
+                    key={signal.title}
+                    className="reveal-item flex items-start gap-3.5 p-6 opacity-0 translate-y-4 transition-all duration-700 lg:p-8"
+                    style={{ transitionDelay: `${(i + 3) * 150}ms` }}
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
+                      <signal.icon className="size-5 text-slate-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">{signal.title}</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                        {signal.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
@@ -568,6 +642,16 @@ export default function LandingPage() {
         @keyframes cubeSweep {
           0%, 100% { background-position: 0% 0%; }
           50% { background-position: 100% 100%; }
+        }
+        .scan-sweep {
+          background: linear-gradient(135deg, transparent 0%, transparent 40%, rgba(59,130,246,0.07) 50%, transparent 60%, transparent 100%);
+          background-size: 300% 300%;
+          animation: cubeSweep 8s ease-in-out infinite;
+        }
+        .scan-sweep2 {
+          background: linear-gradient(315deg, transparent 0%, transparent 40%, rgba(96,165,250,0.05) 50%, transparent 60%, transparent 100%);
+          background-size: 300% 300%;
+          animation: cubeSweep 8s ease-in-out infinite 4s;
         }
       `}</style>
     </div>
