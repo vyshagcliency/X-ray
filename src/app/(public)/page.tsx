@@ -148,7 +148,7 @@ export default function LandingPage() {
               <br />
               <span className="text-[#a5b4fc]">Let&apos;s prove it.</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
+            <p className="mt-6 text-lg leading-relaxed text-slate-400">
               Upload 4 Seller Central reports. In under 8 minutes, get a
               forensic audit showing every missed reimbursement, fee
               overcharge, and expiring dispute window &mdash; with evidence
@@ -163,20 +163,20 @@ export default function LandingPage() {
                 <ArrowRight className="ml-2 size-5" />
               </Link>
               {/* No signup text + arrow pointing up to CTA */}
-              <div className="relative mt-2 w-fit pl-4">
+              <div className="relative mt-5 w-fit pl-6">
                 <span className="text-sm italic text-slate-500">
                   No signup required
                 </span>
-                <svg width="28" height="24" viewBox="0 0 28 24" fill="none" className="absolute -top-5 right-[-30px] text-slate-500">
+                <svg width="30" height="30" viewBox="0 0 30 30" fill="none" className="absolute -top-8 right-[-34px] text-slate-500">
                   <path
-                    d="M3 22Q7 14 13 10Q18 7 23 4"
+                    d="M4 28Q10 20 16 14Q21 9 25 5"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     fill="none"
                   />
                   <path
-                    d="M19 2L24 4L21 8"
+                    d="M21 3L26 5L23 10"
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
