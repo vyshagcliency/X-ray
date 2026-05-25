@@ -125,7 +125,14 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero — dark navy */}
-      <section className="relative overflow-hidden bg-[#0f172a]">
+      <section className="relative overflow-hidden bg-[#0a1929]">
+        {/* Cube grid pattern */}
+        <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(148,163,184,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.5) 1px, transparent 1px)`,
+            backgroundSize: '48px 48px',
+          }}
+        />
         {/* Radial glow */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="size-[600px] rounded-full bg-blue-500/[0.07] blur-[120px]" />
@@ -217,8 +224,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Results metrics — light */}
-      <section className="bg-[#f8fafc] py-16 lg:py-24">
+      {/* Results metrics — dark */}
+      <section className="bg-[#0a1929] py-16 lg:py-24">
         <div className="mx-auto grid max-w-5xl gap-8 px-6 text-center sm:grid-cols-3">
           {[
             { value: "1–3%", label: "Average FBA leakage rate" },
@@ -226,10 +233,10 @@ export default function LandingPage() {
             { value: "< 8 min", label: "From upload to full report" },
           ].map((metric) => (
             <div key={metric.label}>
-              <p className="text-6xl font-bold tracking-tight text-blue-500 lg:text-7xl">
+              <p className="text-6xl font-bold tracking-tight text-blue-400 lg:text-7xl">
                 {metric.value}
               </p>
-              <p className="mt-3 text-sm font-medium text-slate-600">
+              <p className="mt-3 text-sm font-medium text-slate-400">
                 {metric.label}
               </p>
             </div>
