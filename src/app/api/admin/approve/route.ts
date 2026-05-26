@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Trigger email notification
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://xray.baslix.com";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://baslix.com/xray";
   await tasks.trigger("notify.email", { auditId, baseUrl });
 
   return NextResponse.json({ success: true });
