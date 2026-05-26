@@ -104,7 +104,7 @@ export default function LandingPage() {
         <div className="mx-auto flex h-full items-center justify-between px-8 lg:px-12">
           <a href="https://baslix.com" className="flex items-center gap-2.5">
             <Image
-              src="/logo.png"
+              src="/xray/logo.png"
               alt="Baslix"
               width={32}
               height={32}
@@ -606,7 +606,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-6">
               <Link href="/" className="flex items-center gap-2">
                 <Image
-                  src="/logo.png"
+                  src="/xray/logo.png"
                   alt="Baslix"
                   width={20}
                   height={20}

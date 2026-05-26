@@ -44,7 +44,7 @@ export default function StartPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
-              src="/logo.png"
+              src="/xray/logo.png"
               alt="Baslix"
               width={32}
               height={32}
