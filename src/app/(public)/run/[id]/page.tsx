@@ -71,7 +71,7 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
   if (status === "failed") {
     return (
       <>
-      <NavBar currentStep={3} />
+      <NavBar />
       <main className="mx-auto max-w-md px-6 py-32 text-center">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-destructive/10">
           <AlertTriangle className="size-8 text-destructive" />
@@ -104,7 +104,7 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
 
   return (
     <>
-    <NavBar currentStep={3} />
+    <NavBar />
     <main className="mx-auto max-w-md px-6 py-32 text-center">
       <Loader2 className="mx-auto size-12 animate-spin text-primary" />
       <h1 className="mt-6 text-2xl font-bold">Analyzing your data</h1>
