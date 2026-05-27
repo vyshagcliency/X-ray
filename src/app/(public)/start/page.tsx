@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRight,
   Shield,
@@ -10,6 +9,7 @@ import {
   FileText,
   CheckCircle2,
 } from "lucide-react";
+import { NavBar } from "@/components/nav-bar";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +17,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { startAudit } from "./actions";
-
-const steps = [
-  "Enter your details",
-  "Upload 4 CSVs",
-  "Get your report",
-];
 
 export default function StartPage() {
   const [state, formAction, isPending] = useActionState(
@@ -39,52 +33,7 @@ export default function StartPage() {
       <div className="pointer-events-none absolute -right-20 bottom-20 size-72 rounded-full bg-emerald-500/5 blur-3xl" />
       <div className="pointer-events-none absolute right-1/3 top-1/4 size-64 rounded-full bg-violet-500/5 blur-3xl" />
 
-      {/* Nav */}
-      <nav className="relative border-b bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/xray/logo.png"
-              alt="Baslix"
-              width={32}
-              height={32}
-              className="size-8"
-            />
-            <span className="text-xl font-bold tracking-tight">Baslix</span>
-          </Link>
-        </div>
-      </nav>
-
-      {/* Progress steps */}
-      <div className="relative mx-auto max-w-5xl px-6 pt-10">
-        <div className="flex items-center justify-center gap-3">
-          {steps.map((step, i) => (
-            <div key={step} className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold ${
-                    i === 0
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {i + 1}
-                </div>
-                <span
-                  className={`text-sm ${
-                    i === 0 ? "font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  {step}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className="h-px w-8 bg-border" />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      <NavBar currentStep={1} />
 
       <main className="relative mx-auto grid max-w-5xl gap-12 px-6 py-12 lg:grid-cols-2 lg:gap-20 lg:py-16">
         {/* Left — context */}

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, Lock, Trash2, Eye, Server } from "lucide-react";
+import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
 import { ReportTile } from "@/components/upload/ReportTile";
 import { REPORT_SIGNATURES } from "@/lib/csv/headers";
@@ -67,6 +68,8 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
   };
 
   return (
+    <>
+    <NavBar currentStep={2} />
     <main className="mx-auto max-w-2xl px-6 py-16">
       <h1 className="text-2xl font-bold">Upload your Seller Central reports</h1>
       <p className="mt-2 text-sm text-muted-foreground">
@@ -114,5 +117,6 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
         </Button>
       </div>
     </main>
+    </>
   );
 }

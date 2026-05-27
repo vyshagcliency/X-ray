@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, AlertTriangle, ArrowRight } from "lucide-react";
+import { NavBar } from "@/components/nav-bar";
 import { UrgencyChart } from "@/components/report/UrgencyChart";
 
 interface Finding {
@@ -75,6 +76,8 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
   );
 
   return (
+    <>
+    <NavBar />
     <main className="mx-auto max-w-4xl px-6 py-12">
       {/* Headline strip */}
       <section className="rounded-lg border bg-card p-8">
@@ -218,5 +221,6 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
         <p className="mt-1">Case ID: {uuid.slice(0, 8).toUpperCase()}</p>
       </footer>
     </main>
+    </>
   );
 }
