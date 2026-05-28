@@ -54,41 +54,39 @@ export default function StartPage() {
             You&apos;ll upload your Seller Central CSVs on the next step.
           </p>
 
-          <div className="mt-10 space-y-6">
-            <div className="flex items-start gap-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Clock className="size-5 text-primary" />
+          <div className="mt-10 space-y-4">
+            {[
+              {
+                icon: Clock,
+                title: "Ready in 3–8 minutes",
+                text: "We'll email you when your report is done.",
+              },
+              {
+                icon: FileText,
+                title: "Detailed PDF report",
+                text: "Every finding with dispute-ready evidence and deadlines.",
+              },
+              {
+                icon: Shield,
+                title: "Your data stays private",
+                text: "Raw files auto-deleted after 30 days. A compact derivative is kept so your report stays accessible. Never shared.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="flex items-start gap-4 rounded-xl border border-border/60 bg-white/70 p-4 shadow-sm"
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <item.icon className="size-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{item.title}</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                    {item.text}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium">Ready in 3-8 minutes</p>
-                <p className="text-sm text-muted-foreground">
-                  We&apos;ll email you when your report is done.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <FileText className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Detailed PDF report</p>
-                <p className="text-sm text-muted-foreground">
-                  Every finding with dispute-ready evidence and deadlines.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Your data stays private</p>
-                <p className="text-sm text-muted-foreground">
-                  Raw files auto-deleted after 30 days. A compact derivative
-                  is kept so your report stays accessible. Never shared.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
 
         </motion.div>
@@ -100,11 +98,12 @@ export default function StartPage() {
           transition={{ delay: 0.15, duration: 0.5 }}
           className="flex items-center"
         >
-          <Card className="w-full shadow-lg ring-1 ring-black/5">
+          <Card className="w-full overflow-hidden shadow-xl ring-1 ring-black/[0.08]">
+            <div className="h-1 bg-gradient-to-r from-primary/80 via-primary to-primary/80" />
             <CardContent className="p-8">
-              <div className="mb-6 flex items-center gap-2">
-                <CheckCircle2 className="size-5 text-emerald-500" />
-                <p className="text-sm font-medium">
+              <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2">
+                <CheckCircle2 className="size-4 text-emerald-600" />
+                <p className="text-sm font-medium text-emerald-900">
                   No signup or login required
                 </p>
               </div>
