@@ -98,8 +98,7 @@ export default function StartPage() {
           transition={{ delay: 0.15, duration: 0.5 }}
           className="flex items-center"
         >
-          <Card className="w-full overflow-hidden shadow-xl ring-1 ring-black/[0.08]">
-            <div className="h-1 bg-gradient-to-r from-primary/80 via-primary to-primary/80" />
+          <Card className="w-full shadow-xl ring-1 ring-black/[0.08]">
             <CardContent className="p-8">
               <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2">
                 <CheckCircle2 className="size-4 text-emerald-600" />
