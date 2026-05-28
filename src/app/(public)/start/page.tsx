@@ -35,74 +35,36 @@ export default function StartPage() {
 
       <NavBar />
 
-      <main className="relative mx-auto grid max-w-5xl gap-12 px-6 py-12 lg:grid-cols-2 lg:gap-20 lg:py-16">
-        {/* Left — context */}
+      <main className="relative mx-auto max-w-3xl px-6 py-12 lg:py-20">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col justify-center"
+          className="text-center"
         >
-          <Badge variant="secondary" className="w-fit">
+          <Badge variant="secondary" className="mx-auto">
             Step 1 of 3
           </Badge>
           <h1 className="mt-4 text-3xl font-bold tracking-tight lg:text-4xl">
             Start your free audit
           </h1>
-          <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-3 max-w-lg text-base leading-relaxed text-muted-foreground">
             Enter your details and we&apos;ll get your forensic report started.
             You&apos;ll upload your Seller Central CSVs on the next step.
           </p>
-
-          <div className="mt-10 space-y-6">
-            <div className="flex items-start gap-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Clock className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Ready in 3-8 minutes</p>
-                <p className="text-sm text-muted-foreground">
-                  We&apos;ll email you when your report is done.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <FileText className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Detailed PDF report</p>
-                <p className="text-sm text-muted-foreground">
-                  Every finding with dispute-ready evidence and deadlines.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3.5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Your data stays private</p>
-                <p className="text-sm text-muted-foreground">
-                  Raw files auto-deleted after 30 days. A compact derivative
-                  is kept so your report stays accessible. Never shared.
-                </p>
-              </div>
-            </div>
-          </div>
-
         </motion.div>
 
-        {/* Right — form card */}
+        {/* Form card */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5 }}
-          className="flex items-center"
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="mt-10"
         >
-          <Card className="w-full shadow-lg ring-1 ring-black/5">
+          <Card className="mx-auto max-w-md shadow-lg ring-1 ring-black/5">
             <CardContent className="p-8">
-              <div className="mb-6 flex items-center gap-2">
+              <div className="mb-6 flex items-center justify-center gap-2">
                 <CheckCircle2 className="size-5 text-emerald-500" />
                 <p className="text-sm font-medium">
                   No signup or login required
@@ -185,6 +147,45 @@ export default function StartPage() {
               </p>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Feature cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.5 }}
+          className="mt-12 grid gap-4 sm:grid-cols-3"
+        >
+          {[
+            {
+              icon: Clock,
+              title: "Ready in 3–8 minutes",
+              text: "We'll email you when your report is done.",
+            },
+            {
+              icon: FileText,
+              title: "Detailed PDF report",
+              text: "Every finding with dispute-ready evidence and deadlines.",
+            },
+            {
+              icon: Shield,
+              title: "Your data stays private",
+              text: "Raw files auto-deleted after 30 days. Never shared.",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="flex flex-col items-center rounded-xl border bg-white/60 p-5 text-center"
+            >
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                <item.icon className="size-5 text-primary" />
+              </div>
+              <p className="mt-3 text-sm font-medium">{item.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {item.text}
+              </p>
+            </div>
+          ))}
         </motion.div>
       </main>
     </div>
