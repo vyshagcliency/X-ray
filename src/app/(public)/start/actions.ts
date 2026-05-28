@@ -56,40 +56,49 @@ export async function startAudit(formData: FormData) {
     return { error: "Please use a work email address" };
   }
 
-  const db = supabaseAdmin();
+  let auditId: string;
 
-  // Check block list
-  const { data: blocked } = await db
-    .from("block_list")
-    .select("email_domain")
-    .eq("email_domain", domain)
-    .single();
+  try {
+    const db = supabaseAdmin();
 
-  if (blocked) {
-    return { error: "Please use a work email address" };
-  }
+    // Check block list
+    const { data: blocked } = await db
+      .from("block_list")
+      .select("email_domain")
+      .eq("email_domain", domain)
+      .single();
 
-  // Rate limit: 5 audits per domain per 30 days
-  const { success: withinLimit } = await startRateLimit.limit(domain);
-  if (!withinLimit) {
-    return { error: "Too many audits from this domain. Please try again later." };
-  }
+    if (blocked) {
+      return { error: "Please use a work email address" };
+    }
 
-  // Create the audit
-  const { data: audit, error } = await db
-    .from("audits")
-    .insert({
-      email,
-      brand_name: brandName,
-      status: "pending_upload",
-    })
-    .select("id")
-    .single();
+    // Rate limit: 5 audits per domain per 30 days
+    const { success: withinLimit } = await startRateLimit.limit(domain);
+    if (!withinLimit) {
+      return { error: "Too many audits from this domain. Please try again later." };
+    }
 
-  if (error || !audit) {
-    console.error("Failed to create audit:", error);
+    // Create the audit
+    const { data: audit, error } = await db
+      .from("audits")
+      .insert({
+        email,
+        brand_name: brandName,
+        status: "pending_upload",
+      })
+      .select("id")
+      .single();
+
+    if (error || !audit) {
+      console.error("Failed to create audit:", error);
+      return { error: "Something went wrong. Please try again." };
+    }
+
+    auditId = audit.id;
+  } catch (err) {
+    console.error("startAudit error:", err);
     return { error: "Something went wrong. Please try again." };
   }
 
-  redirect(`/upload/${audit.id}`);
+  redirect(`/upload/${auditId}`);
 }
