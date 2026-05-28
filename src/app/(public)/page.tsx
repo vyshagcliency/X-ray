@@ -585,7 +585,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-6">
               <Link href="/" className="flex items-center gap-2">
                 <Image
-                  src="/xray/logo.png"
+                  src="/logo.png"
                   alt="Baslix"
                   width={20}
                   height={20}
