@@ -59,26 +59,35 @@ export async function startAudit(formData: FormData) {
   let auditId: string;
 
   try {
+    console.log("[startAudit] step 1: creating supabase client");
     const db = supabaseAdmin();
 
     // Check block list
-    const { data: blocked } = await db
+    console.log("[startAudit] step 2: checking block list for domain:", domain);
+    const { data: blocked, error: blockErr } = await db
       .from("block_list")
       .select("email_domain")
       .eq("email_domain", domain)
       .maybeSingle();
+
+    if (blockErr) {
+      console.error("[startAudit] block_list query error:", blockErr);
+      return { error: "Something went wrong. Please try again." };
+    }
 
     if (blocked) {
       return { error: "Please use a work email address" };
     }
 
     // Rate limit: 5 audits per domain per 30 days
+    console.log("[startAudit] step 3: rate limiting");
     const { success: withinLimit } = await startRateLimit.limit(domain);
     if (!withinLimit) {
       return { error: "Too many audits from this domain. Please try again later." };
     }
 
     // Create the audit
+    console.log("[startAudit] step 4: inserting audit");
     const { data: audit, error } = await db
       .from("audits")
       .insert({
@@ -90,13 +99,14 @@ export async function startAudit(formData: FormData) {
       .single();
 
     if (error || !audit) {
-      console.error("Failed to create audit:", error);
+      console.error("[startAudit] insert error:", error);
       return { error: "Something went wrong. Please try again." };
     }
 
+    console.log("[startAudit] step 5: audit created:", audit.id);
     auditId = audit.id;
   } catch (err) {
-    console.error("startAudit error:", err);
+    console.error("[startAudit] uncaught error:", err);
     return { error: "Something went wrong. Please try again." };
   }
 
