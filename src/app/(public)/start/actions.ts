@@ -66,7 +66,7 @@ export async function startAudit(formData: FormData) {
       .from("block_list")
       .select("email_domain")
       .eq("email_domain", domain)
-      .single();
+      .maybeSingle();
 
     if (blocked) {
       return { error: "Please use a work email address" };
