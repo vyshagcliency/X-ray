@@ -3,8 +3,10 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, Lock, Trash2, Eye, Server } from "lucide-react";
+import { motion } from "motion/react";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ReportTile } from "@/components/upload/ReportTile";
 import { REPORT_SIGNATURES } from "@/lib/csv/headers";
 
@@ -67,56 +69,93 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
+  const uploadedCount = Object.keys(files).length;
+  const remainingCount = REQUIRED_REPORTS.length - uploadedCount;
+
   return (
-    <>
-    <NavBar />
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="text-2xl font-bold">Upload your Seller Central reports</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Upload the 3 required reports below. We&apos;ll validate each one instantly before
-        processing.
-      </p>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Decorative background elements */}
+      <div className="pointer-events-none absolute -left-32 top-20 size-80 rounded-full bg-primary/5 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-20 size-72 rounded-full bg-emerald-500/5 blur-3xl" />
 
-      {/* Privacy bullets */}
-      <div className="mt-6 rounded-lg border bg-muted/30 p-4">
-        <ul className="space-y-2">
-          {PRIVACY_BULLETS.map((b) => (
-            <li key={b.text} className="flex items-center gap-3 text-sm text-muted-foreground">
-              <b.icon className="size-4 shrink-0" />
-              {b.text}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <NavBar />
 
-      {/* Report tiles */}
-      <div className="mt-8 space-y-4">
-        {REQUIRED_REPORTS.map((type) => (
-          <ReportTile
-            key={type}
-            signature={REPORT_SIGNATURES[type]}
-            onValidFile={(file) => handleValidFile(type, file)}
-            onClear={() => handleClear(type)}
-          />
-        ))}
-      </div>
-
-      {/* Run button */}
-      <div className="mt-8">
-        <Button
-          onClick={handleRunAudit}
-          disabled={!allUploaded || isSubmitting}
-          size="lg"
-          className="w-full"
+      <main className="relative mx-auto max-w-3xl px-6 py-12 lg:py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {isSubmitting
-            ? "Uploading..."
-            : allUploaded
-              ? "Run audit"
-              : `Upload ${REQUIRED_REPORTS.length - Object.keys(files).length} more report${Object.keys(files).length < 2 ? "s" : ""}`}
-        </Button>
-      </div>
-    </main>
-    </>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary">Step 2 of 3</Badge>
+            <span className="text-sm text-muted-foreground">
+              {uploadedCount} of {REQUIRED_REPORTS.length} uploaded
+            </span>
+          </div>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight">
+            Upload your Seller Central reports
+          </h1>
+          <p className="mt-2 text-base text-muted-foreground">
+            Upload the 3 required reports below. We&apos;ll validate each one instantly before
+            processing.
+          </p>
+        </motion.div>
+
+        {/* Report tiles */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="mt-8 space-y-4"
+        >
+          {REQUIRED_REPORTS.map((type) => (
+            <ReportTile
+              key={type}
+              signature={REPORT_SIGNATURES[type]}
+              onValidFile={(file) => handleValidFile(type, file)}
+              onClear={() => handleClear(type)}
+            />
+          ))}
+        </motion.div>
+
+        {/* Run button */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mt-8"
+        >
+          <Button
+            onClick={handleRunAudit}
+            disabled={!allUploaded || isSubmitting}
+            size="lg"
+            className="w-full"
+          >
+            {isSubmitting
+              ? "Uploading..."
+              : allUploaded
+                ? "Run audit"
+                : `Upload ${remainingCount} more report${remainingCount !== 1 ? "s" : ""}`}
+          </Button>
+        </motion.div>
+
+        {/* Privacy bullets */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mt-10 rounded-lg border border-border/60 bg-white/70 p-4 shadow-sm"
+        >
+          <ul className="space-y-2">
+            {PRIVACY_BULLETS.map((b) => (
+              <li key={b.text} className="flex items-center gap-3 text-sm text-muted-foreground">
+                <b.icon className="size-4 shrink-0" />
+                {b.text}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      </main>
+    </div>
   );
 }
