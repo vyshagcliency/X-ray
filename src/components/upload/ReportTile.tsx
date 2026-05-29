@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Upload, CheckCircle2, XCircle, FileText } from "lucide-react";
+import { Upload, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { validateCsvFile, type ValidationResult } from "@/lib/csv/validate-client";
@@ -70,29 +70,21 @@ export function ReportTile({ signature, onValidFile, onClear }: ReportTileProps)
               : ""
       }`}
     >
-      <CardContent className="pt-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-medium">{signature.displayName}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{signature.sellerCentralPath}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{signature.description}</p>
-            <Badge variant="secondary" className="mt-2">
-              {signature.dateRange}
-            </Badge>
-          </div>
-        </div>
-
+      <CardContent className="p-4">
         {isValid ? (
-          <div className="mt-4 flex items-center gap-2 text-sm text-green-700">
-            <CheckCircle2 className="size-4" />
-            <span className="truncate">{fileName}</span>
-            <button onClick={handleClear} className="ml-auto text-xs underline">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="size-5 shrink-0 text-green-600" />
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-medium">{signature.displayName}</h3>
+              <p className="truncate text-xs text-green-700">{fileName}</p>
+            </div>
+            <button onClick={handleClear} className="shrink-0 text-xs text-muted-foreground underline">
               Remove
             </button>
           </div>
         ) : (
           <label
-            className="mt-4 flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed p-6 transition-colors hover:bg-muted/50"
+            className="flex cursor-pointer items-center gap-4"
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
@@ -100,29 +92,31 @@ export function ReportTile({ signature, onValidFile, onClear }: ReportTileProps)
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
           >
-            {isError ? (
-              <>
-                <XCircle className="size-8 text-destructive" />
-                <p className="mt-2 text-center text-sm text-destructive">{validation.error}</p>
-                {validation.suggestion && (
-                  <p className="mt-1 text-center text-xs text-muted-foreground">
-                    {validation.suggestion}
-                  </p>
-                )}
-                <p className="mt-2 text-xs text-muted-foreground">Drop a different file or click to browse</p>
-              </>
-            ) : (
-              <>
-                {fileName ? (
-                  <FileText className="size-8 text-muted-foreground" />
-                ) : (
-                  <Upload className="size-8 text-muted-foreground" />
-                )}
-                <p className="mt-2 text-center text-sm text-muted-foreground">
-                  {isDragging ? "Drop your file here" : "Drag & drop your CSV or click to browse"}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium">{signature.displayName}</h3>
+                <Badge variant="secondary" className="text-[10px]">
+                  {signature.dateRange}
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">{signature.sellerCentralPath}</p>
+              {isError && (
+                <p className="mt-1 text-xs text-destructive">
+                  {validation.error}
+                  {validation.suggestion && ` — ${validation.suggestion}`}
                 </p>
-              </>
-            )}
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2 rounded-md border-2 border-dashed px-4 py-2 transition-colors hover:bg-muted/50">
+              {isError ? (
+                <XCircle className="size-4 text-destructive" />
+              ) : (
+                <Upload className="size-4 text-muted-foreground" />
+              )}
+              <span className="text-xs text-muted-foreground">
+                {isDragging ? "Drop here" : "Drop CSV or browse"}
+              </span>
+            </div>
             <input
               type="file"
               accept=".csv,.txt"

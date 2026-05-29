@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Lock, Trash2, Eye, Server } from "lucide-react";
+import { Lock, Shield } from "lucide-react";
 import { motion } from "motion/react";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,6 @@ import { REPORT_SIGNATURES } from "@/lib/csv/headers";
 
 const REQUIRED_REPORTS = ["reimbursements", "returns", "inventory_ledger"] as const;
 
-const PRIVACY_BULLETS = [
-  { icon: Lock, text: "Your files are encrypted in transit and at rest" },
-  { icon: Trash2, text: "Original CSV files are deleted after 30 days" },
-  { icon: Server, text: "A compact derivative is retained so your report stays accessible" },
-  { icon: Eye, text: "Your data is never shared with third parties" },
-  { icon: Shield, text: "Request full deletion anytime via your report email" },
-];
 
 export default function UploadPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -73,14 +66,14 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
   const remainingCount = REQUIRED_REPORTS.length - uploadedCount;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Decorative background elements */}
       <div className="pointer-events-none absolute -left-32 top-20 size-80 rounded-full bg-primary/5 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-20 size-72 rounded-full bg-emerald-500/5 blur-3xl" />
 
       <NavBar />
 
-      <main className="relative mx-auto max-w-3xl px-6 py-12 lg:py-16">
+      <main className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -92,12 +85,11 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
               {uploadedCount} of {REQUIRED_REPORTS.length} uploaded
             </span>
           </div>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight">
+          <h1 className="mt-3 text-2xl font-bold tracking-tight lg:text-3xl">
             Upload your Seller Central reports
           </h1>
-          <p className="mt-2 text-base text-muted-foreground">
-            Upload the 3 required reports below. We&apos;ll validate each one instantly before
-            processing.
+          <p className="mt-1 text-sm text-muted-foreground">
+            Upload the 3 required reports below. We&apos;ll validate each one instantly.
           </p>
         </motion.div>
 
@@ -106,7 +98,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className="mt-8 space-y-4"
+          className="mt-6 space-y-3"
         >
           {REQUIRED_REPORTS.map((type) => (
             <ReportTile
@@ -123,7 +115,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="mt-8"
+          className="mt-6"
         >
           <Button
             onClick={handleRunAudit}
@@ -139,22 +131,18 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           </Button>
         </motion.div>
 
-        {/* Privacy bullets */}
-        <motion.div
+        {/* Privacy note */}
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="mt-10 rounded-lg border border-border/60 bg-white/70 p-4 shadow-sm"
+          className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground"
         >
-          <ul className="space-y-2">
-            {PRIVACY_BULLETS.map((b) => (
-              <li key={b.text} className="flex items-center gap-3 text-sm text-muted-foreground">
-                <b.icon className="size-4 shrink-0" />
-                {b.text}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
+          <Lock className="size-3" />
+          Encrypted in transit & at rest. Raw files auto-deleted after 30 days.
+          <Shield className="ml-1 size-3" />
+          Never shared.
+        </motion.p>
       </main>
     </div>
   );
