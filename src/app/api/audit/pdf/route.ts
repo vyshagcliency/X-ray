@@ -16,23 +16,32 @@ export async function GET(req: NextRequest) {
 
   const db = supabaseAdmin();
 
-  // Check if a pre-rendered PDF exists in storage
-  const storagePath = `reports/${auditId}.pdf`;
-  const { data: pdfUrl } = await db.storage
-    .from("uploads")
-    .createSignedUrl(storagePath, 3600);
-
-  if (pdfUrl?.signedUrl) {
-    return NextResponse.redirect(pdfUrl.signedUrl);
-  }
-
-  // No pre-rendered PDF — try on-demand React-PDF render
   const { data: audit } = await db
     .from("audits")
     .select("report_data, brand_name")
     .eq("id", auditId)
     .single();
 
+  const filename = `${(audit?.brand_name ?? "report").replace(/[^a-zA-Z0-9_-]/g, "_")}-xray.pdf`;
+
+  // Check if a pre-rendered PDF exists in storage — proxy it instead of redirecting
+  const storagePath = `reports/${auditId}.pdf`;
+  const { data: stored } = await db.storage
+    .from("uploads")
+    .download(storagePath);
+
+  if (stored) {
+    const bytes = new Uint8Array(await stored.arrayBuffer());
+    return new NextResponse(bytes, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Cache-Control": "private, max-age=3600",
+      },
+    });
+  }
+
+  // No pre-rendered PDF — try on-demand React-PDF render
   if (!audit?.report_data) {
     return NextResponse.redirect(new URL(`/r/${auditId}`, req.url));
   }
@@ -52,7 +61,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${audit.brand_name ?? "report"}-xray.pdf"`,
+        "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
   } catch {
