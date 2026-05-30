@@ -61,7 +61,7 @@ export function UrgencyChart({
   if (data.length === 0) return null;
 
   return (
-    <section className="mt-8 rounded-lg border bg-card p-6">
+    <section className="mt-8 rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
       <h2 className="text-lg font-bold">Urgency timeline</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         How much is at risk by dispute window
