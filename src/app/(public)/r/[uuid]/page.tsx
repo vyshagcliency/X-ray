@@ -140,7 +140,7 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
 
           <div className="mt-6">
             <Button asChild variant="outline" size="sm">
-              <a href={`/api/audit/pdf?id=${uuid}`} target="_blank" rel="noopener">
+              <a href={`/api/audit/pdf?id=${uuid}`} download>
                 <Download className="mr-2 size-4" />
                 Download full PDF report
               </a>
