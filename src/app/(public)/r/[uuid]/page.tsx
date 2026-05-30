@@ -97,7 +97,7 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
 
       <NavBar />
 
-      <main className="relative mx-auto max-w-5xl px-6 py-12">
+      <main className="relative mx-auto max-w-7xl px-6 py-12">
         {/* Headline section */}
         <section className="rounded-xl border border-slate-200 bg-white/80 p-8 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
@@ -117,6 +117,14 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
                   </span>
                 </p>
               )}
+              <div className="mt-6">
+                <Button asChild variant="outline" size="sm">
+                  <a href={`/api/audit/pdf?id=${uuid}`} download>
+                    <Download className="mr-2 size-4" />
+                    Download full PDF report
+                  </a>
+                </Button>
+              </div>
             </div>
 
             {/* Right: stats grid */}
@@ -137,37 +145,32 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="mt-6">
-            <Button asChild variant="outline" size="sm">
-              <a href={`/api/audit/pdf?id=${uuid}`} download>
-                <Download className="mr-2 size-4" />
-                Download full PDF report
-              </a>
-            </Button>
+        {/* Executive summary + Urgency chart — side by side on desktop */}
+        <section className="mt-8 grid gap-6 lg:grid-cols-2">
+          {typedAudit.report_data?.narrative?.executive_summary ? (
+            <div className="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+              <h2 className="text-lg font-bold">Executive Summary</h2>
+              <p className="mt-2 leading-relaxed text-muted-foreground">
+                {typedAudit.report_data.narrative.executive_summary}
+              </p>
+            </div>
+          ) : (
+            <div />
+          )}
+          <div>
+            <UrgencyChart
+              findings={typedFindings.map((f) => ({
+                amount_cents: f.amount_cents,
+                window_days_remaining: f.window_days_remaining,
+              }))}
+            />
           </div>
         </section>
 
-        {/* Executive summary */}
-        {typedAudit.report_data?.narrative?.executive_summary && (
-          <section className="mt-8 rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
-            <h2 className="text-lg font-bold">Executive Summary</h2>
-            <p className="mt-2 leading-relaxed text-muted-foreground">
-              {typedAudit.report_data.narrative.executive_summary}
-            </p>
-          </section>
-        )}
-
-        {/* Urgency timeline */}
-        <UrgencyChart
-          findings={typedFindings.map((f) => ({
-            amount_cents: f.amount_cents,
-            window_days_remaining: f.window_days_remaining,
-          }))}
-        />
-
         {/* Category cards */}
-        <section className="mt-8 grid gap-4 sm:grid-cols-2">
+        <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Object.entries(categories).map(([cat, data]) => {
             const highCount = data.findings.filter((f) => f.confidence === "high").length;
             const medCount = data.findings.filter((f) => f.confidence === "medium").length;
@@ -205,120 +208,112 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
           })}
         </section>
 
-        {/* Top cases */}
+        {/* Top cases — table layout */}
         {typedFindings.length > 0 && (
           <section className="mt-8">
             <h2 className="text-xl font-bold">Top cases</h2>
-            <div className="mt-4 divide-y rounded-xl border border-slate-200 bg-white/80 shadow-sm backdrop-blur-sm">
-              {typedFindings.slice(0, 15).map((f) => {
-                const orderId = (f.evidence?.order_id ?? f.evidence?.transaction_id) as string | undefined;
-                const sku = f.evidence?.sku as string | undefined;
-                const fnsku = f.evidence?.fnsku as string | undefined;
-                const disposition = f.evidence?.disposition as string | undefined;
+            <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white/80 shadow-sm backdrop-blur-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-4 py-3">Identifier</th>
+                    <th className="hidden px-4 py-3 sm:table-cell">SKU</th>
+                    <th className="px-4 py-3">Category</th>
+                    <th className="px-4 py-3">Confidence</th>
+                    <th className="hidden px-4 py-3 md:table-cell">Window</th>
+                    <th className="px-4 py-3 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {typedFindings.slice(0, 15).map((f) => {
+                    const orderId = (f.evidence?.order_id ?? f.evidence?.transaction_id) as string | undefined;
+                    const sku = f.evidence?.sku as string | undefined;
 
-                return (
-                  <div key={f.id} className="px-4 py-3 sm:px-6">
-                    <div className="flex items-start justify-between gap-4">
-                      {/* Left: identifiers + evidence */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {orderId && (
-                            <span className="truncate font-mono text-sm" title={String(orderId)}>
-                              {String(orderId)}
-                            </span>
-                          )}
-                          {sku && (
-                            <span className="truncate text-xs text-muted-foreground" title={String(sku)}>
-                              SKU: {String(sku)}
-                            </span>
-                          )}
-                          {fnsku && (
-                            <span className="truncate text-xs text-muted-foreground" title={String(fnsku)}>
-                              FNSKU: {String(fnsku)}
-                            </span>
-                          )}
-                        </div>
-                        {/* Badges */}
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <Badge variant="secondary" className="text-xs">
+                    return (
+                      <tr key={f.id} className="hover:bg-slate-50/50">
+                        <td className="max-w-[180px] truncate px-4 py-3 font-mono text-xs" title={orderId ?? "—"}>
+                          {orderId ?? "—"}
+                        </td>
+                        <td className="hidden max-w-[120px] truncate px-4 py-3 text-xs text-muted-foreground sm:table-cell" title={sku ?? ""}>
+                          {sku ?? "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant="secondary" className="text-xs whitespace-nowrap">
                             {CATEGORY_LABELS[f.category] ?? f.category}
                           </Badge>
+                        </td>
+                        <td className="px-4 py-3">
                           <Badge
                             variant={f.confidence === "high" ? "default" : "secondary"}
                             className="text-xs"
                           >
                             {f.confidence}
                           </Badge>
+                        </td>
+                        <td className="hidden px-4 py-3 md:table-cell">
                           {f.window_days_remaining !== null &&
-                            f.window_days_remaining >= 0 &&
-                            f.window_days_remaining <= 14 && (
-                              <Badge variant="destructive" className="text-xs">
-                                {f.window_days_remaining}d left
-                              </Badge>
-                            )}
-                          {disposition && (
-                            <Badge variant="outline" className="text-xs">
-                              {String(disposition)}
+                          f.window_days_remaining >= 0 ? (
+                            <Badge
+                              variant={f.window_days_remaining <= 14 ? "destructive" : "outline"}
+                              className="text-xs"
+                            >
+                              {f.window_days_remaining}d
                             </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
-                        </div>
-                        {f.narrative_summary && (
-                          <p className="mt-1.5 text-sm leading-snug text-muted-foreground">
-                            {f.narrative_summary}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Right: amount */}
-                      <p className="shrink-0 font-mono text-lg font-bold tabular-nums">
-                        {formatDollars(f.amount_cents)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono font-bold tabular-nums">
+                          {formatDollars(f.amount_cents)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </section>
         )}
 
-        {/* CTA */}
-        <section className="mt-12 rounded-xl border border-slate-200 border-l-4 border-l-primary bg-primary/5 p-8 shadow-sm backdrop-blur-sm">
-          <div className="flex flex-col items-center text-center">
-            <ShieldCheck className="mb-3 size-8 text-primary" />
-            <p className="text-lg font-semibold">
-              Filing {typedAudit.findings_count} disputes is a 60-80 hour job.
-            </p>
-            <p className="mt-2 max-w-xl text-muted-foreground">
-              We do it as a managed service — we only get paid when the money lands in your account
-              (20% of recovered, no retainer, no software).
-            </p>
-            <Button size="lg" className="mt-6">
-              Talk to us — 15 min, no pitch deck <ArrowRight className="ml-2 size-4" />
-            </Button>
+        {/* CTA + Methodology — side by side on desktop */}
+        <section className="mt-12 grid gap-6 lg:grid-cols-5">
+          <div className="rounded-xl border border-slate-200 bg-primary/5 p-8 shadow-sm backdrop-blur-sm lg:col-span-3">
+            <div className="flex flex-col items-center text-center">
+              <ShieldCheck className="mb-3 size-8 text-primary" />
+              <p className="text-lg font-semibold">
+                Filing {typedAudit.findings_count} disputes is a 60-80 hour job.
+              </p>
+              <p className="mt-2 max-w-xl text-muted-foreground">
+                We do it as a managed service — we only get paid when the money lands in your account
+                (20% of recovered, no retainer, no software).
+              </p>
+              <Button size="lg" className="mt-6">
+                Talk to us — 15 min, no pitch deck <ArrowRight className="ml-2 size-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-6 lg:col-span-2">
+            {typedAudit.report_data?.narrative?.methodology_note && (
+              <div className="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Methodology
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {typedAudit.report_data.narrative.methodology_note}
+                </p>
+              </div>
+            )}
+            <div className="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm text-center text-xs text-muted-foreground">
+              <p>
+                Report generated for {typedAudit.brand_name}
+                {typedAudit.completed_at &&
+                  ` on ${new Date(typedAudit.completed_at).toLocaleDateString()}`}
+              </p>
+              <p className="mt-1">Case ID: {uuid.slice(0, 8).toUpperCase()}</p>
+            </div>
           </div>
         </section>
-
-        {/* Methodology + footer */}
-        <footer className="mt-12 space-y-6 border-t border-slate-200 pt-8">
-          {typedAudit.report_data?.narrative?.methodology_note && (
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Methodology
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {typedAudit.report_data.narrative.methodology_note}
-              </p>
-            </div>
-          )}
-          <div className="text-center text-xs text-muted-foreground">
-            <p>
-              Report generated for {typedAudit.brand_name}
-              {typedAudit.completed_at &&
-                ` on ${new Date(typedAudit.completed_at).toLocaleDateString()}`}
-            </p>
-            <p className="mt-1">Case ID: {uuid.slice(0, 8).toUpperCase()}</p>
-          </div>
-        </footer>
       </main>
     </div>
   );
