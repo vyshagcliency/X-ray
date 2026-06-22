@@ -1,0 +1,5 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased
+9001,Order,999-0000001,ItemPrice,Principal,100.00,CE-001,1
+9001,Order,999-0000001,ItemFees,Commission,-15.00,CE-001,1
+9001,Order,999-0000002,ItemPrice,Principal,100.00,MYST-001,1
+9001,Order,999-0000002,ItemFees,Commission,-15.00,MYST-001,1

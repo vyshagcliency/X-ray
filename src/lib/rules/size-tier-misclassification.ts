@@ -8,16 +8,22 @@ import {
  * PRD §5.5 — Dimension/size-tier fee overcharge (payout-integrity wedge).
  *
  * Recomputes the *correct* FBA size tier from a SKU's measured dimensions/weight
- * (Fee Preview report) using the size-tier reference schedule, and compares it
- * against the tier Amazon actually assigned. Where Amazon placed the SKU in a
- * larger/costlier tier than its dimensions warrant, the per-unit fee delta × units
- * sold (from settlement) is the recoverable overcharge — computed in SQL.
+ * (Fee Preview) and flags SKUs Amazon placed in a larger/costlier tier than their
+ * dimensions warrant. The overcharge is the SKU's actual charged fee
+ * (`estimated-fee-total`) minus what the correct tier should cost × units sold.
+ *
+ * Self-calibrating: the "correct tier cost" is the median fee Amazon actually charges
+ * SKUs that ARE correctly classified into that tier (from the seller's own data) —
+ * no hardcoded fee dollars on the recovery path. The published fee schedule is only a
+ * fallback for tiers with no clean in-dataset sample, and is still the source of the
+ * dimension/weight tier boundaries (which are stable and not dollar-sensitive).
  *
  * Contract-free: needs only the seller's own Fee Preview and Settlement reports.
  */
 export const sizeTierMisclassification: Rule = {
   id: "size_tier_misclassification",
-  version: "1.0.0",
+  // 1.1.0 — recovery dollars now self-calibrated from the seller's own fees.
+  version: "1.1.0",
   requiredReports: ["fba_fee_preview", "settlement"],
   category: "fba_dimension",
 
@@ -31,7 +37,9 @@ export const sizeTierMisclassification: Rule = {
         CAST("longest-side" AS DOUBLE) AS longest_in,
         CAST("median-side" AS DOUBLE) AS median_in,
         CAST("shortest-side" AS DOUBLE) AS shortest_in,
-        CAST("item-package-weight" AS DOUBLE) AS weight_oz
+        CAST("item-package-weight" AS DOUBLE) AS weight_oz,
+        -- The fee Amazon actually charges this SKU, from its own report.
+        ROUND(CAST("estimated-fee-total" AS DOUBLE) * 100) AS actual_fee_cents
       FROM read_csv($fba_fee_preview_url, auto_detect=true)
     ),
     units AS (
@@ -47,12 +55,21 @@ export const sizeTierMisclassification: Rule = {
         p.sku,
         p.asin,
         p.amazon_tier,
+        p.actual_fee_cents,
         p.longest_in, p.median_in, p.shortest_in, p.weight_oz,
         ${correctTierRankExpr("p.longest_in", "p.median_in", "p.shortest_in", "p.weight_oz")} AS correct_rank,
-        amzt.rank AS amazon_rank,
-        amzt.fee_cents AS amazon_fee_cents
+        amzt.rank AS amazon_rank
       FROM preview p
       LEFT JOIN fba_size_tiers amzt ON amzt.tier = p.amazon_tier
+    ),
+    -- Self-calibration: the typical fee Amazon charges for SKUs that ARE correctly
+    -- classified into a tier (amazon_rank = correct_rank) — derived from the seller's
+    -- own data, no hardcoded dollars. Median is robust to the odd outlier.
+    tier_baseline AS (
+      SELECT correct_rank AS rank, median(actual_fee_cents) AS baseline_fee_cents
+      FROM classified
+      WHERE amazon_rank = correct_rank AND actual_fee_cents IS NOT NULL
+      GROUP BY correct_rank
     ),
     joined AS (
       SELECT
@@ -62,13 +79,16 @@ export const sizeTierMisclassification: Rule = {
         ct.tier AS correct_tier,
         c.amazon_rank,
         c.correct_rank,
-        c.amazon_fee_cents,
-        ct.fee_cents AS correct_fee_cents,
-        c.amazon_fee_cents - ct.fee_cents AS per_unit_overcharge_cents,
+        c.actual_fee_cents,
+        -- Correct fee = empirical baseline for the correct tier; fall back to the
+        -- published schedule when this dataset has no clean sample for that tier.
+        COALESCE(tb.baseline_fee_cents, ct.fee_cents) AS correct_fee_cents,
+        c.actual_fee_cents - COALESCE(tb.baseline_fee_cents, ct.fee_cents) AS per_unit_overcharge_cents,
         COALESCE(u.units_sold, 0) AS units_sold,
         c.longest_in, c.median_in, c.shortest_in, c.weight_oz
       FROM classified c
       JOIN fba_size_tiers ct ON ct.rank = c.correct_rank
+      LEFT JOIN tier_baseline tb ON tb.rank = c.correct_rank
       LEFT JOIN units u ON u.sku = c.sku
       WHERE c.correct_rank IS NOT NULL
         AND c.amazon_rank IS NOT NULL
@@ -81,7 +101,7 @@ export const sizeTierMisclassification: Rule = {
       correct_tier,
       amazon_rank,
       correct_rank,
-      amazon_fee_cents,
+      actual_fee_cents,
       correct_fee_cents,
       per_unit_overcharge_cents,
       units_sold,

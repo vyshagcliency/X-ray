@@ -65,7 +65,12 @@ Phase 1.5 (payout integrity / "Settlement Truth Audit" — the lead):
 - `fba_fee_preview` — FBA Fee Preview. Amazon's measured `longest-side`/`median-side`/`shortest-side`/`item-package-weight`, assigned `product-size-tier`, and `estimated-fee-total`.
 - `storage_fees` — FBA Aged Inventory Surcharge (`snapshot-date`, `sku`, `qty-charged`, `surcharge-type`, `surcharge-amount`).
 
-**Reference tables:** `src/lib/rules/reference/referral-rates.ts` (category referral %, tiered) and `fba-fee-schedule.ts` (size-tier → fee) are versioned SQL `VALUES` CTEs composed into the rule SQL. Representative 2026 values — **verify against Amazon's live schedule before production**; bump the `*_REFERENCE_VERSION` and the rule `version` when they change. **DuckDB gotcha:** `at` is a reserved keyword — alias tier joins as `amzt`, not `at`.
+**Reference tables** (`src/lib/rules/reference/`, versioned SQL `VALUES` CTEs composed into rule SQL):
+- `referral-rates.ts` — category referral %, progressive/tiered model. Authoritative (Amazon public pricing page).
+- `fba-fee-schedule.ts` — size-tier dimension/weight boundaries + a *fallback* fee per tier. Fee dollars are representative; the size-tier rule self-calibrates real dollars from the seller's own `estimated-fee-total` (median fee of correctly-classified SKUs per tier) and only falls back to the schedule when a tier has no clean sample.
+- `product-group-map.ts` — bridges Fee Preview `product-group` codes (`ce`, `home_garden`, …) → referral category labels. Unmapped → "Everything Else" (15%) so a mapping miss can only *miss* an overcharge, never falsely flag one.
+
+Bump the matching `*_VERSION` and the rule `version` when values change. **DuckDB gotcha:** `at` is a reserved keyword — alias tier joins as `amzt`, not `at`.
 
 **Note:** Amazon deprecated "FBA Inventory Adjustments" in Jan 2023. The internal key was renamed from `adjustments` to `inventory_ledger` (2026-05-08).
 

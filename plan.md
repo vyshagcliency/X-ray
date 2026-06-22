@@ -450,11 +450,13 @@ Each rule is: **pure SQL file + registry entry + Vitest CSV fixture + fixture te
 
 ---
 
-## Phase 2 — Full Bucket 3
+## Phase 2 — Tool maturation (formerly "Full Bucket 3")
 
-**Goal:** Self-serve delivery (no more manual review), all 10 Bucket-3 detection rules live, optional reports unlock deeper findings, admin gets funnel analytics + block list, user-initiated deletion is automated.
+> [!warning] RE-SCOPED 2026-06-23 by the wedge correction. The original Phase 2 ("build all 10 Bucket-3 detection rules") is **superseded.** Bucket 3 (FBA reimbursement) is the *declining, commoditized* bucket — building more free-tool Bucket-3 rules is no longer the right next step. Most of the old §2.2 rules (referral, dimension, aged-surcharge, return-credit) were already built in **Phase 1.5 as the payout-integrity wedge**. What genuinely remains here is **operational maturation of the tool** (self-serve delivery, admin analytics, automated deletion) plus at most 1–2 *optional* add-on checks (removal-not-received, inbound-shortage). **The real next company move is not in this plan: it's the paid recovery service** (Bucket 1 chargebacks + fee-accuracy recovery → retainer → full-stack), delivered by ops per [[service-ladder-strategy]] — gated on the decisive real-data test (Phase 1.5 §1.5.6), not on more tool features.
 
-**Exit gate:** Phase 2 P1/P2 user stories pass. 300-brand target from PRD §11 Phase 2 is achievable. Detection rule catalog covers 5.4–5.9. Self-serve feature flag flipped without incident.
+**Goal:** Mature the X-Ray from a manually-reviewed MVP into a self-serve tool: auto-delivery (no manual review), admin funnel analytics + block list, automated deletion. Detection rules are *largely done* (Phase 1.5); only optional add-on checks remain. Do **not** expand the free tool toward "full Bucket 3" — that bucket is demoted.
+
+**Exit gate:** Self-serve delivery runs ≥50 audits without a credibility incident; admin funnel reflects real data; automated deletion processed end-to-end. (The old "detection catalog covers 5.4–5.9 / 300-brand" gate is retired — superseded by the wedge correction.)
 
 ### 🔬 Research checkpoint (before starting)
 
@@ -477,20 +479,20 @@ Each rule is: **pure SQL file + registry entry + Vitest CSV fixture + fixture te
 - [ ] Header schemas pinned with `header_signature` hash so we can detect Amazon format drift (arch §4.2)
 - [ ] Smoke test all 8 reports against one real dataset end-to-end
 
-### 2.2 Detection rules — expansion
+### 2.2 Detection rules — mostly superseded by Phase 1.5
 
-**User stories:** US-5.4, US-5.5, US-5.6, US-5.7, US-5.8, US-5.9 · **PRD:** §5.4–5.9 · **Rules reference:** `.claude/rules/detection-rules.md`
+**User stories:** US-5.4–5.9 · **PRD:** §5.4–5.9 · **Rules reference:** `.claude/rules/detection-rules.md`
 
-Each rule is: **pure SQL file + registry entry + Vitest fixture + fixture test.**
+Four of the six originally-planned rules shipped in Phase 1.5 as the payout-integrity wedge (different filenames, self-calibrated where relevant):
+- [x] `returned-not-resold` (§5.4) → **shipped as `return-credit-unapplied.ts`** (Phase 1.5)
+- [x] `dim-overcharge` (§5.5) → **shipped as `size-tier-misclassification.ts`** (Phase 1.5, self-calibrated)
+- [x] `referral-category` (§5.6) → **shipped as `referral-fee-mismatch.ts`** (Phase 1.5, real Amazon rates + product-group map)
+- [x] `ltsf-active-sku` (§5.8) → **shipped as `aged-surcharge-on-sold.ts`** (Phase 1.5)
 
-- [ ] `src/lib/rules/returned-not-resold.ts` (PRD §5.4) + tests
-- [ ] `src/lib/rules/dim-overcharge.ts` (PRD §5.5) + tests — the headline Phase 2 feature per PRD §11
-- [ ] `src/lib/rules/referral-category.ts` (PRD §5.6) + tests
-- [ ] `src/lib/rules/removal-not-received.ts` (PRD §5.7) + tests
-- [ ] `src/lib/rules/ltsf-active-sku.ts` (PRD §5.8) + tests
-- [ ] `src/lib/rules/inbound-shortage.ts` (PRD §5.9) + tests
-- [ ] Update report category cards to include the new rule categories
-- [ ] Update PDF template to render the expanded findings
+Genuinely remaining — *optional add-ons only* (not the lead; build only if a real customer's data shows them worth it):
+- [ ] `src/lib/rules/removal-not-received.ts` (PRD §5.7) + tests — needs Removal Order Detail report
+- [ ] `src/lib/rules/inbound-shortage.ts` (PRD §5.9) + tests — needs inbound shipment data
+- [x] Report category cards + PDF render the payout-integrity categories (done in Phase 1.5)
 - [ ] Regenerate sample report PDF for landing page (US-1.3)
 
 ### 2.3 Self-serve delivery
@@ -659,6 +661,7 @@ These don't belong to a single phase — they're continuous discipline across al
 | 2026-05-08 | End-to-end pipeline verified on production | Trigger.dev v20260425.3 deployed. DuckDB `home_directory = '/tmp'` fix for container environments. Test audit completed: 201 findings, $3,015 recoverable. Full flow: upload → detect → narrate → report → admin review → email delivery. |
 | 2026-05-08 | Phase 1 hardening: deletion, security, urgency chart, video placeholder, outreach template | Admin cascade-delete endpoint + button. Security: CSP header, Upstash rate limits (domain + IP), DOMPurify sanitizer. Urgency timeline chart on report page (Recharts). Landing page video placeholder. Outreach email templates for Vyshag. All 21 tests pass, build + lint clean. |
 | 2026-05-09 | 3 synthetic brand datasets for smoke testing | Built deterministic data generator (`scripts/generate-smoke-data.mjs`) producing 3 brands: NovaPeak Outdoor (801 findings), LuxeNest Home (289 findings), PureGlow Beauty (1663 findings). All 3 detection rules fire on all 3 brands. 33 tests pass (12 smoke + 21 unit). Real Amazon data deferred — synthetic data validated rule coverage, edge cases, and cross-report matching. |
+| 2026-06-23 | **Pre-real-data fixes + Phase 2 re-scope** | (1) **Product-group mapping** — new `reference/product-group-map.ts` bridges Fee Preview product-group codes (e.g. `ce`) → referral categories, with conservative fallback to Everything Else (a mapping miss can only *miss* an overcharge, never falsely flag one). Referral rule + test updated (code path proven). (2) **Self-calibrated fees** — `size-tier-misclassification` (v1.1.0) now computes the recovery from the SKU's *actual* charged fee vs the median fee of correctly-classified SKUs in the correct tier (from the seller's own data); the hardcoded schedule is only a fallback. Removes the placeholder-fee dependency on real data. (3) **Urgency reframe** — rolling overcharges (referral/size-tier, no dispute window) now show a "recurring overcharge — keeps accruing every month" line on the report + in the narrative, instead of a countdown. (4) **Phase 2 re-scoped** — "Full Bucket 3" demoted; 4 of its 6 rules already shipped in 1.5; real next move is the paid recovery service, not more free-tool rules. 66 tests pass. |
 | 2026-06-23 | **Demo hero brand "Halcyon Audio" + report/PDF/dispute wording reframed** | Whole journey now tells one story: report exec-summary/methodology, PDF subtitle ("Settlement Truth Audit"), category labels, and 4 new dispute templates all reframed from reimbursement to payout integrity. Added a demo-ready synthetic brand (Consumer Electronics, real 8% referral rate → overcharges show as the default 15%) for the LinkedIn video; bumped synthetic settlement to realistic per-SKU order volume (40–160), and added return-credit-back events (~78% of sellable returns credited) so return_credit isn't artificially inflated. Halcyon totals: **~$53.5k recoverable** — referral $3,094 / size-tier $2,958 / return-credit $47,255 / aged $199 (+ reimbursement add-ons). **This is DEMO data (safe to show), NOT the real-store validation (1.5.6 still open).** 65 tests pass, lint + build clean. |
 | 2026-06-01 | **Phase 1.5 surfacing (Road A): payout-integrity story + new upload reports live** | Referral table populated from Amazon's **public** pricing page (authoritative, v2026.2, 3-tier model). Landing page re-pointed: headline "Your settlement report is lying to you. We'll prove it.", subhead + category cards + steps + stats reframed from reimbursement to fee/payout overcharges. Upload page now shows required tiles (settlement, fba_fee_preview) + an optional section (returns, inventory_ledger, reimbursements, storage_fees); upload route requires only the lead pair and accepts/skips optionals; pipeline already runs whichever rules have their reports. FBA fee dollar grid still representative (resolves via self-calibration from real seller data — no Seller Central account available). Tests 57/57, lint clean. **Still open in 1.5:** narrative/PDF re-frame (1.5.4/1.5.5 server side), the one real-data test (1.5.6). |
 | 2026-06-01 | **Phase 1.5 core built: research + reference tables + 4 rules + synthetic data** | Research checkpoint complete (2026 referral table, Jan-2026 FBA size-tier restructure, Settlement V2 / Fee Preview / Aged-Surcharge schemas). Shipped: `reference/referral-rates.ts` + `reference/fba-fee-schedule.ts` (versioned `VALUES` CTEs); 3 new report signatures in `headers.ts`; `run-rule.ts`/`helpers.ts` now accept a SQL-emitted `amount_cents`; 4 payout-integrity rules (`referral_fee_mismatch`, `size_tier_misclassification`, `return_credit_unapplied`, `aged_surcharge_on_sold`) each with a green fixture test (12 tests); smoke generator extended to emit all 3 new reports with planted discrepancies — all 4 rules fire on all 3 brands. Reimbursement rules demoted in the registry. 57 tests pass, lint clean. **Still open in 1.5:** upload tiles for the new reports (1.5.1), report/narrative demotion ordering (1.5.4), messaging re-frame (1.5.5), the one real-data test (1.5.6). |

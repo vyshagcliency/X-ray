@@ -49,7 +49,16 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
     ? ` Of this, ${urgentFormatted} is time-sensitive — dispute windows close within 14 days.`
     : "";
 
-  const executive_summary = `Our forensic audit of ${brand_name}'s Amazon settlement, fee, and inventory data found ${findings_count} discrepancies totaling ${totalFormatted} where what Amazon charged or credited doesn't match what you're actually owed.${urgentLine} Each finding below is backed by row-level evidence from your own reports and is ready to dispute.`;
+  // Rolling overcharges (referral %, size-tier) have no deadline; they keep accruing.
+  const ROLLING_CATEGORIES = new Set(["referral_fee", "fba_dimension"]);
+  const recurringCents = categories
+    .filter((c) => ROLLING_CATEGORIES.has(c.category))
+    .reduce((s, c) => s + c.total_cents, 0);
+  const recurringLine = recurringCents > 0
+    ? ` ${formatDollars(recurringCents)} of it is a recurring overcharge that keeps accruing every month until corrected.`
+    : "";
+
+  const executive_summary = `Our forensic audit of ${brand_name}'s Amazon settlement, fee, and inventory data found ${findings_count} discrepancies totaling ${totalFormatted} where what Amazon charged or credited doesn't match what you're actually owed.${urgentLine}${recurringLine} Each finding below is backed by row-level evidence from your own reports and is ready to dispute.`;
 
   // Per-category narratives
   const category_narratives: Record<string, string> = {};

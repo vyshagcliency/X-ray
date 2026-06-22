@@ -4,6 +4,7 @@ import {
   REFERRAL_MIN_FEE_CENTS,
   expectedReferralFeeCentsExpr,
 } from "./reference/referral-rates";
+import { PRODUCT_GROUP_MAP_CTE } from "./reference/product-group-map";
 
 /**
  * PRD §5.6 — Referral fee category misclassification (payout-integrity wedge).
@@ -24,11 +25,17 @@ export const referralFeeMismatch: Rule = {
 
   sql: /* sql */ `
     WITH ${REFERRAL_RATES_CTE},
+    ${PRODUCT_GROUP_MAP_CTE},
     sku_category AS (
       SELECT DISTINCT
-        sku,
-        "product-group" AS product_group
-      FROM read_csv($fba_fee_preview_url, auto_detect=true)
+        p.sku,
+        -- Map the report's product-group code/label to a referral category.
+        -- Unmapped → 'Everything Else' (15%): a mapping miss can only cause a
+        -- missed overcharge, never a false one.
+        COALESCE(m.referral_category, 'Everything Else') AS product_group
+      FROM read_csv($fba_fee_preview_url, auto_detect=true) p
+      LEFT JOIN product_group_map m
+        ON m.alias = LOWER(TRIM(p."product-group"))
     ),
     settlement_agg AS (
       SELECT

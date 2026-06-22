@@ -1,0 +1,3 @@
+sku,asin,product-group,longest-side,median-side,shortest-side,item-package-weight,unit-of-dimension,unit-of-weight,product-size-tier,estimated-fee-total
+CE-001,B000CE0001,ce,10,6,2,12,inches,ounces,Large Standard,5.50
+MYST-001,B000MY0001,some_unknown_group,8,5,2,10,inches,ounces,Small Standard,3.50

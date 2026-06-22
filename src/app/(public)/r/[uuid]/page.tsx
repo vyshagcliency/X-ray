@@ -4,7 +4,7 @@ import { formatDollars } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, AlertTriangle, ArrowRight, ShieldCheck } from "lucide-react";
+import { Download, AlertTriangle, ArrowRight, ShieldCheck, RefreshCw } from "lucide-react";
 import { NavBar } from "@/components/nav-bar";
 import { UrgencyChart } from "@/components/report/UrgencyChart";
 
@@ -94,6 +94,13 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
   const categoryCount = Object.keys(categories).length;
   const highConfidenceCount = typedFindings.filter((f) => f.confidence === "high").length;
 
+  // Rolling overcharges (referral %, size-tier) have no dispute deadline — the urgency
+  // is that they keep accruing every month until corrected, not a closing window.
+  const ROLLING_CATEGORIES = new Set(["referral_fee", "fba_dimension"]);
+  const recurringCents = typedFindings
+    .filter((f) => ROLLING_CATEGORIES.has(f.category))
+    .reduce((s, f) => s + f.amount_cents, 0);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Decorative background elements */}
@@ -120,6 +127,14 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
                   <AlertTriangle className="size-4 shrink-0" />
                   <span className="text-sm font-medium">
                     {formatDollars(typedAudit.urgent_recoverable_cents)} has dispute windows closing within 14 days
+                  </span>
+                </p>
+              )}
+              {recurringCents > 0 && (
+                <p className="mt-3 flex items-center gap-2 text-amber-600">
+                  <RefreshCw className="size-4 shrink-0" />
+                  <span className="text-sm font-medium">
+                    {formatDollars(recurringCents)} is a recurring overcharge — it keeps accruing every month until corrected
                   </span>
                 </p>
               )}

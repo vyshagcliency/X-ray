@@ -35,6 +35,21 @@ describe("referral_fee_mismatch", () => {
     expect(findings.every((f) => f.amount_cents !== 1500)).toBe(true);
   });
 
+  it("maps legacy product-group codes (ce → Consumer Electronics 8%) and is conservative on unknown groups", async () => {
+    const findings = await runRuleAgainstFixtures(referralFeeMismatch, {
+      settlement: "referral-code-settlement.csv",
+      fba_fee_preview: "referral-code-preview.csv",
+    });
+
+    // CE-001: product-group "ce" → Consumer Electronics 8%. Charged 15% on $100 →
+    // expected $8, overcharge $7.00.
+    // MYST-001: unknown group → falls back to Everything Else 15% → charged exactly
+    // 15% → no finding (conservative; never falsely flags an unmapped group).
+    expect(findings.length).toBe(1);
+    expect(findings[0].evidence.sku).toBe("CE-001");
+    expect(findings[0].amount_cents).toBe(700);
+  });
+
   it("rates large category gaps as high confidence", async () => {
     const findings = await runRuleAgainstFixtures(referralFeeMismatch, {
       settlement: "referral-settlement.csv",
