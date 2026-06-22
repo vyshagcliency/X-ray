@@ -65,7 +65,13 @@ export async function runRule(
         rule_id: rule.id,
         rule_version: rule.version,
         category: rule.category,
-        amount_cents: estimateAmountCents(rowObj),
+        // Payout-integrity rules compute the real recoverable overcharge in SQL and
+        // emit it as `amount_cents`. Reimbursement rules omit it and fall back to the
+        // downstream estimator. All arithmetic still lives in SQL.
+        amount_cents:
+          rowObj.amount_cents != null
+            ? Math.round(Number(rowObj.amount_cents))
+            : estimateAmountCents(rowObj),
         confidence: rule.confidence(rowObj),
         window_closes_on: windowDate ? windowDate.toISOString().split("T")[0] : null,
         evidence: {

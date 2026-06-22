@@ -1,0 +1,3 @@
+item-name,listing-id,seller-sku,price,quantity,open-date,image-url,item-is-marketplace,product-id-type,zshop-shipping-fee,item-note,item-condition,zshop-category1,zshop-browse-path,zshop-storefront-feature,asin1,date-created,fulfillment-channel
+Partial Widget Expensive,lst-001,PARTIAL-A,149.99,50,,,,1,,,,,,B0PARTIAL1,,AMAZON_NA
+Partial Widget Mid,lst-002,PARTIAL-B,89.99,30,,,,1,,,,,,B0PARTIAL2,,AMAZON_NA

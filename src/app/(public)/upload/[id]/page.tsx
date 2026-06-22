@@ -10,7 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { ReportTile } from "@/components/upload/ReportTile";
 import { REPORT_SIGNATURES } from "@/lib/csv/headers";
 
-const REQUIRED_REPORTS = ["reimbursements", "returns", "inventory_ledger"] as const;
+// Lead with payout integrity: the settlement + fee-preview reports power the
+// referral-fee and size-tier checks (the "Settlement Truth Audit"). The rest are
+// optional and unlock additional findings.
+const REQUIRED_REPORTS = ["settlement", "fba_fee_preview"] as const;
+const OPTIONAL_REPORTS = [
+  "returns",
+  "inventory_ledger",
+  "reimbursements",
+  "storage_fees",
+] as const;
 
 
 export default function UploadPage({ params }: { params: Promise<{ id: string }> }) {
@@ -62,8 +71,9 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
-  const uploadedCount = Object.keys(files).length;
-  const remainingCount = REQUIRED_REPORTS.length - uploadedCount;
+  const requiredUploadedCount = REQUIRED_REPORTS.filter((t) => files[t]).length;
+  const optionalUploadedCount = OPTIONAL_REPORTS.filter((t) => files[t]).length;
+  const remainingCount = REQUIRED_REPORTS.length - requiredUploadedCount;
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -82,18 +92,20 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           <div className="flex items-center gap-3">
             <Badge variant="secondary">Step 2 of 3</Badge>
             <span className="text-sm text-muted-foreground">
-              {uploadedCount} of {REQUIRED_REPORTS.length} uploaded
+              {requiredUploadedCount} of {REQUIRED_REPORTS.length} required
+              {optionalUploadedCount > 0 && ` · +${optionalUploadedCount} optional`}
             </span>
           </div>
           <h1 className="mt-3 text-2xl font-bold tracking-tight lg:text-3xl">
             Upload your Seller Central reports
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Upload the 3 required reports below. We&apos;ll validate each one instantly.
+            Start with the 2 required reports below. We&apos;ll validate each one
+            instantly. Add the optional ones to find more.
           </p>
         </motion.div>
 
-        {/* Report tiles */}
+        {/* Required report tiles */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -108,6 +120,31 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
               onClear={() => handleClear(type)}
             />
           ))}
+        </motion.div>
+
+        {/* Optional report tiles */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+          className="mt-6"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Optional — find more
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="mt-3 space-y-3">
+            {OPTIONAL_REPORTS.map((type) => (
+              <ReportTile
+                key={type}
+                signature={REPORT_SIGNATURES[type]}
+                onValidFile={(file) => handleValidFile(type, file)}
+                onClear={() => handleClear(type)}
+              />
+            ))}
+          </div>
         </motion.div>
 
         {/* Run button */}

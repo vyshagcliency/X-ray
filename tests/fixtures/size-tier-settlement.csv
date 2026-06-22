@@ -1,0 +1,4 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased
+6001,Order,222-0000001,ItemPrice,Principal,25.00,SZ-OK,100
+6001,Order,222-0000002,ItemPrice,Principal,30.00,SZ-BAD1,50
+6001,Order,222-0000003,ItemPrice,Principal,45.00,SZ-BAD2,30

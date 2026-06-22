@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { DuckDBInstance } from "@duckdb/node-api";
+import fs from "fs";
 import path from "path";
 import { RULES } from "@/lib/rules";
 import type { Rule } from "@/lib/rules";
@@ -14,16 +15,33 @@ const BRANDS: BrandDataset[] = [
   { name: "NovaPeak Outdoor", slug: "novapeak-outdoor", dir: "novapeak-outdoor" },
   { name: "LuxeNest Home", slug: "luxenest-home", dir: "luxenest-home" },
   { name: "PureGlow Beauty", slug: "pureglow-beauty", dir: "pureglow-beauty" },
+  { name: "Halcyon Audio", slug: "halcyon-audio", dir: "halcyon-audio" },
 ];
 
 const SMOKE_BASE = path.resolve(__dirname, "smoke");
 
+const REPORT_FILES: Record<string, string> = {
+  returns: "returns.csv",
+  reimbursements: "reimbursements.csv",
+  inventory_ledger: "inventory-ledger.csv",
+  settlement: "settlement.csv",
+  fba_fee_preview: "fba-fee-preview.csv",
+  storage_fees: "storage-fees.csv",
+};
+
+/** A rule is runnable on a brand only if every report file it requires exists. */
+function brandHasReportsFor(rule: Rule, brandDir: string): boolean {
+  return rule.requiredReports.every((r) => {
+    const file = REPORT_FILES[r];
+    return file && fs.existsSync(path.join(SMOKE_BASE, brandDir, file));
+  });
+}
+
 async function runRuleOnBrand(rule: Rule, brandDir: string) {
-  const urls: Record<string, string> = {
-    returns: path.join(SMOKE_BASE, brandDir, "returns.csv"),
-    reimbursements: path.join(SMOKE_BASE, brandDir, "reimbursements.csv"),
-    inventory_ledger: path.join(SMOKE_BASE, brandDir, "inventory-ledger.csv"),
-  };
+  const urls: Record<string, string> = {};
+  for (const [type, file] of Object.entries(REPORT_FILES)) {
+    urls[type] = path.join(SMOKE_BASE, brandDir, file);
+  }
 
   // Check required reports
   for (const r of rule.requiredReports) {
@@ -66,7 +84,7 @@ describe("Smoke tests — 3 brand datasets", () => {
   for (const brand of BRANDS) {
     describe(brand.name, () => {
       for (const rule of RULES) {
-        it(`${rule.id} runs without error and produces findings`, async () => {
+        it.skipIf(!brandHasReportsFor(rule, brand.dir))(`${rule.id} runs without error and produces findings`, async () => {
           const findings = await runRuleOnBrand(rule, brand.dir);
 
           // Every brand should produce at least some findings per rule
@@ -82,9 +100,11 @@ describe("Smoke tests — 3 brand datasets", () => {
             ),
           ).toBe(true);
 
-          // All findings should have a window_closes_on date
+          // Every finding must emit the mandated window_closes_on column. The value
+          // may be null for rolling-overcharge rules (referral/size-tier have no hard
+          // dispute window — PRD §5.5/§5.6); reimbursement rules carry a real date.
           expect(
-            findings.every((f) => f.evidence.window_closes_on != null),
+            findings.every((f) => "window_closes_on" in f.evidence),
           ).toBe(true);
 
           // All findings should have a row_ref
@@ -101,6 +121,7 @@ describe("Smoke tests — 3 brand datasets", () => {
         const breakdown: Record<string, number> = {};
 
         for (const rule of RULES) {
+          if (!brandHasReportsFor(rule, brand.dir)) continue;
           const findings = await runRuleOnBrand(rule, brand.dir);
           total += findings.length;
           breakdown[rule.id] = findings.length;

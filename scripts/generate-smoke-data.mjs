@@ -222,6 +222,31 @@ const brands = [
     reimbMatchRate: 0.45, // Lots of unmatched refunds
     inventoryLossRate: 0.25,
   },
+  {
+    // DEMO HERO BRAND — Consumer Electronics (real referral rate 8%). Planted
+    // overcharges surface as "Amazon charged the default 15% on an 8% category" —
+    // the sharpest referral-fee story for the LinkedIn demo. Safe synthetic data.
+    slug: "halcyon-audio",
+    name: "Halcyon Audio",
+    seed: 909,
+    prefix: "HA",
+    categories: [
+      { code: "HDP", items: ["Over-Ear ANC Headphones", "Wireless Studio Headphones", "Sport Headphones", "Audiophile Open-Back Headphones", "Kids Volume-Safe Headphones", "Gaming Headset Pro", "On-Ear Foldable Headphones", "Bone-Conduction Headphones"] },
+      { code: "EAR", items: ["True Wireless Earbuds Pro", "Noise-Cancelling Earbuds", "Sport Earbuds Secure-Fit", "Mini Earbuds", "Open-Ear Clip Earbuds", "Budget Wireless Earbuds", "Earbuds Pro Max"] },
+      { code: "SPK", items: ["Portable Bluetooth Speaker", "Waterproof Adventure Speaker", "Smart Home Speaker", "Compact Soundbar", "Party Speaker XL", "Bookshelf Speaker Pair", "Clip-On Shower Speaker"] },
+      { code: "CHG", items: ["65W USB-C Charger", "Wireless Charge Pad", "Power Bank 10000mAh", "Power Bank 20000mAh", "3-in-1 Charging Dock", "Dual Car Charger", "GaN Wall Charger 100W"] },
+      { code: "CBL", items: ["USB-C Cable 6ft 2pk", "Braided Lightning Cable", "HDMI 2.1 Cable 4K", "USB-C to USB-C 100W Cable", "Audio Aux Splitter", "Magnetic Cable Organizer"] },
+      { code: "ACC", items: ["Aluminum Headphone Stand", "Hard Carrying Case", "Earbud Charging Case Cover", "Desk Phone Mount", "Screen Protector 3pk", "Microfiber Cleaning Kit", "Replacement Ear Cushions"] },
+    ],
+    // Premium audio = mid-high value, healthy volume, moderate returns
+    returnCount: 2000,
+    reimbCount: 1400,
+    ledgerCount: 900,
+    priceRange: [25, 249],
+    damagedReturnRate: 0.30,
+    reimbMatchRate: 0.55,
+    inventoryLossRate: 0.35,
+  },
 ];
 
 // --- Generate SKU catalog for a brand ---
@@ -458,6 +483,144 @@ function generateInventoryLedger(brand, catalog, rng) {
   return { csv: rows.join("\n"), lossFnskus };
 }
 
+// --- Phase 1.5: payout-integrity reports ---
+// Each brand maps to one Amazon referral category (drives the referral-rate check).
+// Names match src/lib/rules/reference/referral-rates.ts exactly so the join lands.
+const PRODUCT_GROUP_BY_SLUG = {
+  "novapeak-outdoor": "Sports and Outdoors", // flat 15%
+  "luxenest-home": "Home and Kitchen", // flat 15%
+  "pureglow-beauty": "Beauty, Health and Personal Care", // 8% ≤$10 / 15% above
+  "halcyon-audio": "Consumer Electronics", // flat 8% — overcharge shows as 15%
+};
+
+// Mirrors the progressive model in referral-rates.ts so planted data is self-consistent.
+// [t1_cents, t2_cents, rate1, rate2, rate3]
+const REFERRAL_RATES = {
+  "Sports and Outdoors": [0, 0, 0, 0, 0.15],
+  "Home and Kitchen": [0, 0, 0, 0, 0.15],
+  "Beauty, Health and Personal Care": [1000, 1000, 0.08, 0.08, 0.15],
+  "Consumer Electronics": [0, 0, 0, 0, 0.08],
+};
+function correctCommissionCents(pg, revenueCents) {
+  const [t1, t2, r1, r2, r3] = REFERRAL_RATES[pg];
+  const fee =
+    Math.min(revenueCents, t1) * r1 +
+    Math.max(Math.min(revenueCents, t2) - t1, 0) * r2 +
+    Math.max(revenueCents - t2, 0) * r3;
+  return Math.max(Math.round(fee), 30);
+}
+
+// Settlement V2 flat file. Charges the correct referral fee on most orders; inflates
+// it on ~15% of SKUs (referral_fee_mismatch). Also supplies per-SKU unit volume that
+// the size-tier and return-credit rules consume.
+function generateSettlement(brand, catalog, rng) {
+  const headers = [
+    "settlement-id", "transaction-type", "order-id", "amount-type",
+    "amount-description", "amount", "sku", "quantity-purchased",
+  ];
+  const rows = [csvRow(headers)];
+  const pg = PRODUCT_GROUP_BY_SLUG[brand.slug];
+  const settlementId = String(randInt(rng, 80000000, 89999999));
+
+  for (const item of catalog) {
+    // Realistic 18-month per-SKU order volume so fee overcharges accumulate to
+    // believable dollars (a real mid-market brand has far more than a handful).
+    const orderCount = randInt(rng, 40, 160);
+    const overcharged = rng() < 0.15;
+    for (let o = 0; o < orderCount; o++) {
+      const oid = orderId(rng);
+      const qty = rng() < 0.85 ? 1 : randInt(rng, 2, 4);
+      const revenueCents = Math.round(item.price * qty * 100);
+      let commissionCents = correctCommissionCents(pg, revenueCents);
+      if (overcharged) commissionCents += Math.round(revenueCents * 0.07);
+      const revenue = (revenueCents / 100).toFixed(2);
+      const commission = (-commissionCents / 100).toFixed(2);
+      rows.push(csvRow([settlementId, "Order", oid, "ItemPrice", "Principal", revenue, item.sku, qty]));
+      rows.push(csvRow([settlementId, "Order", oid, "ItemFees", "Commission", commission, item.sku, qty]));
+    }
+  }
+  return rows.join("\n");
+}
+
+// FBA Fee Preview. Dimensions genuinely fit Small or Large Standard; ~15% of SKUs are
+// labelled one tier up (size_tier_misclassification).
+function generateFeePreview(brand, catalog, rng) {
+  const headers = [
+    "sku", "asin", "product-group", "longest-side", "median-side", "shortest-side",
+    "item-package-weight", "unit-of-dimension", "unit-of-weight", "product-size-tier", "estimated-fee-total",
+  ];
+  const rows = [csvRow(headers)];
+  const pg = PRODUCT_GROUP_BY_SLUG[brand.slug];
+
+  for (const item of catalog) {
+    const small = rng() < 0.5;
+    const longest = small ? randFloat(rng, 5, 14) : randFloat(rng, 15.5, 17.5);
+    const median = small ? randFloat(rng, 3, 11) : randFloat(rng, 8, 13);
+    const shortest = small ? randFloat(rng, 0.2, 0.7) : randFloat(rng, 1, 7);
+    const weight = small ? randFloat(rng, 2, 15) : randFloat(rng, 20, 300);
+    let tier = small ? "Small Standard" : "Large Standard";
+    let fee = small ? 3.5 : 5.5;
+    if (rng() < 0.15) {
+      tier = small ? "Large Standard" : "Large Bulky";
+      fee = small ? 5.5 : 9.5;
+    }
+    rows.push(csvRow([
+      item.sku, item.asin, pg, longest, median, shortest, weight,
+      "inches", "ounces", tier, fee.toFixed(2),
+    ]));
+  }
+  return rows.join("\n");
+}
+
+// Aged Inventory Surcharge report. ~12% of SKUs are surcharged; ~60% of those also get a
+// recent shipment injected into the ledger so the rule flags them as actively-selling
+// (aged_surcharge_on_sold). Returns extra ledger Shipments rows to append.
+function generateStorageFees(brand, catalog, rng) {
+  const headers = [
+    "snapshot-date", "sku", "fnsku", "asin", "qty-charged",
+    "surcharge-type", "surcharge-amount", "currency",
+  ];
+  const rows = [csvRow(headers)];
+  const extraShipments = [];
+  const snapshot = "2026-04-15";
+  const MIN_FLAGGED = 5; // guarantee the rule fires on every brand
+
+  catalog.forEach((item, idx) => {
+    const force = idx < MIN_FLAGGED;
+    if (force || rng() < 0.12) {
+      const qtyCharged = randInt(rng, 10, 60);
+      const surcharge = (qtyCharged * randFloat(rng, 0.5, 1.2)).toFixed(2);
+      rows.push(csvRow([snapshot, item.sku, item.fnsku, item.asin, qtyCharged, "Aged Inventory Surcharge", surcharge, "USD"]));
+      if (force || rng() < 0.6) {
+        const units = randInt(rng, qtyCharged, qtyCharged + 30);
+        extraShipments.push([
+          "2026-03-20", item.fnsku, item.asin, item.sku, item.title,
+          "Shipments", refId(rng), -units, pick(rng, FCS), "SELLABLE", "", "US",
+        ]);
+      }
+    }
+  });
+  return { csv: rows.join("\n"), extraShipments };
+}
+
+// Most sellable customer returns DO get credited back to inventory; only a fraction
+// slip. Emit CustomerReturns credit events (same month as the return) for ~78% of
+// sellable returns, leaving ~22% as genuine return_credit_unapplied gaps. Without this
+// the rule treats nearly every sellable return as a gap, inflating the recoverable.
+function generateReturnCredits(returns, rng, creditRate = 0.78) {
+  const credits = [];
+  for (const line of returns.split("\n").slice(1)) {
+    const p = line.split(",");
+    if (p[8] !== "SELLABLE") continue;
+    if (rng() >= creditRate) continue; // this fraction stays uncredited = the gap
+    credits.push([
+      p[0], p[4], p[3], p[2], p[5],
+      "CustomerReturns", refId(rng), p[6], pick(rng, FCS), "SELLABLE", "G", "US",
+    ]);
+  }
+  return credits;
+}
+
 // --- Main ---
 const outBase = join(process.cwd(), "tests", "smoke");
 
@@ -470,21 +633,41 @@ for (const brand of brands) {
   const dir = join(outBase, brand.slug);
   mkdirSync(dir, { recursive: true });
 
-  // Generate ledger first so we know which FNSKUs have losses
-  const { csv: ledger, lossFnskus } = generateInventoryLedger(brand, catalog, rng);
-  writeFileSync(join(dir, "inventory-ledger.csv"), ledger);
-  const ledLines = ledger.split("\n").length - 1;
-  console.log(`  inventory-ledger.csv: ${ledLines} rows (${lossFnskus.size} FNSKUs with losses)`);
+  // Generate ledger first so we know which FNSKUs have losses (write deferred until
+  // after the aged-surcharge shipments are appended).
+  const { csv: ledgerBase, lossFnskus } = generateInventoryLedger(brand, catalog, rng);
 
   const returns = generateReturns(brand, catalog, rng);
   writeFileSync(join(dir, "returns.csv"), returns);
-  const retLines = returns.split("\n").length - 1;
-  console.log(`  returns.csv: ${retLines} rows`);
+  console.log(`  returns.csv: ${returns.split("\n").length - 1} rows`);
 
   const reimbursements = generateReimbursements(brand, catalog, rng, returns, lossFnskus);
   writeFileSync(join(dir, "reimbursements.csv"), reimbursements);
-  const rmbLines = reimbursements.split("\n").length - 1;
-  console.log(`  reimbursements.csv: ${rmbLines} rows`);
+  console.log(`  reimbursements.csv: ${reimbursements.split("\n").length - 1} rows`);
+
+  // Phase 1.5 payout-integrity reports. Generated after the Phase-1 files so their
+  // RNG draws don't perturb the existing datasets.
+  const settlement = generateSettlement(brand, catalog, rng);
+  writeFileSync(join(dir, "settlement.csv"), settlement);
+  console.log(`  settlement.csv: ${settlement.split("\n").length - 1} rows`);
+
+  const feePreview = generateFeePreview(brand, catalog, rng);
+  writeFileSync(join(dir, "fba-fee-preview.csv"), feePreview);
+  console.log(`  fba-fee-preview.csv: ${feePreview.split("\n").length - 1} rows`);
+
+  const { csv: storage, extraShipments } = generateStorageFees(brand, catalog, rng);
+  writeFileSync(join(dir, "storage-fees.csv"), storage);
+  console.log(`  storage-fees.csv: ${storage.split("\n").length - 1} rows`);
+
+  // Append return-credit events (most sellable returns get credited back) + the
+  // injected "actively selling" shipments, then write the ledger.
+  const returnCredits = generateReturnCredits(returns, rng);
+  const ledgerExtras = [...returnCredits, ...extraShipments];
+  const ledger = ledgerExtras.length
+    ? ledgerBase + "\n" + ledgerExtras.map(csvRow).join("\n")
+    : ledgerBase;
+  writeFileSync(join(dir, "inventory-ledger.csv"), ledger);
+  console.log(`  inventory-ledger.csv: ${ledger.split("\n").length - 1} rows (${lossFnskus.size} FNSKUs with losses)`);
 
   writeFileSync(join(dir, "brand.json"), JSON.stringify({
     name: brand.name,

@@ -39,8 +39,9 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 |---|---|---|---|
 | **0** | Foundation & scaffolding | 3–5 days | Clean Next.js app, all external services provisioned, migrations run, env validated, CI passing |
 | **1** | MVP ship | 4–6 weeks | First 50 brands can self-serve an audit; Vyshag manually reviews; 3 detection rules live |
-| **2** | Full Bucket 3 | 6 weeks | All 10 core detection rules, self-serve delivery, admin funnel, block list, user-initiated deletion automation |
-| **3** | Bucket 2 + growth | 3–6 months | Fee anomaly rule, SP-API continuous monitoring, whitelabel partnerships, Contract-vs-Reality v2, free-disputes conversion lever |
+| **1.5** | The Wedge Correction — payout-integrity lead | ~1 week | Re-point the audit from FBA reimbursement (the dying bucket) to contract-free **payout-integrity** checks ("Settlement Truth Audit"); reframe messaging to "your settlement report is lying to you." Driven by `Baslix-brain/synthesis/the-wedge-correction-2026.md` |
+| **2** | Full Bucket 3 *(demoted — see Phase 1.5)* | 6 weeks | All core Bucket-3 detection rules, self-serve delivery, admin funnel, block list, user-initiated deletion automation. **Bucket 3 is now a table-stakes add-on, not the lead.** |
+| **3** | Bucket 2 depth + growth | 3–6 months | Contract-dependent payout-integrity checks (co-op, freight, Walmart cash-discount), fee anomaly rule, SP-API continuous monitoring, whitelabel partnerships, Contract-vs-Reality v2 |
 
 ---
 
@@ -363,6 +364,92 @@ This is the ordered, checkboxed build plan. It is the single source of truth for
 
 ---
 
+## Phase 1.5 — The Wedge Correction (payout-integrity lead)
+
+**Why this phase exists:** A first-principles strategy review (`Baslix-brain/synthesis/the-wedge-correction-2026.md`, 2026-05-30) found a split between strategy and execution. The strategy docs say *"lead with payout integrity; FBA reimbursement is a table-stakes add-on."* The build led with FBA reimbursement — the one bucket Amazon is structurally euthanizing (auto-reimbursement Nov 2024/Jan 2025 + manufacturing-cost basis + the GETIDA/ProfitGuard price war). All three Phase-1 rules (`returns_gap`, `inventory_lost`, `refund_reimbursement_mismatch`) are Bucket 3. This phase re-points the audit at **payout integrity** — the confirmed *recovery* whitespace — by pulling the contract-free checks forward, demoting the reimbursement rules to add-ons, and reframing the messaging.
+
+**What carries over unchanged:** the pipeline, rule registry (pluggable pure-SQL modules), CSV-fixture test harness, PDF/Typst render, report page, admin surface. This is a content swap inside a stable frame, not a rebuild.
+
+**Note on PRD mapping:** the four checks below are largely the PRD's own §5.4–5.6 and §5.8 rules — previously sequenced into Phase 2 as "Bucket 3 expansion." This phase pulls them forward and reframes them as the lead wedge. PRD stays frozen; this re-sequencing is captured here + in the `decisions.md` change log.
+
+**Goal:** The free audit leads with contract-free payout-integrity findings — discrepancies that need only the seller's own reports, are not auto-reimbursed by Amazon, are not commoditized, and produce the "wait, you found *what*?" moment. The three reimbursement rules survive as demoted add-ons.
+
+**Exit gate:** A real $40–90M omnichannel brand's settlement data, run through the audit via a warm intro, surfaces material recoverable dollars in the non-commoditized (payout-integrity) buckets. All four new rules pass Vitest fixture tests. The landing page, narrative, and PDF lead with payout-integrity framing, not "Amazon owes you money."
+
+### 🔬 Research checkpoint (before starting)
+
+- [x] Pull **current Amazon referral-fee category table** — **AUTHORITATIVE (2026-06-01):** fetched Amazon's public pricing page (`sell.amazon.com/pricing`, no login). Verbatim tiered rules: Clothing 5%≤$15 / 10% $15-20 / 17% (3-tier), Jewelry 20%≤$250/5%, Watches 16%≤$1500/3%, Beauty & Baby 8%≤$10/15%, Furniture 15%≤$200/10%, Compact Appliances 15%≤$300/8%, Electronics Accessories 15%≤$100/8%; $0.30/unit min. Encoded in `referral-rates.ts` (progressive 3-tier model, v2026.2). ⚠️ Open gap: production needs a Fee-Preview `product-group`-code → referral-category mapping.
+- [x] Pull **current FBA size-tier boundaries + per-tier fulfillment fees** — **Result (2026):** restructured Jan 15 2026 — tiers now Small Standard / Large Standard / Large Bulky / Extra-Large; price-bracket-sensitive; +3.5% fuel surcharge since Apr 17 2026. Representative schedule encoded in `src/lib/rules/reference/fba-fee-schedule.ts`.
+- [x] Confirm **Transaction / Settlement report** (v2 flat file) column schema — **Result:** per `(order-id, sku)`, `amount-description='Principal'` = revenue, `='Commission'` = referral fee. Actual % = Commission/Principal. Fully contract-free. New signature `settlement`.
+- [x] Verify **FBA Fee Preview** report exposes dimensions + size-tier — **Result:** has `longest-side`, `median-side`, `shortest-side`, `length-and-girth`, `item-package-weight`, `product-size-tier`, `estimated-fee-total`. New signature `fba_fee_preview`.
+- [x] Confirm **Storage Fees / Aged-Inventory Surcharge** report schema — **Result:** aged surcharge per SKU + snapshot date; cross-referenced against `inventory_ledger` sales velocity (PRD §5.8). New signature `storage_fees`.
+- [x] Decide how reference tables are versioned — **Decision:** versioned SQL `VALUES` CTEs in `src/lib/rules/reference/`, stamped with `reference_version`, embedded per-rule. Encoded as a representative 2026 subset; flagged for verification against Amazon's live schedule before production (same posture as Phase-1 placeholder headers).
+
+### 1.5.1 Ingest surface expansion
+
+**User stories:** US-3.4 · **PRD:** §4.3 · *Pulls the optional-report tiles from Phase 2.1 forward.*
+
+- [x] Add **Transaction / Settlement report** signature to `src/lib/csv/headers.ts` (per-order fee lines)
+- [x] Add **FBA Fee Preview** (or Manage FBA Inventory w/ dimensions) signature to `headers.ts`
+- [x] Add **Storage / Aged-Inventory Surcharge** report signature to `headers.ts`
+- [x] New upload tiles for the above on `src/app/(public)/upload/[id]/page.tsx` + client/server validation — required tiles (settlement, fba_fee_preview) + optional section (returns, inventory_ledger, reimbursements, storage_fees); upload route accepts new types, requires only the lead pair, skips absent optionals
+- [ ] Pin each new signature with a `header_signature` hash to detect Amazon format drift (arch §4.2)
+- [x] Update which reports are *required* vs *optional* so the lead wedge can run on the new minimum set — required = settlement + fba_fee_preview (referral + size-tier); everything else optional
+
+### 1.5.2 Reference data tables (the long pole)
+
+**Driver:** `Baslix-brain/concepts/payout-integrity.md` · *No PRD section — new supporting asset.*
+
+- [x] Encode **Amazon category referral-rate table** as a versioned reference — `src/lib/rules/reference/referral-rates.ts` (SQL `VALUES` CTE + `REFERRAL_REFERENCE_VERSION` + tiered thresholds + $0.30 min)
+- [x] Encode **FBA size-tier → fulfillment-fee schedule** as a versioned reference — `src/lib/rules/reference/fba-fee-schedule.ts` (SQL `VALUES` CTE + `FBA_FEE_REFERENCE_VERSION` + correct-tier expression)
+- [ ] Stamp findings with `reference_version` so they're reproducible (CLAUDE.md: every finding carries `rule_id` + `rule_version` + `row_ref`) — *constants exist; flow into finding evidence when rules land*
+- [x] Document the refresh procedure (Amazon updates these periodically) — inline in each reference file header (source URLs + "verify before production" + version-bump rule)
+
+### 1.5.3 Payout-integrity detection rules (contract-free checks)
+
+**User stories:** US-5.4, US-5.5, US-5.6 · **PRD:** §5.4, §5.5, §5.6, §5.8 (pulled forward) · **Rules reference:** `.claude/rules/detection-rules.md`
+
+Each rule is: **pure SQL file + registry entry + Vitest CSV fixture + fixture test.**
+
+- [x] `src/lib/rules/return-credit-unapplied.ts` — return credit issued but cost/inventory credit never applied (≈ PRD §5.4). **Test green (3/3).** Values gap at SKU avg price from settlement.
+- [x] `src/lib/rules/aged-surcharge-on-sold.ts` — aged-inventory surcharge charged on actively-selling SKUs (≈ PRD §5.8). **Test green (3/3).** Cross-refs surcharge vs 90-day sales velocity.
+- [x] `src/lib/rules/referral-fee-mismatch.ts` — referral % charged deviates from the SKU's category rate (≈ PRD §5.6). **Test green (3/3).** Requires `settlement` + `fba_fee_preview`; emits real overcharge as `amount_cents` from SQL.
+- [x] `src/lib/rules/size-tier-misclassification.ts` — FBA fee implies a different size tier than the SKU's real dimensions (≈ PRD §5.5). **Test green (3/3).** Recomputes correct tier from dims; fee delta × units.
+- [x] Fixture CSV + expected-findings test for each of the four rules — *all 4 in `tests/rules/`, 12 tests green*
+- [x] Register in `src/lib/rules/index.ts` with payout-integrity leading — *all 4 registered first; categories: `referral_fee`, `fba_dimension`, `return_credit`, `aged_surcharge`*
+- [x] Framework: `runRule`/`helpers` now prefer a SQL-emitted `amount_cents` (payout-integrity rules compute the real recoverable in SQL). Logged in `decisions.md` (2026-06-01).
+
+### 1.5.4 Demote the Bucket-3 reimbursement rules
+
+- [ ] Keep `returns_gap`, `inventory_lost`, `refund_reimbursement_mismatch` in the registry but **demote them out of the lead** — present as secondary add-on findings, not the headline
+- [ ] Flag `inventory_lost` specifically — it surfaces the exact category Amazon now auto-reimburses; either gate it behind a freshness note or weight it last so stale "wins" don't undercut credibility with a sharp Controller
+- [ ] Update report category ordering so payout-integrity buckets render first
+
+### 1.5.5 Messaging / positioning re-frame
+
+**Driver:** `Baslix-brain/concepts/baslix-messaging-playbook.md`, `Baslix-brain/concepts/baslix-content-philosophy.md` · **PRD:** §4.1
+
+- [x] Landing page (`src/app/(public)/page.tsx`) — headline now "Your settlement report is lying to you. We'll prove it."; subhead leads with referral/size-tier/credit overcharges; category cards + steps + stats re-pointed to payout integrity. *(Narrative templates + PDF still pending — see below.)*
+- [x] Narrative templates (`src/lib/llm/narrate.ts`) + dispute drafts (`src/lib/llm/draft-dispute.ts`) — payout-integrity language; exec summary + methodology reframed; 4 new category narratives + 4 new dispute templates (referral/size-tier as "Fee Dispute", `[SELLER_SIGNATURE]` placeholder per llm.md)
+- [x] PDF data-builder + `templates/report.typ` — `CATEGORY_DISPLAY_NAMES` + report-page `CATEGORY_LABELS` gain the 4 payout-integrity categories; PDF subtitle "Forensic FBA Audit Report" → "Settlement Truth Audit"
+- [x] Headline stat aligned at **1–3%** (relabeled "Of revenue typically recoverable")
+- [ ] Retire the 60-second video placeholder framing if it leads with reimbursement
+
+### 1.5.6 The one test that resolves everything
+
+- [ ] Run the audit on **one real $40–90M omnichannel brand's settlement data via a warm intro**. If it surfaces material recoverable dollars in the payout-integrity buckets → wedge + proof confirmed. If not → that's a real market signal (per the synthesis doc's decisive test).
+
+### 🔒 Phase 1.5 exit gate
+
+- [ ] All four payout-integrity rules pass Vitest fixture tests.
+- [ ] Landing + narrative + PDF lead with payout-integrity framing, verified by reading the rendered report.
+- [ ] At least one real omnichannel brand dataset run end-to-end, surfacing non-Bucket-3 recoverable dollars.
+- [ ] Reference tables (referral rates, FBA fee schedule) are versioned and the refresh procedure is documented.
+- [ ] `pnpm build && pnpm lint && pnpm test` all pass, zero regressions on existing rules.
+- [ ] **User confirmation received before continuing to Phase 2.**
+
+---
+
 ## Phase 2 — Full Bucket 3
 
 **Goal:** Self-serve delivery (no more manual review), all 10 Bucket-3 detection rules live, optional reports unlock deeper findings, admin gets funnel analytics + block list, user-initiated deletion is automated.
@@ -572,3 +659,7 @@ These don't belong to a single phase — they're continuous discipline across al
 | 2026-05-08 | End-to-end pipeline verified on production | Trigger.dev v20260425.3 deployed. DuckDB `home_directory = '/tmp'` fix for container environments. Test audit completed: 201 findings, $3,015 recoverable. Full flow: upload → detect → narrate → report → admin review → email delivery. |
 | 2026-05-08 | Phase 1 hardening: deletion, security, urgency chart, video placeholder, outreach template | Admin cascade-delete endpoint + button. Security: CSP header, Upstash rate limits (domain + IP), DOMPurify sanitizer. Urgency timeline chart on report page (Recharts). Landing page video placeholder. Outreach email templates for Vyshag. All 21 tests pass, build + lint clean. |
 | 2026-05-09 | 3 synthetic brand datasets for smoke testing | Built deterministic data generator (`scripts/generate-smoke-data.mjs`) producing 3 brands: NovaPeak Outdoor (801 findings), LuxeNest Home (289 findings), PureGlow Beauty (1663 findings). All 3 detection rules fire on all 3 brands. 33 tests pass (12 smoke + 21 unit). Real Amazon data deferred — synthetic data validated rule coverage, edge cases, and cross-report matching. |
+| 2026-06-23 | **Demo hero brand "Halcyon Audio" + report/PDF/dispute wording reframed** | Whole journey now tells one story: report exec-summary/methodology, PDF subtitle ("Settlement Truth Audit"), category labels, and 4 new dispute templates all reframed from reimbursement to payout integrity. Added a demo-ready synthetic brand (Consumer Electronics, real 8% referral rate → overcharges show as the default 15%) for the LinkedIn video; bumped synthetic settlement to realistic per-SKU order volume (40–160), and added return-credit-back events (~78% of sellable returns credited) so return_credit isn't artificially inflated. Halcyon totals: **~$53.5k recoverable** — referral $3,094 / size-tier $2,958 / return-credit $47,255 / aged $199 (+ reimbursement add-ons). **This is DEMO data (safe to show), NOT the real-store validation (1.5.6 still open).** 65 tests pass, lint + build clean. |
+| 2026-06-01 | **Phase 1.5 surfacing (Road A): payout-integrity story + new upload reports live** | Referral table populated from Amazon's **public** pricing page (authoritative, v2026.2, 3-tier model). Landing page re-pointed: headline "Your settlement report is lying to you. We'll prove it.", subhead + category cards + steps + stats reframed from reimbursement to fee/payout overcharges. Upload page now shows required tiles (settlement, fba_fee_preview) + an optional section (returns, inventory_ledger, reimbursements, storage_fees); upload route requires only the lead pair and accepts/skips optionals; pipeline already runs whichever rules have their reports. FBA fee dollar grid still representative (resolves via self-calibration from real seller data — no Seller Central account available). Tests 57/57, lint clean. **Still open in 1.5:** narrative/PDF re-frame (1.5.4/1.5.5 server side), the one real-data test (1.5.6). |
+| 2026-06-01 | **Phase 1.5 core built: research + reference tables + 4 rules + synthetic data** | Research checkpoint complete (2026 referral table, Jan-2026 FBA size-tier restructure, Settlement V2 / Fee Preview / Aged-Surcharge schemas). Shipped: `reference/referral-rates.ts` + `reference/fba-fee-schedule.ts` (versioned `VALUES` CTEs); 3 new report signatures in `headers.ts`; `run-rule.ts`/`helpers.ts` now accept a SQL-emitted `amount_cents`; 4 payout-integrity rules (`referral_fee_mismatch`, `size_tier_misclassification`, `return_credit_unapplied`, `aged_surcharge_on_sold`) each with a green fixture test (12 tests); smoke generator extended to emit all 3 new reports with planted discrepancies — all 4 rules fire on all 3 brands. Reimbursement rules demoted in the registry. 57 tests pass, lint clean. **Still open in 1.5:** upload tiles for the new reports (1.5.1), report/narrative demotion ordering (1.5.4), messaging re-frame (1.5.5), the one real-data test (1.5.6). |
+| 2026-06-01 | **Phase 1.5 (The Wedge Correction) inserted; Phase 2/3 re-sequenced** | First-principles strategy review (`Baslix-brain/synthesis/the-wedge-correction-2026.md`, 2026-05-30) found execution led with FBA reimbursement (Bucket 3 — structurally dying: Amazon auto-reimbursement + manufacturing-cost basis + GETIDA/ProfitGuard price war), while strategy says lead with payout integrity (Bucket 2, confirmed recovery whitespace). New Phase 1.5 pulls the four contract-free payout-integrity checks forward (≈ PRD §5.4–5.6, §5.8), demotes the three reimbursement rules to add-ons, expands the ingest surface (settlement/transaction, FBA fee preview w/ dimensions, storage-surcharge reports), adds versioned reference tables (referral rates, FBA fee schedule), and reframes messaging to "your settlement report is lying to you." Bucket 3 reframed as table-stakes add-on, not the lead. Estimated ~1 week; architecture/pipeline unchanged. PRD frozen — re-sequencing also to be logged in `decisions.md`. |

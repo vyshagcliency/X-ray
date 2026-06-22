@@ -1,0 +1,15 @@
+{
+  "name": "IronClad Supplies",
+  "slug": "ironclad-supplies",
+  "skuCount": 20,
+  "priceRange": [
+    20,
+    200
+  ],
+  "dateRange": [
+    "2024-10-01",
+    "2026-04-30"
+  ],
+  "expectedFindings": 0,
+  "purpose": "Zero-findings brand. Every return and inventory loss has a matching reimbursement. All 3 rules should produce 0 findings."
+}

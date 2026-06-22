@@ -1,0 +1,23 @@
+{
+  "name": "GlitchWave Electronics",
+  "slug": "glitchwave-electronics",
+  "skuCount": 10,
+  "priceRange": [
+    19,
+    350
+  ],
+  "dateRange": [
+    "2024-10-01",
+    "2026-04-30"
+  ],
+  "purpose": "Dirty data stress test. BOM encoding, mixed date formats (YYYY-MM-DD and MM/DD/YYYY), unicode in product names, quoted fields with embedded commas, empty rows, trailing commas, reason code H in inventory.",
+  "dirtyDataFeatures": [
+    "UTF-8 BOM (byte order mark) on returns, reimbursements, inventory",
+    "Mixed date formats: ~40% MM/DD/YYYY, ~60% YYYY-MM-DD",
+    "Unicode: ä, ®, ™, —, –, ², → in product names",
+    "Quoted fields with embedded commas in product names",
+    "Empty rows scattered throughout",
+    "Trailing commas on some rows",
+    "Reason code H in inventory adjustments"
+  ]
+}

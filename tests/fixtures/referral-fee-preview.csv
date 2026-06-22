@@ -1,0 +1,5 @@
+sku,asin,product-group,longest-side,median-side,shortest-side,item-package-weight,unit-of-dimension,unit-of-weight,product-size-tier,estimated-fee-total
+TOY-001,B000T00001,Toys and Games,10,6,2,12,inches,ounces,Large Standard,5.50
+TOY-002,B000T00002,Toys and Games,10,6,2,12,inches,ounces,Large Standard,5.50
+APP-001,B000A00001,Clothing and Accessories,8,6,1,5,inches,ounces,Small Standard,3.50
+PC-001,B000P00001,Personal Computers,14,10,3,40,inches,ounces,Large Standard,5.50

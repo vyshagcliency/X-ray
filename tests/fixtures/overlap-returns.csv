@@ -1,0 +1,2 @@
+return-date,order-id,sku,asin,fnsku,product-name,quantity,fulfillment-center-id,detailed-disposition,reason,status,license-plate-number,customer-comments
+2025-10-01,CCC-9999999-0000001,OVERLAP-A,B0OVERLAP1,X00OVRLP01,Overlap Widget,1,RIC2,DEFECTIVE,CUSTOMER_RETURN,Refunded,LPnOVR00001,

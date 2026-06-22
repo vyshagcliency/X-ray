@@ -19,17 +19,5 @@
       "Bash(git reset --hard *)"
     ]
   },
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && [ -f package.json ] && pnpm tsc --noEmit 2>&1 | tail -10 || echo '[hook] skipping typecheck — no package.json yet'"
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": {}
 }

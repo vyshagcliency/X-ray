@@ -1,0 +1,20 @@
+{
+  "name": "MegaScale Wholesale",
+  "slug": "megascale-wholesale",
+  "skuCount": 200,
+  "priceRange": [
+    5,
+    300
+  ],
+  "dateRange": [
+    "2024-10-01",
+    "2026-04-30"
+  ],
+  "purpose": "High-volume stress test. 55K returns, 15K+ inventory adjustments, 200 SKUs. Tests DuckDB query performance, memory pressure, and type inference on large files.",
+  "rowCounts": {
+    "returns": 55000,
+    "reimbursements": 7521,
+    "inventoryLedger": 28000,
+    "allListings": 200
+  }
+}

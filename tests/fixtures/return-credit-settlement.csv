@@ -1,0 +1,4 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased
+7001,Order,333-1000001,ItemPrice,Principal,20.00,RC-OK,1
+7001,Order,333-1000002,ItemPrice,Principal,30.00,RC-BAD,1
+7001,Order,333-1000003,ItemPrice,Principal,30.00,RC-BAD,1

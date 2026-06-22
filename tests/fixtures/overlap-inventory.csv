@@ -1,0 +1,3 @@
+Date,FNSKU,ASIN,MSKU,Title,Event Type,Reference ID,Quantity,Fulfillment Center,Disposition,Reason,Country
+2025-10-01,X00OVRLP01,B0OVERLAP1,OVERLAP-A,Overlap Widget,Adjustments,6666666661,-2,RIC2,SELLABLE,E,US
+2025-10-03,X00OVRLP02,B0OVERLAP2,OVERLAP-B,Overlap Widget 2,Adjustments,6666666662,-1,RIC2,DAMAGED,D,US

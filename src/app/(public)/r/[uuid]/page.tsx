@@ -30,6 +30,12 @@ interface AuditData {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
+  // Payout integrity (the lead wedge)
+  referral_fee: "Referral Fee Overcharges",
+  fba_dimension: "Size-Tier Overcharges",
+  return_credit: "Credits Never Applied",
+  aged_surcharge: "Aged-Stock Surcharges",
+  // Reimbursement add-ons
   returns: "Customer Returns",
   lost_inventory: "Lost & Damaged Inventory",
   dimensions: "Dimension Overcharges",

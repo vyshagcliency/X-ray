@@ -1,0 +1,4 @@
+sku,asin,product-group,longest-side,median-side,shortest-side,item-package-weight,unit-of-dimension,unit-of-weight,product-size-tier,estimated-fee-total
+SZ-OK,B000S00001,Home and Kitchen,10,6,0.5,10,inches,ounces,Small Standard,3.50
+SZ-BAD1,B000S00002,Home and Kitchen,12,8,0.6,12,inches,ounces,Large Standard,5.50
+SZ-BAD2,B000S00003,Home and Kitchen,16,10,5,40,inches,ounces,Large Bulky,9.50

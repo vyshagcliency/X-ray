@@ -71,7 +71,12 @@ export async function runRuleAgainstFixtures(
         rule_id: rule.id,
         rule_version: rule.version,
         category: rule.category,
-        amount_cents: estimateAmountCents(rowObj),
+        // A rule that computes its own recoverable amount emits `amount_cents` from
+        // SQL; otherwise fall back to the estimator (default $15). Mirrors runRule.
+        amount_cents:
+          rowObj.amount_cents != null
+            ? Math.round(Number(rowObj.amount_cents))
+            : estimateAmountCents(rowObj),
         confidence: rule.confidence(rowObj),
         window_closes_on: windowDate
           ? windowDate.toISOString().split("T")[0]

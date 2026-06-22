@@ -49,7 +49,7 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
     ? ` Of this, ${urgentFormatted} is time-sensitive — dispute windows close within 14 days.`
     : "";
 
-  const executive_summary = `Our analysis of ${brand_name}'s Amazon Seller Central data identified ${findings_count} discrepancies totaling ${totalFormatted} in potential recoveries.${urgentLine} Each finding below is backed by row-level evidence from your reports and is ready for dispute submission.`;
+  const executive_summary = `Our forensic audit of ${brand_name}'s Amazon settlement, fee, and inventory data found ${findings_count} discrepancies totaling ${totalFormatted} where what Amazon charged or credited doesn't match what you're actually owed.${urgentLine} Each finding below is backed by row-level evidence from your own reports and is ready to dispute.`;
 
   // Per-category narratives
   const category_narratives: Record<string, string> = {};
@@ -61,16 +61,21 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
       : "";
 
     const templates: Record<string, string> = {
+      // Payout-integrity findings (the lead wedge).
+      referral_fee: `We found ${cat.count} orders where Amazon charged a higher referral fee than your product category's published rate, totaling ${catTotal}. The most affected SKUs include ${skuList || "multiple products"}. A wrong category rate compounds on every sale until it's corrected.${urgentNote}`,
+      fba_dimension: `We found ${cat.count} SKUs Amazon placed in a larger size tier than their measured dimensions warrant, overcharging the fulfillment fee on every unit shipped — totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
+      return_credit: `We found ${cat.count} SKUs where customer returns were credited back on paper but the inventory or cash credit never landed in your account, totaling ${catTotal}. Top affected SKUs: ${skuList || "multiple products"}.${urgentNote}`,
+      aged_surcharge: `We found ${cat.count} SKUs charged an aged-inventory surcharge while they were actively selling, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
+      // Reimbursement findings (demoted add-ons).
       returns: `We identified ${cat.count} customer returns where Amazon received damaged or defective items but never issued a reimbursement, totaling ${catTotal}. The most affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
-      inventory: `We found ${cat.count} instances of inventory reported as lost or damaged in Amazon's fulfillment centers without a corresponding reimbursement, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
-      refunds: `We detected ${cat.count} cases where Amazon refunded a customer but failed to issue a corresponding reimbursement to your account, totaling ${catTotal}. Top affected SKUs: ${skuList || "multiple products"}.${urgentNote}`,
+      lost_inventory: `We found ${cat.count} instances of inventory reported as lost or damaged in Amazon's fulfillment centers without a corresponding reimbursement, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
     };
 
     category_narratives[cat.category] = templates[cat.category]
       ?? `We identified ${cat.count} discrepancies totaling ${catTotal} in the ${cat.category} category.${urgentNote}`;
   }
 
-  const methodology_note = "This analysis was performed by cross-referencing your Returns, Reimbursements, and Inventory Ledger reports using exact order-ID and SKU matching. Each finding represents a verifiable discrepancy backed by specific rows in your Seller Central data. Confidence levels reflect the strength of the evidence — high-confidence findings have direct, unambiguous matches.";
+  const methodology_note = "This analysis recomputes what Amazon should have charged or credited on each sale — using your category's published referral rates and your products' measured dimensions — and matches it against what Amazon actually did, drawing on your Settlement, FBA Fee Preview, Returns, Reimbursements, and Inventory Ledger reports. Each finding is a verifiable discrepancy backed by specific rows in your own Seller Central data. Confidence levels reflect the strength of the evidence — high-confidence findings have direct, unambiguous matches.";
 
   return {
     executive_summary,

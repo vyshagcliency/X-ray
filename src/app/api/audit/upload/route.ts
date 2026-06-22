@@ -3,7 +3,16 @@ import { supabaseAdmin } from "@/lib/db/supabase";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { uploadRateLimit } from "@/lib/security/rate-limit";
 
-const VALID_REPORT_TYPES = ["reimbursements", "returns", "inventory_ledger"] as const;
+// Lead with payout integrity: settlement + fee-preview are required (they power the
+// referral-fee and size-tier checks). The rest are optional and unlock more rules.
+const REQUIRED_REPORT_TYPES = ["settlement", "fba_fee_preview"] as const;
+const OPTIONAL_REPORT_TYPES = [
+  "returns",
+  "inventory_ledger",
+  "reimbursements",
+  "storage_fees",
+] as const;
+const VALID_REPORT_TYPES = [...REQUIRED_REPORT_TYPES, ...OPTIONAL_REPORT_TYPES] as const;
 
 export async function POST(req: NextRequest) {
   // Rate limit: 10 uploads per IP per day
@@ -40,14 +49,23 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
 
-  // Upload each file to Supabase Storage
-  for (const reportType of VALID_REPORT_TYPES) {
+  // Required reports must all be present.
+  for (const reportType of REQUIRED_REPORT_TYPES) {
     const file = formData.get(reportType);
     if (!file || !(file instanceof File)) {
       return NextResponse.json(
         { error: `Missing required report: ${reportType}` },
         { status: 400 },
       );
+    }
+  }
+
+  // Upload every provided report (required + any optional). Absent optionals are
+  // skipped — the pipeline runs whichever rules have their reports.
+  for (const reportType of VALID_REPORT_TYPES) {
+    const file = formData.get(reportType);
+    if (!file || !(file instanceof File)) {
+      continue;
     }
 
     const storagePath = `raw/${auditId}/${reportType}/${file.name}`;

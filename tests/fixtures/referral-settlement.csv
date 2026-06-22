@@ -1,0 +1,9 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased
+5001,Order,111-0000001,ItemPrice,Principal,40.00,TOY-001,1
+5001,Order,111-0000001,ItemFees,Commission,-6.00,TOY-001,1
+5001,Order,111-0000002,ItemPrice,Principal,50.00,TOY-002,1
+5001,Order,111-0000002,ItemFees,Commission,-11.00,TOY-002,1
+5001,Order,111-0000003,ItemPrice,Principal,20.00,APP-001,1
+5001,Order,111-0000003,ItemFees,Commission,-3.40,APP-001,1
+5001,Order,111-0000004,ItemPrice,Principal,100.00,PC-001,1
+5001,Order,111-0000004,ItemFees,Commission,-15.00,PC-001,1

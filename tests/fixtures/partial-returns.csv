@@ -1,0 +1,3 @@
+return-date,order-id,sku,asin,fnsku,product-name,quantity,fulfillment-center-id,detailed-disposition,reason,status,license-plate-number,customer-comments
+2025-08-01,BBB-1000001-0000001,PARTIAL-A,B0PARTIAL1,X00PARTL01,Partial Widget Expensive,1,DFW7,DEFECTIVE,CUSTOMER_RETURN,Refunded,LPnPRT00001,
+2025-08-03,BBB-1000002-0000002,PARTIAL-B,B0PARTIAL2,X00PARTL02,Partial Widget Mid,1,DFW7,CUSTOMER_DAMAGED,DEFECTIVE,Refunded,LPnPRT00002,

@@ -13,7 +13,6 @@ import {
   FileText,
   RotateCcw,
   Ruler,
-  PackageX,
   ShieldCheck,
   TrendingUp,
   AlertTriangle,
@@ -22,46 +21,46 @@ import { NavBar } from "@/components/nav-bar";
 
 const auditCategories = [
   {
-    label: "Returns gap",
+    label: "Referral fee overcharges",
     detail:
-      "Customers get refunded, but Amazon never reimburses you. We flag every case.",
-    stat: "1–3% of FBA revenue is typically lost here",
-    icon: RotateCcw,
+      "Amazon charges a higher referral % than your category's contracted rate — and it can run for a year before anyone notices.",
+    stat: "A wrong rate on one category compounds every single sale",
+    icon: DollarSign,
   },
   {
-    label: "Dimension overcharges",
+    label: "Size-tier overcharges",
     detail:
-      "Amazon re-measures your products and charges higher fees. We catch the mismatches.",
+      "Amazon re-measures your products, bumps them into a bigger size tier, and overcharges the fulfillment fee on every unit.",
     stat: "Affects ~10% of ASINs on average",
     icon: Ruler,
   },
   {
-    label: "Lost inventory",
+    label: "Credits never applied",
     detail:
-      "Inventory goes missing in warehouses. Amazon owes you, but won't remind you.",
-    stat: "Reimbursement window closes after 18 months",
-    icon: PackageX,
+      "A customer return is credited to you on paper, but the money never lands — or an aged-stock fee hits SKUs you're actively selling.",
+    stat: "Silent on your books — invisible unless you reconcile",
+    icon: RotateCcw,
   },
 ];
 
 const steps = [
   {
     icon: Upload,
-    title: "Upload your CSVs",
+    title: "Upload your reports",
     description:
-      "Export 4 standard reports from Seller Central and drop them in. Takes 2 minutes.",
+      "Export your settlement and fee reports from Seller Central and drop them in. Takes 2 minutes.",
   },
   {
     icon: Search,
-    title: "We scan 18 months",
+    title: "We check every fee",
     description:
-      "Our engine cross-references every transaction, fee, return, and reimbursement.",
+      "Our engine recomputes what Amazon should have charged on every sale and finds where it didn't match.",
   },
   {
     icon: FileText,
     title: "Get your report",
     description:
-      "A detailed PDF with every dollar Amazon owes you, dispute-ready evidence included.",
+      "A detailed PDF of every overcharge and missed credit, with dispute-ready evidence for each one.",
   },
 ];
 
@@ -123,15 +122,17 @@ export default function LandingPage() {
               100% free &mdash; no strings attached
             </span>
             <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              <span className="whitespace-nowrap">Amazon owes you money.</span>
+              <span>Your settlement report</span>
               <br />
-              <span className="text-[#a5b4fc]">Let&apos;s prove it.</span>
+              <span>is lying to you.</span>
+              <br />
+              <span className="text-[#a5b4fc]">We&apos;ll prove it.</span>
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-400">
-              Upload 4 Seller Central reports. In under 8 minutes, get a
-              forensic audit showing every missed reimbursement, fee
-              overcharge, and expiring dispute window &mdash; with evidence
-              to file claims.
+              Amazon quietly overcharges fees on your own sales &mdash; wrong
+              referral rates, inflated size tiers, credits that never land.
+              Upload your Seller Central reports and in under 8 minutes get a
+              forensic audit of every overcharge, with evidence to dispute it.
             </p>
             <div className="mt-10 flex items-center gap-5">
               <Link
@@ -332,7 +333,7 @@ export default function LandingPage() {
           {/* Metrics */}
           <div className="mx-auto grid max-w-5xl gap-8 px-6 text-center sm:grid-cols-3">
             {[
-              { value: "1–3%", label: "Average FBA leakage rate" },
+              { value: "1–3%", label: "Of revenue typically recoverable" },
               { value: "18 mo", label: "Of transaction data scanned" },
               { value: "< 8 min", label: "From upload to full report" },
             ].map((metric) => (
@@ -562,7 +563,7 @@ export default function LandingPage() {
               <span className="font-semibold text-white">Baslix</span>. We
               recover money from Amazon for ecommerce brands as a managed
               service — and only get paid when you do. The audit is free because
-              if you find $200k of leakage, you&apos;ll probably want help
+              if you find $200k in overcharges, you&apos;ll probably want help
               filing the claims.
             </p>
             <Link

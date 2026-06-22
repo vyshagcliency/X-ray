@@ -51,14 +51,21 @@ Every rule's SELECT must return:
 - `window_closes_on` — date, the last day to file, **computed in SQL** from source event date + policy window
 - `row_ref` — text, derived from `row_number() OVER ()` — the source row position for the evidence trail
 
-Amount estimation is done downstream by `runRule`'s `estimateAmountCents` callback (defaults to $15/finding). Phase 2 will add price lookup from All Listings Report.
+**Amount:** two paths. (1) **Reimbursement rules** (Bucket 3) omit an amount column → `runRule`'s `estimateAmountCents` callback fills it (default $15/finding). (2) **Payout-integrity rules** (Phase 1.5) compute the *real* recoverable overcharge in SQL and emit it as an `amount_cents` column; `runRule`/`helpers` prefer it when present. Either way the arithmetic lives in SQL — never post-process amounts in TypeScript. `window_closes_on` may be `NULL` for rolling overcharges (referral/size-tier have no hard dispute window — PRD §5.5/§5.6).
 
 ## Report types
 
-Three report types in Phase 1:
+Phase 1 (reimbursement / Bucket 3):
 - `returns` — FBA Customer Returns Report (headers: `return-date`, `order-id`, `sku`, `asin`, `fnsku`, `product-name`, `quantity`, `fulfillment-center-id`, `detailed-disposition`, `reason`, `license-plate-number`, `customer-comments`; optional: `status`)
 - `reimbursements` — FBA Reimbursements Report (headers: `approval-date`, `reimbursement-id`, `case-id`, `amazon-order-id`, `reason`, `sku`, `fnsku`, `asin`, `condition`, `currency-unit`, `amount-per-unit`, `amount-total`, `quantity-reimbursed-cash`, `quantity-reimbursed-inventory`, `quantity-reimbursed-total`)
 - `inventory_ledger` — Inventory Ledger Detailed View (headers: `Date`, `FNSKU`, `ASIN`, `MSKU`, `Title`, `Event Type`, `Reference ID`, `Quantity`, `Fulfillment Center`, `Disposition`, `Reason`; optional: `Country`)
+
+Phase 1.5 (payout integrity / "Settlement Truth Audit" — the lead):
+- `settlement` — Payments All Statements V2 flat file. Per `(order-id, sku)`: `amount-description='Principal'` = revenue, `='Commission'` = referral fee charged. Source of truth for the referral % and per-SKU unit volume.
+- `fba_fee_preview` — FBA Fee Preview. Amazon's measured `longest-side`/`median-side`/`shortest-side`/`item-package-weight`, assigned `product-size-tier`, and `estimated-fee-total`.
+- `storage_fees` — FBA Aged Inventory Surcharge (`snapshot-date`, `sku`, `qty-charged`, `surcharge-type`, `surcharge-amount`).
+
+**Reference tables:** `src/lib/rules/reference/referral-rates.ts` (category referral %, tiered) and `fba-fee-schedule.ts` (size-tier → fee) are versioned SQL `VALUES` CTEs composed into the rule SQL. Representative 2026 values — **verify against Amazon's live schedule before production**; bump the `*_REFERENCE_VERSION` and the rule `version` when they change. **DuckDB gotcha:** `at` is a reserved keyword — alias tier joins as `amzt`, not `at`.
 
 **Note:** Amazon deprecated "FBA Inventory Adjustments" in Jan 2023. The internal key was renamed from `adjustments` to `inventory_ledger` (2026-05-08).
 
@@ -103,9 +110,15 @@ export interface Rule {
 }
 
 export const RULES: Rule[] = [
-  returnsGap,              // Phase 1 — PRD §5.1
-  inventoryLost,           // Phase 1 — PRD §5.2
-  refundReimbursementMismatch, // Phase 1 — PRD §5.3
+  // Payout-integrity wedge (Phase 1.5) — the lead.
+  referralFeeMismatch,         // PRD §5.6 — settlement + fba_fee_preview
+  sizeTierMisclassification,   // PRD §5.5 — fba_fee_preview + settlement
+  returnCreditUnapplied,       // PRD §5.4 — returns + inventory_ledger + settlement
+  agedSurchargeOnSold,         // PRD §5.8 — storage_fees + inventory_ledger
+  // Reimbursement add-ons (Phase 1) — demoted out of the lead.
+  returnsGap,                  // PRD §5.1
+  inventoryLost,               // PRD §5.2
+  refundReimbursementMismatch, // PRD §5.3
 ]
 ```
 
