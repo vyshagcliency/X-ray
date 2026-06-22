@@ -460,23 +460,24 @@ Each rule is: **pure SQL file + registry entry + Vitest CSV fixture + fixture te
 
 ### 🔬 Research checkpoint (before starting)
 
-- [ ] Pull **current Amazon referral-fee category table** — fee percentages by category (rule 5.5 depends on this; Amazon updates periodically).
-- [ ] Pull **current FBA size-tier boundaries** and per-tier fulfillment fees (rule 5.4 depends on this).
-- [ ] Pull **current 9-month inbound-shipment reconciliation window** policy (rule 5.8).
-- [ ] Confirm **LTSF (long-term storage fee)** policy — aged-inventory thresholds (rule 5.9).
-- [ ] Confirm **Removal Order Detail** report column schema (rule 5.6).
-- [ ] Verify **Manage FBA Inventory** report now includes dimensions column (required for rule 5.4).
+*Most of the original checkpoint is superseded — the referral table, FBA size-tier boundaries/fees, and aged-surcharge logic were all researched and built in Phase 1.5. Only the items for the two remaining optional add-ons and the operational capacity check survive.*
+
+- [x] ~~Amazon referral-fee category table~~ — done in Phase 1.5 (`reference/referral-rates.ts`, authoritative).
+- [x] ~~FBA size-tier boundaries + per-tier fees~~ — done in Phase 1.5 (`reference/fba-fee-schedule.ts` + self-calibration).
+- [x] ~~LTSF / aged-inventory thresholds~~ — shipped as `aged-surcharge-on-sold.ts` (Phase 1.5).
+- [ ] *(optional add-on)* Confirm **inbound-shipment reconciliation window** policy — only if building `inbound-shortage.ts`.
+- [ ] *(optional add-on)* Confirm **Removal Order Detail** report schema — only if building `removal-not-received.ts`.
 - [ ] Confirm **Supabase Pro tier** capacity covers projected volume (decisions §4 deferred decision).
 
 ### 2.1 Extended uploads
 
 **User stories:** US-3.4 · **PRD:** §4.3
 
-- [ ] Add 4th required CSV tile: **All Listings Report** — headers in `src/lib/csv/headers.ts`
-- [ ] Add 4 optional CSV tiles: Settlement, FBA Fee Preview, Removal Order Detail, Manage FBA Inventory
+- [x] ~~Settlement + FBA Fee Preview tiles~~ — shipped in Phase 1.5 (now the *required* lead pair) + `storage_fees` optional tile; upload route accepts them.
+- [ ] Add optional **All Listings Report** tile (`all_listings` signature already in `headers.ts`) — for SKU price/catalog enrichment.
+- [ ] Add optional tiles for the two add-on rules' inputs (Removal Order Detail, inbound shipment) — only if building those rules.
 - [ ] Optional tile styling + "+$X estimated findings if you add this" messaging
-- [ ] `parse-csv` task handles the new report types; Parquet schemas added (arch §4.3)
-- [ ] Header schemas pinned with `header_signature` hash so we can detect Amazon format drift (arch §4.2)
+- [ ] Header schemas pinned with `header_signature` hash so we can detect Amazon format drift (arch §4.2) — *still open; flagged in Phase 1.5 too.*
 - [ ] Smoke test all 8 reports against one real dataset end-to-end
 
 ### 2.2 Detection rules — mostly superseded by Phase 1.5
