@@ -60,14 +60,14 @@ export function ReportTile({ signature, onValidFile, onClear }: ReportTileProps)
 
   return (
     <Card
-      className={`transition-colors ${
+      className={`h-full transition-all duration-200 ${
         isDragging
-          ? "border-primary bg-primary/5"
+          ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/20"
           : isValid
-            ? "border-green-500 bg-green-50"
+            ? "border-green-500/70 bg-green-50/70"
             : isError
               ? "border-destructive bg-destructive/5"
-              : ""
+              : "hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
       }`}
     >
       <CardContent className="p-4">
@@ -107,13 +107,13 @@ export function ReportTile({ signature, onValidFile, onClear }: ReportTileProps)
                 </p>
               )}
             </div>
-            <div className="flex shrink-0 items-center gap-2 rounded-md border-2 border-dashed px-4 py-2 transition-colors hover:bg-muted/50">
+            <div className="flex shrink-0 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3.5 py-2 text-muted-foreground transition-colors hover:border-slate-400 hover:bg-muted/40">
               {isError ? (
                 <XCircle className="size-4 text-destructive" />
               ) : (
-                <Upload className="size-4 text-muted-foreground" />
+                <Upload className="size-4" />
               )}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs">
                 {isDragging ? "Drop here" : "Drop CSV or browse"}
               </span>
             </div>

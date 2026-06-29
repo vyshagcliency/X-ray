@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Shield } from "lucide-react";
+import { Lock, Shield, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
@@ -112,11 +112,18 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           transition={{ delay: 0.1, duration: 0.5 }}
           className="mt-8"
         >
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Required
-            </span>
-            <div className="h-px flex-1 bg-border" />
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold">Required</h2>
+            {allUploaded ? (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+                <CheckCircle2 className="size-3.5" />
+                Ready to run
+              </span>
+            ) : (
+              <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                {requiredUploadedCount} of {REQUIRED_REPORTS.length} added
+              </span>
+            )}
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {REQUIRED_REPORTS.map((type) => (
@@ -137,11 +144,12 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           transition={{ delay: 0.15, duration: 0.5 }}
           className="mt-8"
         >
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Optional — find more
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold">Optional</h2>
+            <span className="text-xs text-muted-foreground">
+              {optionalUploadedCount > 0 && `${optionalUploadedCount} added · `}
+              more files, more findings
             </span>
-            <div className="h-px flex-1 bg-border" />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {OPTIONAL_REPORTS.map((type) => (
