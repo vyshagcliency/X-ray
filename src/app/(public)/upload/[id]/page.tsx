@@ -83,7 +83,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
 
       <NavBar />
 
-      <main className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-8">
+      <main className="relative mx-auto w-full max-w-5xl px-6 py-10">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -100,34 +100,42 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
             Upload your Seller Central reports
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Start with the 2 required reports below. We&apos;ll validate each one
-            instantly. Add the optional ones to find more.
+            Start with the 2 required reports. We&apos;ll validate each one instantly.
+            Add the optional ones to find more.
           </p>
         </motion.div>
 
-        {/* Required report tiles */}
+        {/* Required report tiles — 2-up grid */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className="mt-6 space-y-3"
+          className="mt-8"
         >
-          {REQUIRED_REPORTS.map((type) => (
-            <ReportTile
-              key={type}
-              signature={REPORT_SIGNATURES[type]}
-              onValidFile={(file) => handleValidFile(type, file)}
-              onClear={() => handleClear(type)}
-            />
-          ))}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Required
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {REQUIRED_REPORTS.map((type) => (
+              <ReportTile
+                key={type}
+                signature={REPORT_SIGNATURES[type]}
+                onValidFile={(file) => handleValidFile(type, file)}
+                onClear={() => handleClear(type)}
+              />
+            ))}
+          </div>
         </motion.div>
 
-        {/* Optional report tiles */}
+        {/* Optional report tiles — 2-up grid */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.5 }}
-          className="mt-6"
+          className="mt-8"
         >
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -135,7 +143,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
-          <div className="mt-3 space-y-3">
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {OPTIONAL_REPORTS.map((type) => (
               <ReportTile
                 key={type}
@@ -147,18 +155,24 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           </div>
         </motion.div>
 
-        {/* Run button */}
+        {/* Footer row: privacy left, action right */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="mt-6"
+          className="mt-8 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between"
         >
+          <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground sm:justify-start">
+            <Lock className="size-3" />
+            Encrypted in transit &amp; at rest. Auto-deleted after 30 days.
+            <Shield className="ml-1 size-3" />
+            Never shared.
+          </p>
           <Button
             onClick={handleRunAudit}
             disabled={!allUploaded || isSubmitting}
             size="lg"
-            className="w-full"
+            className="w-full sm:w-auto sm:min-w-[240px]"
           >
             {isSubmitting
               ? "Uploading..."
@@ -167,19 +181,6 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
                 : `Upload ${remainingCount} more report${remainingCount !== 1 ? "s" : ""}`}
           </Button>
         </motion.div>
-
-        {/* Privacy note */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground"
-        >
-          <Lock className="size-3" />
-          Encrypted in transit & at rest. Raw files auto-deleted after 30 days.
-          <Shield className="ml-1 size-3" />
-          Never shared.
-        </motion.p>
       </main>
     </div>
   );
