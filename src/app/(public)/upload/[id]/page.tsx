@@ -83,7 +83,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
 
       <NavBar />
 
-      <main className="relative mx-auto w-full max-w-5xl px-6 py-10">
+      <main className="relative mx-auto w-full max-w-7xl px-6 py-10">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

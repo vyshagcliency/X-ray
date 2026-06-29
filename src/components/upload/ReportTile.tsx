@@ -99,7 +99,8 @@ export function ReportTile({ signature, onValidFile, onClear }: ReportTileProps)
                   {signature.dateRange}
                 </Badge>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">{signature.sellerCentralPath}</p>
+              <p className="mt-1 text-xs text-foreground/70">{signature.description}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{signature.sellerCentralPath}</p>
               {isError && (
                 <p className="mt-1 text-xs text-destructive">
                   {validation.error}
