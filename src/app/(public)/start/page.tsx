@@ -35,7 +35,7 @@ export default function StartPage() {
 
       <NavBar />
 
-      <main className="relative mx-auto grid max-w-5xl gap-12 px-6 py-12 lg:grid-cols-2 lg:gap-20 lg:py-16">
+      <main className="relative mx-auto grid max-w-7xl items-center gap-10 px-6 py-10 lg:grid-cols-[1fr_minmax(360px,420px)] lg:gap-16">
         {/* Left — context */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -54,7 +54,7 @@ export default function StartPage() {
             You&apos;ll upload your Seller Central CSVs on the next step.
           </p>
 
-          <div className="mt-10 space-y-4">
+          <div className="mt-8 space-y-6">
             {[
               {
                 icon: Clock,
@@ -72,23 +72,19 @@ export default function StartPage() {
                 text: "Raw files auto-deleted after 30 days. A compact derivative is kept so your report stays accessible. Never shared.",
               },
             ].map((item) => (
-              <div
-                key={item.title}
-                className="flex items-start gap-4 rounded-xl border border-border/60 bg-white/70 p-4 shadow-sm"
-              >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <div key={item.title} className="flex items-start gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/15">
                   <item.icon className="size-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                     {item.text}
                   </p>
                 </div>
               </div>
             ))}
           </div>
-
         </motion.div>
 
         {/* Right — form card */}
@@ -98,8 +94,8 @@ export default function StartPage() {
           transition={{ delay: 0.15, duration: 0.5 }}
           className="flex items-center"
         >
-          <Card className="w-full shadow-xl ring-1 ring-black/[0.08]">
-            <CardContent className="p-8">
+          <Card className="w-full shadow-sm ring-1 ring-black/5">
+            <CardContent className="p-7">
               <div className="mb-6 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2">
                 <CheckCircle2 className="size-4 text-emerald-600" />
                 <p className="text-sm font-medium text-emerald-900">
