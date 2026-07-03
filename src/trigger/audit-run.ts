@@ -118,10 +118,23 @@ export const auditRun = task({
     await metadata.set("progress", 0.6);
 
     if (allFindings.length > 0) {
-      const { data: insertedFindings } = await db
+      const { data: insertedFindings, error: insertError } = await db
         .from("findings")
         .insert(allFindings)
         .select("id, rule_id, category, amount_cents, confidence, window_closes_on, window_days_remaining, evidence");
+
+      // A swallowed error here silently ships an empty/inconsistent report (e.g. an
+      // unmigrated finding_category enum value fails the whole batch). Fail loudly so
+      // the task retries and the failure is visible, rather than completing at $0.
+      if (insertError) {
+        await db.from("audit_events").insert({
+          audit_id: auditId,
+          stage: "findings.insert",
+          status: "failed",
+          metadata: { error: insertError.message, attempted: allFindings.length },
+        });
+        throw new Error(`Findings insert failed: ${insertError.message}`);
+      }
 
       // 5. Generate narrative (template-based for Phase 1)
       await metadata.set("stage", "Writing analysis...");
