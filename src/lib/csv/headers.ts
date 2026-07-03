@@ -14,7 +14,7 @@ export interface ReportSignature {
   displayName: string;
   sellerCentralPath: string;
   dateRange: string;
-  /** Required columns — all must be present for the file to match */
+  /** Required columns: all must be present for the file to match */
   requiredHeaders: string[];
   /** Optional columns that may or may not be present */
   optionalHeaders?: string[];
@@ -133,7 +133,7 @@ export const REPORT_SIGNATURES: Record<string, ReportSignature> = {
 
   settlement: {
     reportType: "settlement",
-    displayName: "Payments — All Statements (Settlement V2)",
+    displayName: "Payments: All Statements (Settlement V2)",
     sellerCentralPath: "Reports > Payments > All Statements > Download Flat File V2",
     dateRange: "Last 18 months (all statements)",
     requiredHeaders: [
@@ -159,7 +159,7 @@ export const REPORT_SIGNATURES: Record<string, ReportSignature> = {
       "order-item-code",
       "promotion-id",
     ],
-    description: "Every fee Amazon charged per order — the source of truth for referral %",
+    description: "Every fee Amazon charged per order, the source of truth for referral %",
   },
 
   fba_fee_preview: {

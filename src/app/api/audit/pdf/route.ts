@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   const filename = `${(audit?.brand_name ?? "report").replace(/[^a-zA-Z0-9_-]/g, "_")}-xray.pdf`;
 
-  // Check if a pre-rendered PDF exists in storage — proxy it instead of redirecting
+  // Check if a pre-rendered PDF exists in storage: proxy it instead of redirecting
   const storagePath = `reports/${auditId}.pdf`;
   const { data: stored } = await db.storage
     .from("uploads")
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // No pre-rendered PDF — try on-demand React-PDF render
+  // No pre-rendered PDF: try on-demand React-PDF render
   if (!audit?.report_data) {
     return NextResponse.redirect(new URL(`/r/${auditId}`, req.url));
   }

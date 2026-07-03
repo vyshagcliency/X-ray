@@ -105,7 +105,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           </p>
         </motion.div>
 
-        {/* Required report tiles — 2-up grid */}
+        {/* Required report tiles: 2-up grid */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,7 +137,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
           </div>
         </motion.div>
 
-        {/* Optional report tiles — 2-up grid */}
+        {/* Optional report tiles: 2-up grid */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

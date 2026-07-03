@@ -1,13 +1,13 @@
 import type { Rule } from "./index";
 
 /**
- * PRD §5.4 — Return credit issued but inventory credit never applied
+ * PRD §5.4: Return credit issued but inventory credit never applied
  * (payout-integrity wedge; sibling of returns_gap §5.1).
  *
  * Per SKU per month, compares the count of customer returns marked SELLABLE
  * against the units the inventory ledger shows actually credited back to sellable
  * stock. Where sellable returns exceed the credited units, the gap is product the
- * customer returned (and was refunded for) that never came back to the seller —
+ * customer returned (and was refunded for) that never came back to the seller,
  * recoverable at the SKU's average selling price (from settlement). All in SQL.
  *
  * Contract-free: needs only the seller's own Returns, Inventory Ledger, and
@@ -68,6 +68,6 @@ export const returnCreditUnapplied: Rule = {
     WHERE sr.returned_qty - COALESCE(ri.found_qty, 0) > 0
   `,
 
-  // PRD §5.4: medium — a real gap, but legitimate timing differences exist.
+  // PRD §5.4: medium. A real gap, but legitimate timing differences exist.
   confidence: () => "medium",
 };

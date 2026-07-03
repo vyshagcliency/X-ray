@@ -10,7 +10,7 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Admin route guard — exclude the login page itself
+  // Admin route guard: exclude the login page itself
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const adminSession = request.cookies.get("admin-session");
     if (!adminSession?.value) {

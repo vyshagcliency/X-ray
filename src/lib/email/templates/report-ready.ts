@@ -1,6 +1,6 @@
 /**
  * Report-ready email template.
- * Simple HTML — no heavy email framework for Phase 1.
+ * Simple HTML: no heavy email framework for Phase 1.
  */
 
 import { formatDollars } from "@/lib/format";
@@ -23,7 +23,7 @@ export function reportReadyHtml({
   const totalFormatted = formatDollars(total_recoverable_cents);
 
   return {
-    subject: `Your X-Ray report is ready — ${totalFormatted} recoverable for ${brand_name}`,
+    subject: `Your X-Ray report is ready: ${totalFormatted} recoverable for ${brand_name}`,
     html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -44,13 +44,14 @@ export function reportReadyHtml({
   <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
 
   <p style="font-size:14px;color:#888;">
-    Filing ${findings_count} disputes is typically a 60-80 hour job. We do it as a managed service —
-    we only get paid when the money lands in your account (20% of recovered, no retainer).
+    Every finding above is yours to file, free. What we run as a service is catching next
+    month's overcharge before it compounds, across every channel you sell on, plus the
+    backward claims that need direct access to your data to chase down.
   </p>
 
   <p style="font-size:14px;color:#888;">
-    Reply to this email to schedule a 15-minute call, or
-    <a href="${report_url}" style="color:#1a1a1a;">view the full report</a>.
+    <a href="https://calendly.com/vyshag-baslix/30min" style="color:#1a1a1a;">Talk to us: 15 minutes, no pitch deck</a>,
+    or <a href="${report_url}" style="color:#1a1a1a;">view the full report</a>.
   </p>
 
   <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">

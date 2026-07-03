@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Upload every provided report (required + any optional). Absent optionals are
-  // skipped — the pipeline runs whichever rules have their reports.
+  // skipped. The pipeline runs whichever rules have their reports.
   for (const reportType of VALID_REPORT_TYPES) {
     const file = formData.get(reportType);
     if (!file || !(file instanceof File)) {

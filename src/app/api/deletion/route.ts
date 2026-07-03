@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     .limit(1);
 
   if (existing && existing.length > 0) {
-    // Already requested — return success silently
+    // Already requested: return success silently
     return NextResponse.json({ success: true });
   }
 

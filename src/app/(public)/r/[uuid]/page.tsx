@@ -160,7 +160,7 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
 
               <p className="mt-5 max-w-xl text-sm text-muted-foreground">
                 Every figure below traces to a specific row in your own Seller Central
-                reports — defensible line by line.
+                reports, defensible line by line.
               </p>
 
               <div className="mt-6">
@@ -246,14 +246,21 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
             <div className="flex flex-col items-center text-center">
               <ShieldCheck className="mb-3 size-8 text-primary" />
               <p className="text-lg font-semibold">
-                Filing {typedAudit.findings_count.toLocaleString()} disputes is a 60–80 hour job.
+                Every finding above is yours to file, free.
               </p>
               <p className="mt-2 max-w-xl text-muted-foreground">
-                We do it as a managed service — and only get paid when the money lands in
-                your account (20% of recovered, no retainer, no software).
+                What we run as a service is catching next month&apos;s overcharge before it
+                compounds, across every channel you sell on, plus the backward claims that
+                need direct access to your data to chase down.
               </p>
-              <Button size="lg" className="mt-6">
-                Talk to us — 15 min, no pitch deck <ArrowRight className="ml-2 size-4" />
+              <Button size="lg" className="mt-6" asChild>
+                <a
+                  href="https://calendly.com/vyshag-baslix/30min"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Talk to us: 15 minutes, no pitch deck <ArrowRight className="ml-2 size-4" />
+                </a>
               </Button>
             </div>
           </div>

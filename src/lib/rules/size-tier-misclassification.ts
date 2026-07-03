@@ -5,7 +5,7 @@ import {
 } from "./reference/fba-fee-schedule";
 
 /**
- * PRD §5.5 — Dimension/size-tier fee overcharge (payout-integrity wedge).
+ * PRD §5.5: Dimension/size-tier fee overcharge (payout-integrity wedge).
  *
  * Recomputes the *correct* FBA size tier from a SKU's measured dimensions/weight
  * (Fee Preview) and flags SKUs Amazon placed in a larger/costlier tier than their
@@ -13,8 +13,8 @@ import {
  * (`estimated-fee-total`) minus what the correct tier should cost × units sold.
  *
  * Self-calibrating: the "correct tier cost" is the median fee Amazon actually charges
- * SKUs that ARE correctly classified into that tier (from the seller's own data) —
- * no hardcoded fee dollars on the recovery path. The published fee schedule is only a
+ * SKUs that ARE correctly classified into that tier (from the seller's own data),
+ * with no hardcoded fee dollars on the recovery path. The published fee schedule is only a
  * fallback for tiers with no clean in-dataset sample, and is still the source of the
  * dimension/weight tier boundaries (which are stable and not dollar-sensitive).
  *
@@ -22,7 +22,7 @@ import {
  */
 export const sizeTierMisclassification: Rule = {
   id: "size_tier_misclassification",
-  // 1.1.0 — recovery dollars now self-calibrated from the seller's own fees.
+  // 1.1.0: recovery dollars now self-calibrated from the seller's own fees.
   version: "1.1.0",
   requiredReports: ["fba_fee_preview", "settlement"],
   category: "fba_dimension",
@@ -63,7 +63,7 @@ export const sizeTierMisclassification: Rule = {
       LEFT JOIN fba_size_tiers amzt ON amzt.tier = p.amazon_tier
     ),
     -- Self-calibration: the typical fee Amazon charges for SKUs that ARE correctly
-    -- classified into a tier (amazon_rank = correct_rank) — derived from the seller's
+    -- classified into a tier (amazon_rank = correct_rank), derived from the seller's
     -- own data, no hardcoded dollars. Median is robust to the odd outlier.
     tier_baseline AS (
       SELECT correct_rank AS rank, median(actual_fee_cents) AS baseline_fee_cents

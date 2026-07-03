@@ -1,6 +1,6 @@
 /**
  * Format cents as dollars for display.
- * All internal values are bigint cents — this is the only conversion point.
+ * All internal values are bigint cents. This is the only conversion point.
  */
 export function formatDollars(cents: number | bigint): string {
   const dollars = Number(cents) / 100;

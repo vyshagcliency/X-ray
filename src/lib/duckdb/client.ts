@@ -2,7 +2,7 @@ import { DuckDBInstance } from "@duckdb/node-api";
 
 /**
  * Create a fresh DuckDB instance for a single task.
- * Each Trigger.dev task gets its own in-process DuckDB — no shared state.
+ * Each Trigger.dev task gets its own in-process DuckDB. No shared state.
  */
 export async function createDuckDB() {
   const instance = await DuckDBInstance.create(":memory:");

@@ -1,5 +1,5 @@
 /**
- * Amazon US FBA fulfillment-fee size-tier reference table — payout-integrity wedge (Phase 1.5).
+ * Amazon US FBA fulfillment-fee size-tier reference table: payout-integrity wedge (Phase 1.5).
  *
  * The size-tier misclassification rule (PRD §5.5) recomputes the *correct* size tier
  * from a SKU's real dimensions/weight (FBA Fee Preview report) and compares the fee
@@ -16,7 +16,7 @@
  *   2026 restructure (eff. Jan 15 2026): tiers are Small Standard / Large Standard /
  *   Large Bulky / Extra-Large; a 3.5% fuel & logistics surcharge applies since Apr 17 2026.
  *
- * ⚠️ REPRESENTATIVE SUBSET — fees here are a simplified, price-bracket-agnostic
+ * ⚠️ REPRESENTATIVE SUBSET: fees here are a simplified, price-bracket-agnostic
  * baseline for detecting *tier* misclassification (the cross-tier delta), not an exact
  * fee calculator. Verify against Amazon's live fee table before production. Bump
  * FBA_FEE_REFERENCE_VERSION and the dependent rule's `version` when values change.

@@ -1,7 +1,7 @@
 import { formatDollars, formatDollarsExact } from "@/lib/format";
 
 /**
- * LLM output validation — ensures no invented dollar amounts.
+ * LLM output validation: ensures no invented dollar amounts.
  *
  * Every $X substring in LLM output must match a known findings.amount_cents value.
  * Mismatches fall back to template prose + flag to admin.
@@ -15,7 +15,7 @@ interface ValidationResult {
   inventedAmounts: string[];
   /** Dollar strings found in the text that match known amounts */
   matchedAmounts: string[];
-  /** Shorthand amounts found (e.g., $147k, $1.2M) — always invalid */
+  /** Shorthand amounts found (e.g., $147k, $1.2M): always invalid */
   shorthandAmounts: string[];
 }
 
@@ -41,7 +41,7 @@ export function validateLlmOutput(
   validDollarStrings.add(formatDollars(total));
   validDollarStrings.add(formatDollarsExact(total));
 
-  // Check for shorthand amounts ($147k, $1.2M, etc.) — always invalid
+  // Check for shorthand amounts ($147k, $1.2M, etc.): always invalid
   const shorthandRegex = /\$[\d,.]+[kKmMbB]\b/g;
   const shorthandAmounts = [...text.matchAll(shorthandRegex)].map(
     (m) => m[0],

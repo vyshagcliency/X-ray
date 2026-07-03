@@ -47,7 +47,7 @@ export function RecoveryVisuals({
 
   return (
     <section className="mt-8 grid gap-6 lg:grid-cols-5">
-      {/* Where the money is — category bar */}
+      {/* Where the money is: category bar */}
       <div className="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm lg:col-span-3">
         <h2 className="text-lg font-bold">Where the money is</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -82,7 +82,7 @@ export function RecoveryVisuals({
         </div>
       </div>
 
-      {/* Recurring vs recoverable-now — donut */}
+      {/* Recurring vs recoverable-now: donut */}
       <div className="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm lg:col-span-2">
         <h2 className="text-lg font-bold">Recurring vs. one-time</h2>
         <p className="mt-1 text-sm text-muted-foreground">

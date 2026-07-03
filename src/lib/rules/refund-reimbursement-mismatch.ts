@@ -1,7 +1,7 @@
 import type { Rule } from "./index";
 
 /**
- * PRD §5.3 — Refund issued but reimbursement missing
+ * PRD §5.3: Refund issued but reimbursement missing
  *
  * Finds customer returns where Amazon refunded the customer
  * but never reimbursed the seller.

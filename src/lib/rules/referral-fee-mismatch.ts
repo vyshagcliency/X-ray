@@ -7,13 +7,13 @@ import {
 import { PRODUCT_GROUP_MAP_CTE } from "./reference/product-group-map";
 
 /**
- * PRD §5.6 — Referral fee category misclassification (payout-integrity wedge).
+ * PRD §5.6: Referral fee category misclassification (payout-integrity wedge).
  *
  * Compares the referral fee Amazon actually charged per order (Settlement V2:
  * Commission ÷ Principal) against the rate the SKU's category should pay
  * (referral-rate reference table, joined by product-group from the Fee Preview
  * report). Where the charged fee exceeds the expected fee + the $0.30/unit floor,
- * the overcharge is the recoverable amount — computed entirely in SQL.
+ * the overcharge is the recoverable amount, computed entirely in SQL.
  *
  * Contract-free: needs only the seller's own Settlement and Fee Preview reports.
  */

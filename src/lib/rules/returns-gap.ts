@@ -1,7 +1,7 @@
 import type { Rule } from "./index";
 
 /**
- * PRD §5.1 — Customer return reimbursement gaps
+ * PRD §5.1: Customer return reimbursement gaps
  *
  * Finds returns marked as damaged/defective where Amazon never issued
  * a reimbursement and the item wasn't returned to sellable inventory.

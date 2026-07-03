@@ -12,7 +12,7 @@ interface Finding {
 }
 
 const num = (v: unknown) => Number(v ?? 0);
-const str = (v: unknown) => (v == null || v === "" ? "—" : String(v));
+const str = (v: unknown) => (v == null || v === "" ? "N/A" : String(v));
 const pct = (frac: unknown) => `${(num(frac) * 100).toFixed(1)}%`;
 const sum = (fs: Finding[], k: string) => fs.reduce((s, f) => s + num(f.evidence[k]), 0);
 const avg = (fs: Finding[], k: string) =>
@@ -122,7 +122,7 @@ const FALLBACK: DetailConfig = {
     str(f.evidence.disposition ?? f.evidence.reason),
     f.window_days_remaining != null && f.window_days_remaining >= 0
       ? `${f.window_days_remaining}d left`
-      : "—",
+      : "N/A",
     formatDollars(f.amount_cents),
   ],
 };
@@ -242,7 +242,7 @@ export function CategoryDeepDive({
       </div>
       {remaining > 0 && (
         <p className="border-t border-slate-100 px-4 py-2.5 text-xs text-muted-foreground">
-          + {remaining.toLocaleString()} more case{remaining !== 1 ? "s" : ""} in this category — full detail in the PDF and CSV export.
+          + {remaining.toLocaleString()} more case{remaining !== 1 ? "s" : ""} in this category. Full detail is in the PDF and CSV export.
         </p>
       )}
     </section>

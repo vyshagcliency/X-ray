@@ -1,7 +1,7 @@
 import type { Rule } from "./index";
 
 /**
- * PRD §5.8 — Aged-inventory surcharge on actively-selling SKUs (payout-integrity wedge).
+ * PRD §5.8: Aged-inventory surcharge on actively-selling SKUs (payout-integrity wedge).
  *
  * Cross-references each aged-inventory surcharge (Aged Inventory Surcharge report)
  * against the SKU's sales velocity in the 90 days before the surcharge snapshot
@@ -9,7 +9,7 @@ import type { Rule } from "./index";
  * carrying aged stock; a surcharge on it is likely charged on units that should
  * have cleared. The surcharge amount is the recoverable figure.
  *
- * Lower confidence — flagged for human review, not auto-included in the headline
+ * Lower confidence: flagged for human review, not auto-included in the headline
  * (PRD §5.8). Contract-free: seller's own Aged Surcharge + Inventory Ledger reports.
  */
 export const agedSurchargeOnSold: Rule = {

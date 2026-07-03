@@ -1,5 +1,5 @@
 /**
- * LLM narrative generation — Sonnet 4.5 pattern analysis.
+ * LLM narrative generation: Sonnet 4.5 pattern analysis.
  *
  * The LLM narrates from pre-computed findings JSON. It NEVER calculates.
  * Every dollar figure in output must trace back to findings.amount_cents.
@@ -46,7 +46,7 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
 
   // Executive summary
   const urgentLine = urgent_recoverable_cents > 0
-    ? ` Of this, ${urgentFormatted} is time-sensitive — dispute windows close within 14 days.`
+    ? ` Of this, ${urgentFormatted} is time-sensitive: dispute windows close within 14 days.`
     : "";
 
   // Rolling overcharges (referral %, size-tier) have no deadline; they keep accruing.
@@ -72,7 +72,7 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
     const templates: Record<string, string> = {
       // Payout-integrity findings (the lead wedge).
       referral_fee: `We found ${cat.count} orders where Amazon charged a higher referral fee than your product category's published rate, totaling ${catTotal}. The most affected SKUs include ${skuList || "multiple products"}. A wrong category rate compounds on every sale until it's corrected.${urgentNote}`,
-      fba_dimension: `We found ${cat.count} SKUs Amazon placed in a larger size tier than their measured dimensions warrant, overcharging the fulfillment fee on every unit shipped — totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
+      fba_dimension: `We found ${cat.count} SKUs Amazon placed in a larger size tier than their measured dimensions warrant, overcharging the fulfillment fee on every unit shipped, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
       return_credit: `We found ${cat.count} SKUs where customer returns were credited back on paper but the inventory or cash credit never landed in your account, totaling ${catTotal}. Top affected SKUs: ${skuList || "multiple products"}.${urgentNote}`,
       aged_surcharge: `We found ${cat.count} SKUs charged an aged-inventory surcharge while they were actively selling, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
       // Reimbursement findings (demoted add-ons).
@@ -84,7 +84,7 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
       ?? `We identified ${cat.count} discrepancies totaling ${catTotal} in the ${cat.category} category.${urgentNote}`;
   }
 
-  const methodology_note = "This analysis recomputes what Amazon should have charged or credited on each sale — using your category's published referral rates and your products' measured dimensions — and matches it against what Amazon actually did, drawing on your Settlement, FBA Fee Preview, Returns, Reimbursements, and Inventory Ledger reports. Each finding is a verifiable discrepancy backed by specific rows in your own Seller Central data. Confidence levels reflect the strength of the evidence — high-confidence findings have direct, unambiguous matches.";
+  const methodology_note = "This analysis recomputes what Amazon should have charged or credited on each sale, using your category's published referral rates and your products' measured dimensions, and matches it against what Amazon actually did, drawing on your Settlement, FBA Fee Preview, Returns, Reimbursements, and Inventory Ledger reports. Each finding is a verifiable discrepancy backed by specific rows in your own Seller Central data. Confidence levels reflect the strength of the evidence: high-confidence findings have direct, unambiguous matches.";
 
   return {
     executive_summary,

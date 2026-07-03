@@ -12,7 +12,7 @@ interface SendEmailParams {
 export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<{ success: boolean; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn("RESEND_API_KEY not set — email skipped");
+    console.warn("RESEND_API_KEY not set, email skipped");
     return { success: false, error: "RESEND_API_KEY not configured" };
   }
 

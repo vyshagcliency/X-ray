@@ -23,7 +23,7 @@ const auditCategories = [
   {
     label: "Referral fee overcharges",
     detail:
-      "Amazon charges a higher referral % than your category's contracted rate — and it can run for a year before anyone notices.",
+      "Amazon charges a higher referral % than your category's contracted rate, and it can run for a year before anyone notices.",
     stat: "A wrong rate on one category compounds every single sale",
     icon: DollarSign,
   },
@@ -37,8 +37,8 @@ const auditCategories = [
   {
     label: "Credits never applied",
     detail:
-      "A customer return is credited to you on paper, but the money never lands — or an aged-stock fee hits SKUs you're actively selling.",
-    stat: "Silent on your books — invisible unless you reconcile",
+      "A customer return is credited to you on paper, but the money never lands, or an aged-stock fee hits SKUs you're actively selling.",
+    stat: "Silent on your books, invisible unless you reconcile",
     icon: RotateCcw,
   },
 ];
@@ -101,7 +101,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
       <NavBar showCta />
 
-      {/* Hero — dark navy */}
+      {/* Hero: dark navy */}
       <section className="relative overflow-hidden bg-[#0a1929]">
         {/* Cube grid pattern */}
         <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -116,10 +116,10 @@ export default function LandingPage() {
         </div>
 
         <div className="relative mx-auto grid min-h-[70vh] max-w-[82rem] gap-12 pb-20 pl-6 pr-2 pt-12 lg:grid-cols-5 lg:gap-16 lg:pb-28 lg:pl-8 lg:pr-0 lg:pt-16">
-          {/* Left — 3/5 */}
+          {/* Left: 3/5 */}
           <div className="flex flex-col items-start justify-center lg:col-span-3">
             <span className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-blue-400">
-              100% free &mdash; no strings attached
+              100% free, no strings attached
             </span>
             <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl">
               <span>Your settlement report</span>
@@ -129,7 +129,7 @@ export default function LandingPage() {
               <span className="text-[#a5b4fc]">We&apos;ll prove it.</span>
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-400">
-              Amazon quietly overcharges fees on your own sales &mdash; wrong
+              Amazon quietly overcharges fees on your own sales: wrong
               referral rates, inflated size tiers, credits that never land.
               Upload your Seller Central reports and in under 8 minutes get a
               forensic audit of every overcharge, with evidence to dispute it.
@@ -170,7 +170,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right — 2/5 — stock image with floating badges */}
+          {/* Right: 2/5, stock image with floating badges */}
           <div className="relative flex items-center lg:col-span-2">
             <div className="overflow-hidden rounded-2xl ring-1 ring-white/10">
               <Image
@@ -183,7 +183,7 @@ export default function LandingPage() {
               />
             </div>
 
-            {/* Floating badge — top-left */}
+            {/* Floating badge: top-left */}
             <div className="absolute -left-4 top-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 backdrop-blur">
               <div className="flex size-8 items-center justify-center rounded-full bg-emerald-500/20">
                 <DollarSign className="size-4 text-emerald-400" />
@@ -193,7 +193,7 @@ export default function LandingPage() {
               </span>
             </div>
 
-            {/* Floating badge — top-right */}
+            {/* Floating badge: top-right */}
             <div className="absolute -right-3 top-12 flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 backdrop-blur">
               <div className="flex size-8 items-center justify-center rounded-full bg-blue-500/20">
                 <ShieldCheck className="size-4 text-blue-400" />
@@ -203,7 +203,7 @@ export default function LandingPage() {
               </span>
             </div>
 
-            {/* Floating badge — bottom-left */}
+            {/* Floating badge: bottom-left */}
             <div className="absolute -left-6 bottom-16 flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 backdrop-blur">
               <div className="flex size-8 items-center justify-center rounded-full bg-amber-500/20">
                 <AlertTriangle className="size-4 text-amber-400" />
@@ -213,7 +213,7 @@ export default function LandingPage() {
               </span>
             </div>
 
-            {/* Floating badge — bottom-right */}
+            {/* Floating badge: bottom-right */}
             <div className="absolute -right-2 bottom-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 backdrop-blur">
               <div className="flex size-8 items-center justify-center rounded-full bg-violet-500/20">
                 <TrendingUp className="size-4 text-violet-400" />
@@ -226,7 +226,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Results metrics + How it works — white bg with design elements */}
+      {/* Results metrics + How it works: white bg with design elements */}
       <section className="relative overflow-hidden bg-white py-16 lg:py-24" ref={howRef}>
         {/* ── Background design elements (inspired by baslix SolutionSection) ── */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -278,7 +278,7 @@ export default function LandingPage() {
             style={{ background: 'radial-gradient(ellipse, hsl(215 50% 94%) 0%, hsl(220 30% 97%) 50%, transparent 75%)' }}
           />
 
-          {/* Flowing curves — left */}
+          {/* Flowing curves: left */}
           <svg className="absolute -left-[10%] top-[15%] h-[800px] w-[600px] opacity-[0.04]" viewBox="0 0 600 800" fill="none">
             <path d="M500 0C500 0 600 200 450 350C300 500 400 650 300 800" stroke="url(#curveL)" strokeWidth="1.5" />
             <path d="M550 0C550 0 650 250 500 400C350 550 450 700 350 850" stroke="url(#curveL)" strokeWidth="1" opacity="0.6" />
@@ -292,7 +292,7 @@ export default function LandingPage() {
             </defs>
           </svg>
 
-          {/* Flowing curves — right */}
+          {/* Flowing curves: right */}
           <svg className="absolute -right-[8%] top-[20%] h-[700px] w-[500px] opacity-[0.035]" viewBox="0 0 500 700" fill="none">
             <path d="M0 0C0 0 -100 180 50 300C200 420 100 550 200 700" stroke="url(#curveR)" strokeWidth="1.5" />
             <path d="M-50 50C-50 50 -150 220 0 350C150 480 50 600 150 750" stroke="url(#curveR)" strokeWidth="1" opacity="0.5" />
@@ -306,7 +306,7 @@ export default function LandingPage() {
             </defs>
           </svg>
 
-          {/* Dot accent pattern — top */}
+          {/* Dot accent pattern: top */}
           <div
             className="absolute left-1/2 top-[6%] h-[100px] w-[400px] -translate-x-1/2 opacity-[0.06]"
             style={{
@@ -333,7 +333,7 @@ export default function LandingPage() {
           {/* Metrics */}
           <div className="mx-auto grid max-w-5xl gap-8 px-6 text-center sm:grid-cols-3">
             {[
-              { value: "1–3%", label: "Of revenue typically recoverable" },
+              { value: "1-3%", label: "Of revenue typically recoverable" },
               { value: "18 mo", label: "Of transaction data scanned" },
               { value: "< 8 min", label: "From upload to full report" },
             ].map((metric) => (
@@ -387,7 +387,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* What we scan for + Trust signals — dark navy with cube grid */}
+      {/* What we scan for + Trust signals: dark navy with cube grid */}
       <section className="relative overflow-hidden py-16 lg:py-28" style={{ backgroundColor: '#0f172a' }} ref={scanRef}>
         {/* ── Background: cube grid + sweeps + glows ── */}
         <div className="pointer-events-none absolute inset-0">
@@ -448,7 +448,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Detection cards — individual cards */}
+          {/* Detection cards: individual cards */}
           <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-3">
             {auditCategories.map((c, i) => (
               <div
@@ -491,7 +491,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Trust signals — compact strip below */}
+          {/* Trust signals: compact strip below */}
           <div className="mx-auto mt-10 max-w-5xl rounded-xl border border-white/[0.06] bg-white/[0.03]">
             <div className="grid divide-y divide-white/[0.06] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               {[
@@ -518,7 +518,7 @@ export default function LandingPage() {
                   <signal.icon className="size-4 shrink-0 text-slate-500" />
                   <div>
                     <span className="text-xs font-semibold text-slate-300">{signal.title}</span>
-                    <span className="ml-1 text-xs text-slate-500">&mdash; {signal.text}</span>
+                    <span className="ml-1 text-xs text-slate-500">: {signal.text}</span>
                   </div>
                 </div>
               ))}
@@ -527,7 +527,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA section — dark navy card */}
+      {/* CTA section: dark navy card */}
       <section className="bg-[#f8fafc] px-6 py-16 lg:py-24" ref={ctaRef}>
         <div className="reveal-item relative mx-auto max-w-4xl overflow-hidden rounded-[2rem_0_2rem_0] bg-[#0f172a] px-8 py-16 text-center opacity-0 translate-y-4 transition-all duration-700 lg:px-16 lg:py-20">
           {/* Plus/cross pattern SVG background */}
@@ -560,11 +560,11 @@ export default function LandingPage() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl leading-relaxed text-slate-300">
               We&apos;re{" "}
-              <span className="font-semibold text-white">Baslix</span>. We
-              recover money from Amazon for ecommerce brands as a managed
-              service — and only get paid when you do. The audit is free because
-              if you find $200k in overcharges, you&apos;ll probably want help
-              filing the claims.
+              <span className="font-semibold text-white">Baslix</span>. We run
+              continuous payout-integrity monitoring across every channel you
+              sell on, and chase the backward claims you can&apos;t file
+              yourself. The audit above is free: it&apos;s proof of what we
+              catch.
             </p>
             <Link
               href="/start"
@@ -577,7 +577,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer — deeper navy */}
+      {/* Footer: deeper navy */}
       <footer className="relative bg-[#0a1929]">
         {/* Gradient accent line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />

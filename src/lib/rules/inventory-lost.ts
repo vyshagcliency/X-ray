@@ -1,7 +1,7 @@
 import type { Rule } from "./index";
 
 /**
- * PRD §5.2 — Lost/damaged inventory not reimbursed
+ * PRD §5.2: Lost/damaged inventory not reimbursed
  *
  * Finds inventory adjustment events where Amazon lost or damaged
  * items but never issued a reimbursement.

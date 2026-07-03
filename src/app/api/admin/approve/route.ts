@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/db/supabase";
 import { tasks } from "@trigger.dev/sdk/v3";
 
 export async function POST(req: NextRequest) {
-  // Phase 1: no auth middleware yet — admin routes are unlinked + noindex
+  // Phase 1: no auth middleware yet. Admin routes are unlinked + noindex
   const { auditId } = (await req.json()) as { auditId: string };
 
   if (!auditId) {

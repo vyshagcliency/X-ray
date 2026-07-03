@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/db/supabase";
 
 /**
  * Daily scheduled task: purges raw CSV uploads older than 30 days.
- * Parquet files and findings survive — only raw CSVs are deleted.
+ * Parquet files and findings survive. Only raw CSVs are deleted.
  * This is a code-enforced privacy promise, not just policy.
  */
 export const purgeRawUploads = schedules.task({

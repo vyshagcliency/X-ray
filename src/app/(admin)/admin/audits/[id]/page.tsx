@@ -158,7 +158,7 @@ export default async function AuditDetailPage({
         <div className="mb-6 rounded-lg border border-destructive p-4">
           <p className="text-sm font-medium text-destructive">
             Deletion requested on{" "}
-            {new Date(deletionReqs[0].created_at).toLocaleDateString()} —
+            {new Date(deletionReqs[0].created_at).toLocaleDateString()}.
             Status: {deletionReqs[0].status}
           </p>
           {deletionReqs[0].status === "pending" && audit.status !== "deleted" && (

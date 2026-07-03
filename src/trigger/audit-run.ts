@@ -72,7 +72,7 @@ export const auditRun = task({
     for (const rule of RULES) {
       const hasRequired = rule.requiredReports.every((r) => csvUrls[r]);
       if (!hasRequired) {
-        console.log(`Skipping rule ${rule.id} — missing required reports`);
+        console.log(`Skipping rule ${rule.id}: missing required reports`);
         continue;
       }
 

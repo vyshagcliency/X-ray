@@ -1,10 +1,10 @@
 /**
- * Dispute draft generation — Haiku 4.5 per-case drafts.
+ * Dispute draft generation: Haiku 4.5 per-case drafts.
  *
  * Phase 1: Template-based dispute drafts.
  * LLM enhancement will be added in Phase 1.5.
  *
- * The LLM NEVER calculates — all dollar figures come from findings.amount_cents.
+ * The LLM NEVER calculates. All dollar figures come from findings.amount_cents.
  */
 
 import { formatDollarsExact } from "@/lib/format";
@@ -35,7 +35,7 @@ export function draftDispute(input: DisputeInput): DisputeDraft {
   const templates: Record<string, { subject: string; body: string }> = {
     // Payout-integrity disputes (the lead wedge).
     referral_fee_mismatch: {
-      subject: `Fee Dispute — Incorrect Referral Fee Charged (Order ${orderId})`,
+      subject: `Fee Dispute: Incorrect Referral Fee Charged (Order ${orderId})`,
       body: `I am writing to dispute a referral fee that was charged above the published rate for my product's category.
 
 Order ID: ${orderId}
@@ -51,7 +51,7 @@ Please review the category assignment and refund the difference between the rate
 [SELLER_SIGNATURE]`,
     },
     size_tier_misclassification: {
-      subject: `Fee Dispute — Size-Tier Misclassification (SKU: ${sku})`,
+      subject: `Fee Dispute: Size-Tier Misclassification (SKU: ${sku})`,
       body: `I am writing to dispute an FBA fulfillment fee charged at a higher size tier than my product's measured dimensions warrant.
 
 SKU: ${sku}
@@ -66,7 +66,7 @@ Please re-measure this product (a cubiscan request may be required) and refund t
 [SELLER_SIGNATURE]`,
     },
     return_credit_unapplied: {
-      subject: `Reimbursement Request — Return Credit Never Applied (SKU: ${sku})`,
+      subject: `Reimbursement Request: Return Credit Never Applied (SKU: ${sku})`,
       body: `I am writing to request a credit for customer returns that were recorded but never credited back to my inventory or account.
 
 SKU: ${sku}
@@ -80,7 +80,7 @@ Please investigate the missing credits and reimburse the value of the units that
 [SELLER_SIGNATURE]`,
     },
     aged_surcharge_on_sold: {
-      subject: `Fee Dispute — Aged-Inventory Surcharge on Active SKU (SKU: ${sku})`,
+      subject: `Fee Dispute: Aged-Inventory Surcharge on Active SKU (SKU: ${sku})`,
       body: `I am writing to dispute an aged-inventory surcharge applied to a SKU that has been actively selling.
 
 SKU: ${sku}
@@ -96,7 +96,7 @@ Please review the sales velocity for this SKU and refund the surcharge if it was
     },
     // Reimbursement disputes (demoted add-ons).
     returns_gap: {
-      subject: `Reimbursement Request — Damaged Return Not Credited (Order ${orderId})`,
+      subject: `Reimbursement Request: Damaged Return Not Credited (Order ${orderId})`,
       body: `I am writing to request a reimbursement for a customer return that was received at your fulfillment center in damaged/defective condition but was never credited to my account.
 
 Order ID: ${orderId}
@@ -110,7 +110,7 @@ Per Amazon's FBA reimbursement policy, when a returned item is received in unsel
 Please investigate and process the appropriate reimbursement. I have attached the relevant Seller Central report data for your reference.`,
     },
     inventory_lost: {
-      subject: `Reimbursement Request — Lost/Damaged Inventory (SKU: ${sku})`,
+      subject: `Reimbursement Request: Lost/Damaged Inventory (SKU: ${sku})`,
       body: `I am writing to request a reimbursement for inventory that was reported as lost or damaged in your fulfillment center but was never reimbursed.
 
 SKU: ${sku}
@@ -124,7 +124,7 @@ Per Amazon's FBA lost and damaged inventory reimbursement policy, I am entitled 
 Please investigate and process the appropriate reimbursement.`,
     },
     refund_reimbursement_mismatch: {
-      subject: `Reimbursement Request — Refund Without Reimbursement (Order ${orderId})`,
+      subject: `Reimbursement Request: Refund Without Reimbursement (Order ${orderId})`,
       body: `I am writing to request a reimbursement for an order where a customer refund was processed but no corresponding reimbursement was issued to my account.
 
 Order ID: ${orderId}
@@ -139,7 +139,7 @@ Please investigate and issue the appropriate reimbursement.`,
   };
 
   const template = templates[input.rule_id] ?? {
-    subject: `Reimbursement Request — ${input.category} Discrepancy (${orderId})`,
+    subject: `Reimbursement Request: ${input.category} Discrepancy (${orderId})`,
     body: `I am writing to request a reimbursement of ${amount} for a discrepancy identified in my Seller Central data.\n\nOrder/SKU: ${orderId} / ${sku}\n\nPlease investigate and process the appropriate reimbursement.`,
   };
 

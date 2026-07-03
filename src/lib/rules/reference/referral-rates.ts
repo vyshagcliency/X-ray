@@ -1,11 +1,11 @@
 /**
- * Amazon US referral-fee reference table — payout-integrity wedge (Phase 1.5).
+ * Amazon US referral-fee reference table: payout-integrity wedge (Phase 1.5).
  *
  * The referral-fee mismatch rule (PRD §5.6) compares the referral % Amazon
  * actually charged (Settlement V2: Commission ÷ Principal) against the rate the
  * SKU's category *should* pay. This file is that reference rate table.
  *
- * Progressive (piecewise) model — handles flat, 2-tier, and 3-tier categories with
+ * Progressive (piecewise) model: handles flat, 2-tier, and 3-tier categories with
  * one expression. Per category:
  *   t1_cents, t2_cents : price-tier boundaries (t1 ≤ t2), in cents
  *   rate1, rate2, rate3: fraction applied to the revenue in each band
@@ -19,7 +19,7 @@
  * Amazon also enforces a $0.30/unit minimum referral fee.
  *
  * SOURCE: Amazon's public published referral fee schedule (no Seller Central login
- *   required): https://sell.amazon.com/pricing  — fetched 2026-06-01.
+ *   required): https://sell.amazon.com/pricing, fetched 2026-06-01.
  *   No referral % changes were announced for 2026 (structure stable vs 2025).
  *
  * Values below for tiered categories are verbatim from that page. Flat-rate

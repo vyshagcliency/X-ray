@@ -8,12 +8,12 @@ interface ServiceCheck {
 export async function GET() {
   const checks: Record<string, ServiceCheck> = {};
 
-  // Supabase — use the health endpoint which doesn't require auth
+  // Supabase: use the health endpoint which doesn't require auth
   try {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_ANON_KEY;
     if (!url || !key) throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
-    // Query an empty table list — returns 200 with [] even with anon key
+    // Query an empty table list: returns 200 with [] even with anon key
     const res = await fetch(`${url}/rest/v1/?limit=0`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
     });
@@ -51,7 +51,7 @@ export async function GET() {
     checks.anthropic = { status: "error", message: (e as Error).message };
   }
 
-  // Resend — no dedicated health endpoint; check key is configured
+  // Resend: no dedicated health endpoint; check key is configured
   // and service is reachable. 401/403 = reachable but key issue, not down.
   try {
     const key = process.env.RESEND_API_KEY;
@@ -62,7 +62,7 @@ export async function GET() {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({}), // Empty body — will 422 with valid key, 401 with bad key
+      body: JSON.stringify({}), // Empty body: will 422 with valid key, 401 with bad key
     });
     // 422 = key works, body invalid (expected). 401/403 = key issue.
     checks.resend = res.status === 422 || res.ok

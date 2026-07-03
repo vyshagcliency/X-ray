@@ -4,7 +4,7 @@ import { z } from "zod";
 export const env = createEnv({
   /*
    * Server-side environment variables.
-   * All secrets live here — never prefixed with NEXT_PUBLIC_.
+   * All secrets live here. Never prefixed with NEXT_PUBLIC_.
    */
   server: {
     // Supabase
@@ -50,7 +50,7 @@ export const env = createEnv({
   },
 
   /*
-   * Client-side variables — only truly public, non-secret values.
+   * Client-side variables: only truly public, non-secret values.
    * Hard rule: no API keys, no secrets, no credentials here.
    */
   client: {
@@ -61,7 +61,7 @@ export const env = createEnv({
   },
 
   /*
-   * Runtime values — map env vars to the schema above.
+   * Runtime values: map env vars to the schema above.
    */
   runtimeEnv: {
     SUPABASE_URL: process.env.SUPABASE_URL,

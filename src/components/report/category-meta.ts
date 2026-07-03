@@ -40,7 +40,7 @@ export const CATEGORY_META: Record<string, CategoryMeta> = {
     color: "#d97706",
     recurring: false,
     mechanism:
-      "Amazon billed an aged-inventory surcharge on SKUs that were actively selling — inconsistent with stock that has genuinely aged out.",
+      "Amazon billed an aged-inventory surcharge on SKUs that were actively selling, inconsistent with stock that has genuinely aged out.",
   },
   returns: {
     label: "Customer Returns",

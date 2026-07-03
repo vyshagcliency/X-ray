@@ -266,7 +266,7 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
                 exit={{ opacity: 0 }}
                 className="mt-6 max-w-sm text-sm text-muted-foreground"
               >
-                This is taking longer than usual. We&apos;ll email you when it&apos;s ready — feel free
+                This is taking longer than usual. We&apos;ll email you when it&apos;s ready, feel free
                 to close this tab.
               </motion.p>
             )}
@@ -291,7 +291,7 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
                   <signal.icon className="size-4 shrink-0 text-muted-foreground" />
                   <div>
                     <span className="text-xs font-semibold">{signal.title}</span>
-                    <span className="ml-1 text-xs text-muted-foreground">&mdash; {signal.text}</span>
+                    <span className="ml-1 text-xs text-muted-foreground">: {signal.text}</span>
                   </div>
                 </div>
               ))}

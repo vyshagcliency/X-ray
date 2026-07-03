@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy — Baslix Leakage X-Ray",
+  title: "Privacy Policy: Baslix Leakage X-Ray",
 };
 
 export default function PrivacyPage() {
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground">
             Your uploaded CSV files are processed to identify potential
             reimbursement and recovery opportunities. The analysis is performed
-            by deterministic detection rules — your data is never used to train
+            by deterministic detection rules. Your data is never used to train
             machine learning models.
           </p>
         </section>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
             <li>We never share your data with third parties</li>
             <li>We never use your data to train AI models</li>
             <li>We never send more than one email per audit (the report delivery email)</li>
-            <li>We never store your Seller Central credentials — we never ask for them</li>
+            <li>We never store your Seller Central credentials, and we never ask for them</li>
             <li>We never email anyone mentioned in your reports</li>
           </ul>
         </section>
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground">
             The narrative sections of your report are generated using AI language
             models. These models receive only pre-computed, aggregated finding
-            summaries — never your raw CSV data or individual transaction rows.
+            summaries, never your raw CSV data or individual transaction rows.
             All dollar figures in the report are computed by deterministic code,
             not by the AI model.
           </p>

@@ -104,7 +104,7 @@ export function ReportTile({ signature, onValidFile, onClear }: ReportTileProps)
               {isError && (
                 <p className="mt-1 text-xs text-destructive">
                   {validation.error}
-                  {validation.suggestion && ` — ${validation.suggestion}`}
+                  {validation.suggestion && ` (${validation.suggestion})`}
                 </p>
               )}
             </div>

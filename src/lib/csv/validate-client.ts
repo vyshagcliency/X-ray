@@ -81,7 +81,7 @@ export async function validateCsvFile(
 
 /** Read the first N lines of a file without loading the entire thing */
 async function readFirstLines(file: File, n: number): Promise<string> {
-  // Read first 10KB — enough for headers and a few rows
+  // Read first 10KB: enough for headers and a few rows
   const slice = file.slice(0, 10240);
   const text = await slice.text();
   return text.split("\n").slice(0, n).join("\n");

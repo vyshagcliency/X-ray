@@ -11,7 +11,7 @@
   header: context {
     if counter(page).get().first() > 1 [
       #set text(size: 8pt, fill: rgb("#999"))
-      Baslix Leakage X-Ray — #data.brand_name
+      Baslix Leakage X-Ray: #data.brand_name
       #h(1fr)
       Confidential
     ]
@@ -65,7 +65,7 @@
     #v(1in)
 
     #text(size: 9pt, fill: rgb("#999"))[
-      Generated #data.generated_at.slice(0, 10) — baslix.com
+      Generated #data.generated_at.slice(0, 10), baslix.com
     ]
   ]
 ]
@@ -94,7 +94,7 @@
     #v(4pt)
     #text(size: 9pt, fill: rgb("#666"))[
       #str(cat.count) cases
-      #if cat.urgent_count > 0 [ — #str(cat.urgent_count) urgent]
+      #if cat.urgent_count > 0 [ (#str(cat.urgent_count) urgent)]
     ]
 
     #if cat.category in data.narrative.category_narratives [
@@ -115,7 +115,7 @@
 #v(0.3in)
 
 // ── Top Cases ───────────────────────────────────────────────────
-#heading(level: 1)[Top Cases — Dispute-Ready Evidence]
+#heading(level: 1)[Top Cases: Dispute-Ready Evidence]
 
 #for case in data.top_cases [
   #block(
@@ -133,7 +133,7 @@
       ],
       [
         #text(size: 9pt, fill: rgb("#666"))[
-          #case.category — #case.sku
+          #case.category · #case.sku
         ]
       ],
       [
@@ -195,25 +195,26 @@
     radius: 6pt,
   )[
     #text(size: 14pt, weight: "bold")[
-      Filing #str(data.findings_count) disputes is a 60-80 hour job.
+      Every finding above is yours to file, free.
     ]
 
     #v(10pt)
 
     #text(size: 10pt)[
-      We do this for our customers as a managed service — we only get paid when
-      the money lands in your account (20% of recovered, no retainer, no software).
+      What we run as a service is catching next month's overcharge before it
+      compounds, across every channel you sell on, plus the backward claims
+      that need direct access to your data to chase down.
     ]
 
     #v(12pt)
 
     #text(size: 11pt, weight: "bold")[
-      Talk to us — 15 min, no pitch deck
+      #link("https://calendly.com/vyshag-baslix/30min")[Talk to us: 15 minutes, no pitch deck]
     ]
 
     #v(4pt)
 
-    #text(size: 9pt, fill: rgb("#666"))[baslix.com]
+    #text(size: 9pt, fill: rgb("#666"))[calendly.com/vyshag-baslix/30min]
   ]
 
   #v(1in)

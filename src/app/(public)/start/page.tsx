@@ -36,7 +36,7 @@ export default function StartPage() {
       <NavBar />
 
       <main className="relative mx-auto grid max-w-7xl items-center gap-10 px-6 py-10 lg:grid-cols-[1fr_minmax(360px,420px)] lg:gap-16">
-        {/* Left — context */}
+        {/* Left: context */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -87,7 +87,7 @@ export default function StartPage() {
           </div>
         </motion.div>
 
-        {/* Right — form card */}
+        {/* Right: form card */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

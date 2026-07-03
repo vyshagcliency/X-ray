@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of Service — Baslix Leakage X-Ray",
+  title: "Terms of Service: Baslix Leakage X-Ray",
 };
 
 export default function TermsPage() {

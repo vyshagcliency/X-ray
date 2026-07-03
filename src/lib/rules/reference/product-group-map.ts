@@ -1,14 +1,14 @@
 /**
- * Amazon Fee Preview `product-group` → referral category map — payout-integrity wedge.
+ * Amazon Fee Preview `product-group` → referral category map: payout-integrity wedge.
  *
  * The referral-fee rule needs each SKU's referral *category* to look up the correct
  * rate. The Settlement report gives the fee charged, but the category comes from the
- * Fee Preview report's `product-group` column — which uses Amazon's legacy product-group
+ * Fee Preview report's `product-group` column, which uses Amazon's legacy product-group
  * *codes* (e.g. "ce", "home_garden"), NOT the referral category labels in
  * referral-rates.ts. This table bridges the two.
  *
  * Design: maps both (a) the legacy codes we're confident about and (b) the canonical
- * referral category names to themselves (identity) — so the rule works whether a report
+ * referral category names to themselves (identity), so the rule works whether a report
  * carries a code or a clean label. Anything unmapped falls back to "Everything Else"
  * (15% standard) in the rule via COALESCE. That fallback is deliberately CONSERVATIVE:
  * an unmapped SKU is assumed to be a standard-rate item, so a mapping miss can only
