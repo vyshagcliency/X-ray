@@ -86,13 +86,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Record in raw_uploads
-    await db.from("raw_uploads").insert({
+    // Record in raw_uploads. The pipeline reads this table to decide which reports
+    // to process, so a swallowed insert error here silently drops the report and
+    // produces an empty audit. Fail loudly instead.
+    const { error: insertError } = await db.from("raw_uploads").insert({
       audit_id: auditId,
       report_type: reportType,
       storage_key: storagePath,
       size_bytes: file.size,
     });
+
+    if (insertError) {
+      console.error(`raw_uploads insert failed for ${reportType}:`, insertError.message);
+      return NextResponse.json(
+        { error: `Failed to record ${reportType}`, code: "UPLOAD_RECORD_FAILED" },
+        { status: 500 },
+      );
+    }
   }
 
   // Update audit status to processing
