@@ -46,13 +46,21 @@ export async function runRuleAgainstFixtures(
   const connection = await instance.connect();
 
   try {
-    // Substitute URLs into SQL
+    // Bind fixture paths as query parameters (mirrors runRule) rather than
+    // interpolating them into the SQL string.
+    const urlTypes = Object.keys(fixtureUrls).filter((type) =>
+      rule.sql.includes(`$${type}_url`),
+    );
     let sql = rule.sql;
-    for (const [type, filePath] of Object.entries(fixtureUrls)) {
-      sql = sql.replaceAll(`$${type}_url`, `'${filePath}'`);
-    }
+    urlTypes.forEach((type, i) => {
+      sql = sql.replaceAll(`$${type}_url`, () => `$${i + 1}`);
+    });
 
-    const result = await connection.runAndReadAll(sql);
+    const prepared = await connection.prepare(sql);
+    urlTypes.forEach((type, i) => {
+      prepared.bindVarchar(i + 1, fixtureUrls[type]);
+    });
+    const result = await prepared.runAndReadAll();
     const columnNames = result.columnNames();
     const findings: TestFinding[] = [];
 

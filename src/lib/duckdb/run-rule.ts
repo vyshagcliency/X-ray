@@ -37,13 +37,23 @@ export async function runRule(
   const { connection, instance } = await createDuckDB();
 
   try {
-    // Prepare the SQL with parameterized URLs
+    // Bind report URLs as query parameters rather than interpolating them: a signed
+    // URL embeds the user-chosen filename, so string-concatenation would be injectable.
+    // Each $<type>_url placeholder present in the SQL maps to a positional parameter.
+    const urlTypes = Object.keys(parquetUrls).filter((type) =>
+      rule.sql.includes(`$${type}_url`),
+    );
     let sql = rule.sql;
-    for (const [type, url] of Object.entries(parquetUrls)) {
-      sql = sql.replaceAll(`$${type}_url`, `'${url}'`);
-    }
+    urlTypes.forEach((type, i) => {
+      // Function replacement avoids `$` being read as a replacement pattern.
+      sql = sql.replaceAll(`$${type}_url`, () => `$${i + 1}`);
+    });
 
-    const result = await connection.runAndReadAll(sql);
+    const prepared = await connection.prepare(sql);
+    urlTypes.forEach((type, i) => {
+      prepared.bindVarchar(i + 1, parquetUrls[type]);
+    });
+    const result = await prepared.runAndReadAll();
 
     const columnNames = result.columnNames();
     const rows: FindingRow[] = [];
