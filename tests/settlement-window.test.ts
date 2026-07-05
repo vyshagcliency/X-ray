@@ -15,4 +15,11 @@ describe("getSettlementMonths", () => {
     const months = await getSettlementMonths(fixture("settlement-undated.csv"));
     expect(months).toBeNull();
   });
+
+  it("treats a quote in the path as a literal filename, not injectable SQL", async () => {
+    // With the URL bound as a parameter, this resolves to a (missing) file rather than
+    // breaking out of a string literal; the error is caught and null returned.
+    const months = await getSettlementMonths("/nonexistent/x'; SELECT 1;--.csv");
+    expect(months).toBeNull();
+  });
 });
