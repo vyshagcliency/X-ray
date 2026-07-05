@@ -61,6 +61,8 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
 
   const typedAudit = audit as AuditData & {
     report_data?: {
+      recurring_monthly_cents?: number | null;
+      settlement_months?: number | null;
       narrative?: {
         executive_summary?: string;
         methodology_note?: string;
@@ -102,6 +104,8 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
     .filter((f) => catMeta(f.category).recurring)
     .reduce((s, f) => s + f.amount_cents, 0);
   const oneTimeCents = typedAudit.total_recoverable_cents - recurringCents;
+  // Per-month run-rate of the recurring overcharge, from the settlement date range.
+  const recurringMonthlyCents = typedAudit.report_data?.recurring_monthly_cents ?? null;
 
   const chartCategories = ordered.map(([key, data]) => ({
     key,
@@ -147,7 +151,9 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
                 {recurringCents > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
                     <RefreshCw className="size-3.5" />
-                    {formatDollars(recurringCents)} bleeding every month until fixed
+                    {recurringMonthlyCents !== null
+                      ? `≈${formatDollars(recurringMonthlyCents)}/mo recurring until fixed`
+                      : "Recurring overcharge — accrues until fixed"}
                   </span>
                 )}
                 {typedAudit.urgent_recoverable_cents > 0 && (

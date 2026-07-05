@@ -5,6 +5,7 @@ import { runRule } from "@/lib/duckdb/run-rule";
 import { generateNarrative } from "@/lib/llm/narrate";
 import { draftDispute } from "@/lib/llm/draft-dispute";
 import { buildReportData } from "@/lib/pdf/data-builder";
+import { getSettlementMonths } from "@/lib/duckdb/settlement-window";
 
 export const auditRun = task({
   id: "audit.run",
@@ -49,6 +50,12 @@ export const auditRun = task({
         csvUrls[upload.report_type] = signedUrl.signedUrl;
       }
     }
+
+    // Settlement window (months) turns cumulative recurring overcharges into an
+    // honest per-month run-rate downstream. Null when the export has no date column.
+    const settlementMonths = csvUrls.settlement
+      ? await getSettlementMonths(csvUrls.settlement)
+      : null;
 
     // 3. Run detection rules
     await metadata.set("stage", "Cross-referencing your data...");
@@ -165,6 +172,7 @@ export const auditRun = task({
         total_recoverable_cents: totalCents,
         urgent_recoverable_cents: urgentCents,
         findings_count: allFindings.length,
+        settlement_months: settlementMonths,
         categories: Array.from(catMap.entries()).map(([cat, data]) => ({
           category: cat,
           count: data.count,
@@ -203,6 +211,7 @@ export const auditRun = task({
         })),
         narrative,
         disputeDrafts,
+        settlementMonths,
       );
 
       // Store report data as JSON in audits for the report page

@@ -1,0 +1,5 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased
+90000001,Order,111-1111111-1111111,ItemPrice,Principal,50.00,SKU-A,1
+90000001,Order,111-1111111-1111111,ItemFees,Commission,-7.50,SKU-A,1
+90000001,Order,222-2222222-2222222,ItemPrice,Principal,60.00,SKU-B,1
+90000001,Order,222-2222222-2222222,ItemFees,Commission,-9.00,SKU-B,1

@@ -4,7 +4,7 @@
  */
 
 import { formatDollars, formatDollarsExact } from "@/lib/format";
-import type { NarrativeOutput } from "@/lib/llm/narrate";
+import { ROLLING_CATEGORIES, type NarrativeOutput } from "@/lib/llm/narrate";
 import type { DisputeDraft } from "@/lib/llm/draft-dispute";
 
 interface Finding {
@@ -35,6 +35,10 @@ export interface ReportData {
   urgent_recoverable: string;
   urgent_recoverable_cents: number;
   findings_count: number;
+  /** Whole months the settlement report spans; null when no date column was present. */
+  settlement_months: number | null;
+  /** Recurring overcharge per month (cumulative recurring ÷ settlement_months); null if unknown. */
+  recurring_monthly_cents: number | null;
   categories: CategorySummary[];
   top_cases: Array<{
     rank: number;
@@ -69,8 +73,19 @@ export function buildReportData(
   findings: Finding[],
   narrative: NarrativeOutput,
   disputeDrafts: Map<string, DisputeDraft>,
+  settlementMonths: number | null,
 ): ReportData {
   const now = new Date();
+
+  // Recurring overcharges (referral %, size-tier) accrued across the settlement
+  // history. Divide by the window to get an honest per-month run-rate.
+  const recurringCents = findings
+    .filter((f) => ROLLING_CATEGORIES.has(f.category))
+    .reduce((s, f) => s + f.amount_cents, 0);
+  const recurringMonthlyCents =
+    settlementMonths && settlementMonths > 0
+      ? Math.round(recurringCents / settlementMonths)
+      : null;
 
   // Aggregate by category
   const catMap = new Map<string, { count: number; total_cents: number; urgent_count: number }>();
@@ -110,6 +125,8 @@ export function buildReportData(
     urgent_recoverable: formatDollars(urgentCents),
     urgent_recoverable_cents: urgentCents,
     findings_count: findings.length,
+    settlement_months: settlementMonths,
+    recurring_monthly_cents: recurringMonthlyCents,
     categories,
     top_cases: top25.map((f, i) => ({
       rank: i + 1,

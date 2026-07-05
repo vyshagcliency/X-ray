@@ -516,11 +516,15 @@ function correctCommissionCents(pg, revenueCents) {
 function generateSettlement(brand, catalog, rng) {
   const headers = [
     "settlement-id", "transaction-type", "order-id", "amount-type",
-    "amount-description", "amount", "sku", "quantity-purchased",
+    "amount-description", "amount", "sku", "quantity-purchased", "posted-date",
   ];
   const rows = [csvRow(headers)];
   const pg = PRODUCT_GROUP_BY_SLUG[brand.slug];
   const settlementId = String(randInt(rng, 80000000, 89999999));
+  // Posted dates come from an independent stream so adding them doesn't perturb the
+  // amount/volume RNG (keeps existing findings stable). Orders spread across the
+  // 18-month window, giving the report a real settlement date range to rate-per-month.
+  const dateRng = mulberry32(brand.seed + 7);
 
   for (const item of catalog) {
     // Realistic 18-month per-SKU order volume so fee overcharges accumulate to
@@ -535,8 +539,9 @@ function generateSettlement(brand, catalog, rng) {
       if (overcharged) commissionCents += Math.round(revenueCents * 0.07);
       const revenue = (revenueCents / 100).toFixed(2);
       const commission = (-commissionCents / 100).toFixed(2);
-      rows.push(csvRow([settlementId, "Order", oid, "ItemPrice", "Principal", revenue, item.sku, qty]));
-      rows.push(csvRow([settlementId, "Order", oid, "ItemFees", "Commission", commission, item.sku, qty]));
+      const postedDate = fmtDate(randDate(dateRng, DATE_START, DATE_END));
+      rows.push(csvRow([settlementId, "Order", oid, "ItemPrice", "Principal", revenue, item.sku, qty, postedDate]));
+      rows.push(csvRow([settlementId, "Order", oid, "ItemFees", "Commission", commission, item.sku, qty, postedDate]));
     }
   }
   return rows.join("\n");

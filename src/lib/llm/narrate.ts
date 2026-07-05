@@ -24,8 +24,18 @@ interface NarrativeInput {
   total_recoverable_cents: number;
   urgent_recoverable_cents: number;
   findings_count: number;
+  /** Whole months the settlement report spans; null when no date column was present. */
+  settlement_months?: number | null;
   categories: FindingSummary[];
 }
+
+/**
+ * Categories whose overcharge keeps recurring on future sales until the root cause
+ * (wrong referral category / wrong size tier) is corrected — no dispute deadline.
+ * Single source of truth for the "recurring" split; mirrored by category-meta's
+ * `recurring` flag on the report page.
+ */
+export const ROLLING_CATEGORIES = new Set(["referral_fee", "fba_dimension"]);
 
 export interface NarrativeOutput {
   executive_summary: string;
@@ -39,7 +49,7 @@ export interface NarrativeOutput {
  * LLM enhancement will be added in Phase 1.5.
  */
 export function generateNarrative(input: NarrativeInput): NarrativeOutput {
-  const { brand_name, total_recoverable_cents, urgent_recoverable_cents, findings_count, categories } = input;
+  const { brand_name, total_recoverable_cents, urgent_recoverable_cents, findings_count, categories, settlement_months } = input;
 
   const totalFormatted = formatDollars(total_recoverable_cents);
   const urgentFormatted = formatDollars(urgent_recoverable_cents);
@@ -50,12 +60,18 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
     : "";
 
   // Rolling overcharges (referral %, size-tier) have no deadline; they keep accruing.
-  const ROLLING_CATEGORIES = new Set(["referral_fee", "fba_dimension"]);
+  // The cumulative figure spans the whole settlement history, so quote a per-month
+  // run-rate (cumulative ÷ months) rather than implying the cumulative recurs monthly.
   const recurringCents = categories
     .filter((c) => ROLLING_CATEGORIES.has(c.category))
     .reduce((s, c) => s + c.total_cents, 0);
+  const recurringMonthlyCents = settlement_months && settlement_months > 0
+    ? Math.round(recurringCents / settlement_months)
+    : null;
   const recurringLine = recurringCents > 0
-    ? ` ${formatDollars(recurringCents)} of it is a recurring overcharge that keeps accruing every month until corrected.`
+    ? recurringMonthlyCents !== null
+      ? ` About ${formatDollars(recurringMonthlyCents)} of that is a recurring overcharge that keeps accruing each month until the root cause is corrected — ${formatDollars(recurringCents)} has built up over the ${settlement_months} months of data you provided.`
+      : ` ${formatDollars(recurringCents)} of it is a recurring overcharge that keeps accruing until the root cause is corrected.`
     : "";
 
   const executive_summary = `Our forensic audit of ${brand_name}'s Amazon settlement, fee, and inventory data found ${findings_count} discrepancies totaling ${totalFormatted} where what Amazon charged or credited doesn't match what you're actually owed.${urgentLine}${recurringLine} Each finding below is backed by row-level evidence from your own reports and is ready to dispute.`;

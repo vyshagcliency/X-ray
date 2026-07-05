@@ -41,7 +41,7 @@ export function RecoveryVisuals({
   const total = recurringCents + oneTimeCents;
 
   const splitData = [
-    { name: "Recurring bleed", value: recurringCents, color: "#d97706" },
+    { name: "Recurring overcharge", value: recurringCents, color: "#d97706" },
     { name: "Recoverable now", value: oneTimeCents, color: "#2563eb" },
   ].filter((d) => d.value > 0);
 
