@@ -3,7 +3,6 @@ import { supabaseAdmin } from "@/lib/db/supabase";
 import { RULES } from "@/lib/rules";
 import { runRule } from "@/lib/duckdb/run-rule";
 import { generateNarrative } from "@/lib/llm/narrate";
-import { draftDispute } from "@/lib/llm/draft-dispute";
 import { buildReportData } from "@/lib/pdf/data-builder";
 import { getSettlementMonths } from "@/lib/duckdb/settlement-window";
 
@@ -125,10 +124,7 @@ export const auditRun = task({
     await metadata.set("progress", 0.6);
 
     if (allFindings.length > 0) {
-      const { data: insertedFindings, error: insertError } = await db
-        .from("findings")
-        .insert(allFindings)
-        .select("id, rule_id, category, amount_cents, confidence, window_closes_on, window_days_remaining, evidence");
+      const { error: insertError } = await db.from("findings").insert(allFindings);
 
       // A swallowed error here silently ships an empty/inconsistent report (e.g. an
       // unmigrated finding_category enum value fails the whole batch). Fail loudly so
@@ -183,44 +179,28 @@ export const auditRun = task({
         })),
       });
 
-      // 6. Generate dispute drafts for top 25 findings
+      // 6. Build report data (the single source of truth for every report number) +
+      // the top-25 dispute drafts, from the COMPLETE in-memory finding set. Building
+      // from allFindings (not the DB round-trip, which PostgREST caps at 1000 rows)
+      // is what keeps the headline, category cards and confidence widget reconciled.
       await metadata.set("stage", "Drafting disputes...");
       await metadata.set("progress", 0.8);
 
-      const disputeDrafts = new Map<string, ReturnType<typeof draftDispute>>();
-      const sorted = [...(insertedFindings ?? [])].sort((a, b) => b.amount_cents - a.amount_cents);
-      const top25 = sorted.slice(0, 25);
-
-      for (const f of top25) {
-        const draft = draftDispute({
-          rule_id: f.rule_id,
-          category: f.category,
-          amount_cents: f.amount_cents,
-          confidence: f.confidence,
-          evidence: f.evidence as Record<string, unknown>,
-        });
-        disputeDrafts.set(f.id, draft);
-      }
-
-      // 7. Build report data and store
       const reportData = buildReportData(
         brandName,
-        (insertedFindings ?? []).map((f) => ({
-          ...f,
-          evidence: f.evidence as Record<string, unknown>,
-        })),
+        allFindings,
         narrative,
-        disputeDrafts,
         settlementMonths,
       );
 
-      // Store report data as JSON in audits for the report page
+      // Store report data as JSON in audits for the report page. The audit summary
+      // columns read from report_data so they can never diverge from what renders.
       await db
         .from("audits")
         .update({
-          total_recoverable_cents: totalCents,
-          urgent_recoverable_cents: urgentCents,
-          findings_count: allFindings.length,
+          total_recoverable_cents: reportData.total_recoverable_cents,
+          urgent_recoverable_cents: reportData.urgent_recoverable_cents,
+          findings_count: reportData.findings_count,
           report_data: reportData,
           status: "pending_review", // Phase 1: manual review
           completed_at: new Date().toISOString(),

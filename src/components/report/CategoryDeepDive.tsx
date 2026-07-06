@@ -23,6 +23,14 @@ const month = (v: unknown) => {
     ? str(v)
     : d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 };
+// A dispute window renders as a real countdown, "closed" once past, or "—" when the
+// finding has no deadline (rolling overcharge). Never "N/A" beside an urgency claim (D5).
+const windowLabel = (daysRemaining: number | null) =>
+  daysRemaining == null
+    ? "—"
+    : daysRemaining < 0
+      ? "closed"
+      : `${daysRemaining}d left`;
 
 interface Kpi {
   label: string;
@@ -120,34 +128,44 @@ const FALLBACK: DetailConfig = {
     str(f.evidence.order_id ?? f.evidence.transaction_id),
     str(f.evidence.sku),
     str(f.evidence.disposition ?? f.evidence.reason),
-    f.window_days_remaining != null && f.window_days_remaining >= 0
-      ? `${f.window_days_remaining}d left`
-      : "N/A",
+    windowLabel(f.window_days_remaining),
     formatDollars(f.amount_cents),
   ],
 };
 
 const ROW_CAP = 8;
 
+/** Cross-checkable numbers come from report_data (the single source), not from the
+ * fetched evidence rows — see P0.2. `findings` drives only the evidence table body. */
+interface CategorySummary {
+  count: number;
+  total_cents: number;
+  high: number;
+  medium: number;
+  low: number;
+}
+
 export function CategoryDeepDive({
   categoryKey,
+  summary,
   findings,
   narrative,
 }: {
   categoryKey: string;
+  summary: CategorySummary;
   findings: Finding[];
   narrative?: string;
 }) {
-  if (findings.length === 0) return null;
+  if (summary.count === 0) return null;
 
   const meta = catMeta(categoryKey);
   const config = DETAIL[categoryKey] ?? FALLBACK;
-  const total = findings.reduce((s, f) => s + f.amount_cents, 0);
-  const high = findings.filter((f) => f.confidence === "high").length;
-  const medium = findings.filter((f) => f.confidence === "medium").length;
-  const low = findings.filter((f) => f.confidence === "low").length;
+  const total = summary.total_cents;
+  const high = summary.high;
+  const medium = summary.medium;
+  const low = summary.low;
   const rows = findings.slice(0, ROW_CAP);
-  const remaining = findings.length - rows.length;
+  const remaining = summary.count - rows.length;
 
   return (
     <section
@@ -179,7 +197,7 @@ export function CategoryDeepDive({
               {formatDollars(total)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {findings.length} case{findings.length !== 1 ? "s" : ""}
+              {summary.count} case{summary.count !== 1 ? "s" : ""}
             </p>
           </div>
         </div>

@@ -177,14 +177,14 @@ All tables use `uuid` PKs, `created_at timestamptz default now()`, `updated_at` 
 | `email_domain` | `text generated always as (split_part(email,'@',2)) stored` | For rate-limit + block-list joins. |
 | `status` | `audit_status enum` | `pending_upload` → `processing` → `pending_review` → `completed` · `failed` · `deleted`. |
 | `trigger_run_id` | `text` | Trigger.dev run ID for the parent task. |
-| `total_recoverable_cents` | `bigint` | Sum of high-confidence findings. |
+| `total_recoverable_cents` | `bigint` | Sum of **all** findings (= `report_data.total_recoverable_cents`). The report *hero* shows the provable subset (`report_data.provable_cents`); the flat-$15 estimated tier is fenced out (Report Killer P0.3). Set from `report_data` so it can't diverge. |
 | `urgent_recoverable_cents` | `bigint` | Subset with window ≤14 days. |
 | `findings_count` | `int` | |
 | `report_version` | `int default 1` | Bumped if the audit is re-run after a rule fix. |
 | `rule_versions` | `jsonb` | `{ "returns_gap": "1.2.0", ... }` — every rule's semver at run time. |
 | `ip` | `inet` | For rate limiting. Purged with raw uploads at 30 days. |
 | `ua` | `text` | Same. |
-| `report_data` | `jsonb` | Full report JSON (narrative, categories, top cases, dispute drafts). Added 2026-04-21 to avoid multiple queries on report page load. |
+| `report_data` | `jsonb` | **The single source of truth for every report number** (web + PDF both render from it; nothing re-aggregates `findings`). Built once by `pdf/data-builder.ts` from the complete in-memory finding set (NOT the DB round-trip, which PostgREST caps at 1000 rows). Holds: narrative; `categories` **ordered by confidence×punch** (`high_cents` desc, then `$` — P1.3; each with count/total/urgent + confidence breakdown + `high_cents` + `recurring`/`estimated` flags); top-level `confidence` tally; `total`/`provable`/`estimated`/`recurring`/`one_time` cents; `provable_one_time_cents`/`provable_urgent_cents`; the **hero** `provable_forward_cents` + `provable_forward_monthly_cents` (high-confidence rolling ÷ months — P1.1); `provable_confidence_cents` + `urgency_buckets` (chart aggregates — P1.6); `spotlight` (the sharpest wedge finding — P1.2); `skus_affected`; `top_cases` (25, each with a dispute draft). A dev/test invariant (`assertReportDataConsistent`) enforces Σcategory==total, confidence==findings_count, provable+estimated==total, and Σprovable-confidence==provable. Added 2026-04-21; reshaped by Report Killer P0.2–P0.4 + P1.1–P1.6 (2026-07-06). |
 | `completed_at` | `timestamptz` | |
 
 ### 4.2 `raw_uploads` — auto-purged

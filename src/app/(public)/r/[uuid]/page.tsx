@@ -7,13 +7,17 @@ import {
   AlertTriangle,
   ArrowRight,
   ShieldCheck,
-  RefreshCw,
   FileSearch,
+  Calculator,
+  ScanLine,
+  Gauge,
 } from "lucide-react";
 import { NavBar } from "@/components/nav-bar";
-import { RecoveryVisuals } from "@/components/report/RecoveryVisuals";
+import { ForensicVisuals } from "@/components/report/ForensicVisuals";
+import { Spotlight, type SpotlightProps } from "@/components/report/Spotlight";
 import { CategoryDeepDive } from "@/components/report/CategoryDeepDive";
 import { catMeta } from "@/components/report/category-meta";
+import { REIMBURSEMENT_CATEGORIES } from "@/lib/pdf/data-builder";
 
 interface Finding {
   id: string;
@@ -36,8 +40,84 @@ interface AuditData {
   completed_at: string | null;
 }
 
-// Reimbursement add-ons sort after the payout-integrity wedge categories.
-const REIMBURSEMENT = new Set(["returns", "lost_inventory"]);
+/** Per-category summary as computed once in report_data (the single source of truth). */
+export interface CategorySummary {
+  category: string;
+  display_name: string;
+  count: number;
+  total_cents: number;
+  urgent_count: number;
+  high: number;
+  medium: number;
+  low: number;
+  high_cents?: number;
+  recurring: boolean;
+  estimated: boolean;
+}
+
+interface UrgencyBucket {
+  label: string;
+  max_days: number;
+  cents: number;
+  count: number;
+}
+
+interface ReportDataShape {
+  total_recoverable_cents?: number;
+  urgent_recoverable_cents?: number;
+  findings_count?: number;
+  recurring_monthly_cents?: number | null;
+  recurring_cents?: number;
+  one_time_cents?: number;
+  provable_cents?: number;
+  estimated_cents?: number;
+  provable_one_time_cents?: number;
+  provable_urgent_cents?: number;
+  provable_forward_cents?: number;
+  provable_forward_monthly_cents?: number | null;
+  provable_confidence_cents?: { high: number; medium: number; low: number };
+  urgency_buckets?: UrgencyBucket[];
+  spotlight?: SpotlightProps | null;
+  skus_affected?: number;
+  settlement_months?: number | null;
+  confidence?: { high: number; medium: number; low: number };
+  categories?: CategorySummary[];
+  narrative?: {
+    executive_summary?: string;
+    methodology_note?: string;
+    category_narratives?: Record<string, string>;
+  };
+}
+
+const isUrgent = (f: Finding) =>
+  f.window_days_remaining !== null &&
+  f.window_days_remaining >= 0 &&
+  f.window_days_remaining <= 14;
+
+/** Fallback for legacy/zero-finding audits with no report_data; the fetch is complete
+ * (paginated) so this reconciles with what report_data would have produced. */
+function deriveCategorySummaries(
+  byCategory: Record<string, Finding[]>,
+): CategorySummary[] {
+  return Object.entries(byCategory)
+    .map(([category, fs]) => ({
+      category,
+      display_name: catMeta(category).label,
+      count: fs.length,
+      total_cents: fs.reduce((s, f) => s + f.amount_cents, 0),
+      urgent_count: fs.filter(isUrgent).length,
+      high: fs.filter((f) => f.confidence === "high").length,
+      medium: fs.filter((f) => f.confidence === "medium").length,
+      low: fs.filter((f) => f.confidence === "low").length,
+      recurring: catMeta(category).recurring,
+      estimated: REIMBURSEMENT_CATEGORIES.has(category),
+    }))
+    .sort((a, b) => {
+      const ra = REIMBURSEMENT_CATEGORIES.has(a.category) ? 1 : 0;
+      const rb = REIMBURSEMENT_CATEGORIES.has(b.category) ? 1 : 0;
+      return ra !== rb ? ra - rb : b.total_cents - a.total_cents;
+    });
+}
 
 export default async function ReportPage({ params }: { params: Promise<{ uuid: string }> }) {
   const { uuid } = await params;
@@ -53,72 +133,99 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
     notFound();
   }
 
-  const { data: findings } = await db
-    .from("findings")
-    .select("id, rule_id, category, amount_cents, confidence, window_days_remaining, window_closes_on, narrative_summary, evidence")
-    .eq("audit_id", uuid)
-    .order("amount_cents", { ascending: false });
+  const typedAudit = audit as AuditData & { status: string; report_data?: ReportDataShape };
+  const rd = typedAudit.report_data;
 
-  const typedAudit = audit as AuditData & {
-    report_data?: {
-      recurring_monthly_cents?: number | null;
-      settlement_months?: number | null;
-      narrative?: {
-        executive_summary?: string;
-        methodology_note?: string;
-        category_narratives?: Record<string, string>;
-      };
-    };
-  };
-  const typedFindings = (findings ?? []) as Finding[];
-  const narrative = typedAudit.report_data?.narrative;
+  // Fetch the COMPLETE finding set for the evidence tables. PostgREST caps a single
+  // response at 1000 rows, so paginate — otherwise the smallest-dollar categories
+  // (ordered last) get dropped and a category present in report_data renders empty.
+  const expected = rd?.findings_count ?? typedAudit.findings_count ?? 0;
+  const typedFindings: Finding[] = [];
+  const PAGE = 1000;
+  while (typedFindings.length < expected) {
+    const { data: page } = await db
+      .from("findings")
+      .select("id, rule_id, category, amount_cents, confidence, window_days_remaining, window_closes_on, narrative_summary, evidence")
+      .eq("audit_id", uuid)
+      .order("amount_cents", { ascending: false })
+      .order("id", { ascending: true })
+      .range(typedFindings.length, typedFindings.length + PAGE - 1);
+    if (!page || page.length === 0) break;
+    typedFindings.push(...(page as Finding[]));
+  }
 
-  // Group findings by category.
-  const categories = typedFindings.reduce(
+  const narrative = rd?.narrative;
+
+  // Group fetched findings by category (evidence tables only). All summary numbers
+  // below come from report_data — the page never re-aggregates them (D2).
+  const byCategory = typedFindings.reduce(
     (acc, f) => {
-      (acc[f.category] ??= { findings: [], totalCents: 0 });
-      acc[f.category].findings.push(f);
-      acc[f.category].totalCents += f.amount_cents;
+      (acc[f.category] ??= []).push(f);
       return acc;
     },
-    {} as Record<string, { findings: Finding[]; totalCents: number }>,
+    {} as Record<string, Finding[]>,
   );
 
-  // Order: payout-integrity wedge first, reimbursement add-ons last; $ desc within.
-  const ordered = Object.entries(categories).sort((a, b) => {
-    const ra = REIMBURSEMENT.has(a[0]) ? 1 : 0;
-    const rb = REIMBURSEMENT.has(b[0]) ? 1 : 0;
-    return ra !== rb ? ra - rb : b[1].totalCents - a[1].totalCents;
-  });
+  const categorySummaries: CategorySummary[] =
+    rd?.categories ?? deriveCategorySummaries(byCategory);
 
-  const categoryCount = ordered.length;
-  const high = typedFindings.filter((f) => f.confidence === "high").length;
-  const medium = typedFindings.filter((f) => f.confidence === "medium").length;
-  const low = typedFindings.filter((f) => f.confidence === "low").length;
-  const confTotal = Math.max(high + medium + low, 1);
-  const skusAffected = new Set(
-    typedFindings.map((f) => f.evidence?.sku).filter(Boolean) as string[],
-  ).size;
+  const total = rd?.total_recoverable_cents ?? typedAudit.total_recoverable_cents;
+  // Hero urgency counts provable findings only (D5) — estimated tier windows show in
+  // their own fenced table, never in the headline.
+  const urgentCents =
+    rd?.provable_urgent_cents ??
+    rd?.urgent_recoverable_cents ??
+    typedAudit.urgent_recoverable_cents;
+  const findingsCount = rd?.findings_count ?? typedAudit.findings_count;
+  // The hero and the traceability promise describe the PROVABLE figure (real per-row
+  // amounts). The flat-$15 estimated tier is fenced below and excluded here (D3).
+  const provableCategories = categorySummaries.filter((c) => !c.estimated);
+  const estimatedCategories = categorySummaries.filter((c) => c.estimated);
+  const estimatedCents =
+    rd?.estimated_cents ??
+    estimatedCategories.reduce((s, c) => s + c.total_cents, 0);
+  const provable = rd?.provable_cents ?? total - estimatedCents;
+  const conf = rd?.confidence ?? {
+    high: typedFindings.filter((f) => f.confidence === "high").length,
+    medium: typedFindings.filter((f) => f.confidence === "medium").length,
+    low: typedFindings.filter((f) => f.confidence === "low").length,
+  };
+  const confTotal = Math.max(conf.high + conf.medium + conf.low, 1);
+  const skusAffected =
+    rd?.skus_affected ??
+    new Set(typedFindings.map((f) => f.evidence?.sku).filter(Boolean) as string[]).size;
+  const recurringCents =
+    rd?.recurring_cents ??
+    categorySummaries.filter((c) => c.recurring).reduce((s, c) => s + c.total_cents, 0);
+  // "Recoverable now" is the provable, non-recurring figure — estimated tier excluded.
+  const provableOneTime = rd?.provable_one_time_cents ?? provable - recurringCents;
+  const categoryCount = categorySummaries.length;
 
-  const recurringCents = typedFindings
-    .filter((f) => catMeta(f.category).recurring)
-    .reduce((s, f) => s + f.amount_cents, 0);
-  const oneTimeCents = typedAudit.total_recoverable_cents - recurringCents;
-  // Per-month run-rate of the recurring overcharge, from the settlement date range.
-  const recurringMonthlyCents = typedAudit.report_data?.recurring_monthly_cents ?? null;
-
-  const chartCategories = ordered.map(([key, data]) => ({
-    key,
-    label: catMeta(key).label,
-    total: data.totalCents,
-    color: catMeta(key).color,
+  // Charts show the provable breakdown so they reconcile with the hero.
+  const chartCategories = provableCategories.map((c) => ({
+    key: c.category,
+    label: catMeta(c.category).label,
+    total: c.total_cents,
+    color: catMeta(c.category).color,
   }));
 
+  // The hero is the high-confidence forward run-rate (P1.1). Falls back to null on
+  // legacy audits with no report_data — the page then leads with the provable figure.
+  const forwardMonthly = rd?.provable_forward_monthly_cents ?? null;
+  const spotlight = rd?.spotlight ?? null;
+  const urgencyBuckets = rd?.urgency_buckets ?? [];
+  // Provable dollars by confidence — for the confidence×dollars chart (P1.6).
+  const provableConfidenceCents = rd?.provable_confidence_cents ?? {
+    high: provableCategories.reduce((s, c) => s + (c.high_cents ?? 0), 0),
+    medium: 0,
+    low: 0,
+  };
+
   const stats = [
-    { value: typedAudit.findings_count.toLocaleString(), label: "Findings" },
+    { value: findingsCount.toLocaleString(), label: "Findings" },
     { value: String(categoryCount), label: categoryCount === 1 ? "Category" : "Categories" },
     { value: skusAffected.toLocaleString(), label: "SKUs affected" },
-    { value: String(high), label: "High confidence" },
+    { value: String(conf.high), label: "High confidence" },
   ];
 
   return (
@@ -135,45 +242,86 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1">
               <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                Recoverable for {typedAudit.brand_name}
-              </p>
-              <p className="mt-2 font-mono text-5xl font-bold tabular-nums tracking-tight lg:text-6xl">
-                {formatDollars(typedAudit.total_recoverable_cents)}
+                Settlement Truth Audit · {typedAudit.brand_name}
               </p>
 
+              {forwardMonthly !== null && forwardMonthly > 0 ? (
+                <>
+                  <p className="mt-2 font-mono text-5xl font-bold tabular-nums tracking-tight lg:text-6xl">
+                    {formatDollars(forwardMonthly)}
+                    <span className="ml-1 align-baseline text-2xl font-semibold text-muted-foreground">
+                      /mo
+                    </span>
+                  </p>
+                  <p className="mt-4 max-w-xl text-base leading-relaxed text-foreground/90">
+                    Amazon is overbilling {typedAudit.brand_name} about{" "}
+                    <span className="font-semibold">{formatDollars(forwardMonthly)} every month</span>{" "}
+                    in high-confidence, provable overcharges — and it compounds until the
+                    wrong referral category and size-tier are corrected.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 font-mono text-5xl font-bold tabular-nums tracking-tight lg:text-6xl">
+                    {formatDollars(provable)}
+                  </p>
+                  <p className="mt-4 max-w-xl text-base leading-relaxed text-foreground/90">
+                    Provable overcharges and missing credits we found in{" "}
+                    {typedAudit.brand_name}&apos;s own Seller Central data — every figure
+                    below traces to a specific row.
+                  </p>
+                </>
+              )}
+
               <div className="mt-4 flex flex-wrap gap-2">
-                {oneTimeCents > 0 && (
+                {provableOneTime > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
                     <FileSearch className="size-3.5" />
-                    {formatDollars(oneTimeCents)} recoverable now
+                    {formatDollars(provableOneTime)} recoverable now (one-time)
                   </span>
                 )}
-                {recurringCents > 0 && (
+                {urgentCents > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                    <RefreshCw className="size-3.5" />
-                    {recurringMonthlyCents !== null
-                      ? `≈${formatDollars(recurringMonthlyCents)}/mo recurring until fixed`
-                      : "Recurring overcharge — accrues until fixed"}
-                  </span>
-                )}
-                {typedAudit.urgent_recoverable_cents > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
                     <AlertTriangle className="size-3.5" />
-                    {formatDollars(typedAudit.urgent_recoverable_cents)} window closing in 14d
+                    {formatDollars(urgentCents)} closing within 14 days
                   </span>
                 )}
               </div>
 
               <p className="mt-5 max-w-xl text-sm text-muted-foreground">
-                Every figure below traces to a specific row in your own Seller Central
-                reports, defensible line by line.
+                <span className="font-semibold text-slate-700">
+                  {formatDollars(total)}
+                </span>{" "}
+                surfaced in total across {categoryCount}{" "}
+                {categoryCount === 1 ? "category" : "categories"} —{" "}
+                {formatDollars(provable)} provable
+                {estimatedCents > 0 && <>, {formatDollars(estimatedCents)} estimated</>} ·{" "}
+                {conf.high} high · {conf.medium} medium confidence. Full forensic detail
+                below.
               </p>
+              {estimatedCents > 0 && (
+                <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+                  The estimated figure is a flat per-item placeholder for reimbursement
+                  buckets, fenced below and <span className="font-medium">not</span>{" "}
+                  counted in the provable number — Amazon may have already auto-reimbursed
+                  some.
+                </p>
+              )}
 
-              <div className="mt-6">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Button asChild size="sm">
+                  <a
+                    href="https://calendly.com/vyshag-baslix/30min"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Talk to us: 15 minutes, no pitch <ArrowRight className="ml-1.5 size-4" />
+                  </a>
+                </Button>
                 <Button asChild variant="outline" size="sm">
                   <a href={`/api/audit/pdf?id=${uuid}`} download>
                     <Download className="mr-2 size-4" />
-                    Download full PDF report
+                    Download PDF
                   </a>
                 </Button>
               </div>
@@ -195,17 +343,60 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
               <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3">
                 <p className="text-xs font-medium text-muted-foreground">Evidence confidence</p>
                 <div className="mt-2 flex h-2 overflow-hidden rounded-full bg-slate-200">
-                  <div className="bg-blue-600" style={{ width: `${(high / confTotal) * 100}%` }} />
-                  <div className="bg-amber-400" style={{ width: `${(medium / confTotal) * 100}%` }} />
-                  <div className="bg-slate-300" style={{ width: `${(low / confTotal) * 100}%` }} />
+                  <div className="bg-blue-600" style={{ width: `${(conf.high / confTotal) * 100}%` }} />
+                  <div className="bg-amber-400" style={{ width: `${(conf.medium / confTotal) * 100}%` }} />
+                  <div className="bg-slate-300" style={{ width: `${(conf.low / confTotal) * 100}%` }} />
                 </div>
                 <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-                  <span>{high} high</span>
-                  <span>{medium} medium</span>
-                  <span>{low} review</span>
+                  <span>{conf.high} high</span>
+                  <span>{conf.medium} medium</span>
+                  <span>{conf.low} review</span>
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Tier 1 — Spotlight: the single sharpest finding, undeniable in 30 seconds */}
+        {spotlight && (
+          <div className="mt-6">
+            <Spotlight {...spotlight} />
+          </div>
+        )}
+
+        {/* Tier 2 — Trust strip: disarm the verifier before they doubt */}
+        <section className="mt-6 grid gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200 sm:grid-cols-3">
+          <div className="bg-white/90 p-5">
+            <div className="flex items-center gap-2 text-slate-700">
+              <Calculator className="size-4 stroke-[1.5]" />
+              <p className="text-sm font-semibold">Recomputed, not guessed</p>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              We recompute what Amazon should have charged or credited on each sale and
+              match it against what it actually did — using only your own reports.
+            </p>
+          </div>
+          <div className="bg-white/90 p-5">
+            <div className="flex items-center gap-2 text-slate-700">
+              <ScanLine className="size-4 stroke-[1.5]" />
+              <p className="text-sm font-semibold">Every figure traces to a row</p>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Each provable dollar carries the source order, SKU and date from your
+              Seller Central data — defensible line by line, in the PDF and CSV.
+            </p>
+          </div>
+          <div className="bg-white/90 p-5">
+            <div className="flex items-center gap-2 text-slate-700">
+              <Gauge className="size-4 stroke-[1.5]" />
+              <p className="text-sm font-semibold">Honest confidence</p>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              <span className="font-medium">High</span> = direct, unambiguous match ·{" "}
+              <span className="font-medium">medium</span> = strong signal, legitimate
+              exception possible · <span className="font-medium">review</span> = human
+              look before filing.
+            </p>
           </div>
         </section>
 
@@ -221,30 +412,59 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
           </section>
         )}
 
-        {/* Charts */}
-        <RecoveryVisuals
+        {/* Tier 3 — Forensic body: the visual system, then the dossiers */}
+        <ForensicVisuals
           categories={chartCategories}
-          recurringCents={recurringCents}
-          oneTimeCents={oneTimeCents}
+          confidenceCents={provableConfidenceCents}
+          urgencyBuckets={urgencyBuckets}
+          forwardMonthlyCents={forwardMonthly}
         />
 
-        {/* Per-category deep dives */}
+        {/* Per-category deep dives — provable findings (real per-row amounts) */}
         <section className="mt-10">
           <h2 className="text-xl font-bold">The findings, in detail</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Each category, how it happens, and the evidence behind every dollar.
           </p>
           <div className="mt-4 space-y-6">
-            {ordered.map(([key, data]) => (
+            {provableCategories.map((c) => (
               <CategoryDeepDive
-                key={key}
-                categoryKey={key}
-                findings={data.findings}
-                narrative={narrative?.category_narratives?.[key]}
+                key={c.category}
+                categoryKey={c.category}
+                summary={c}
+                findings={byCategory[c.category] ?? []}
+                narrative={narrative?.category_narratives?.[c.category]}
               />
             ))}
           </div>
         </section>
+
+        {/* Estimated tier — fenced below the fold, excluded from the total above (D3) */}
+        {estimatedCategories.length > 0 && (
+          <section className="mt-10 rounded-xl border border-dashed border-slate-300 bg-slate-50/40 p-6">
+            <h2 className="text-xl font-bold text-muted-foreground">
+              Estimated — needs confirmation
+            </h2>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+              These reimbursement buckets are flagged from your reports but valued at a
+              flat per-item estimate, not a row-level amount — so they are{" "}
+              <span className="font-medium">not counted in the {formatDollars(provable)}{" "}
+              above</span>. Amazon&apos;s 2024–25 auto-reimbursement may already have
+              covered some. We confirm the real per-item value before filing.
+            </p>
+            <div className="mt-4 space-y-6">
+              {estimatedCategories.map((c) => (
+                <CategoryDeepDive
+                  key={c.category}
+                  categoryKey={c.category}
+                  summary={c}
+                  findings={byCategory[c.category] ?? []}
+                  narrative={narrative?.category_narratives?.[c.category]}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* CTA + Methodology */}
         <section className="mt-12 grid gap-6 lg:grid-cols-5">
@@ -255,9 +475,20 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
                 Every finding above is yours to file, free.
               </p>
               <p className="mt-2 max-w-xl text-muted-foreground">
-                What we run as a service is catching next month&apos;s overcharge before it
-                compounds, across every channel you sell on, plus the backward claims that
-                need direct access to your data to chase down.
+                The report is the easy part. What needs our hands is what recurs:{" "}
+                {forwardMonthly !== null && forwardMonthly > 0 ? (
+                  <>
+                    the{" "}
+                    <span className="font-semibold text-foreground/90">
+                      {formatDollars(forwardMonthly)}/mo
+                    </span>{" "}
+                    overcharge that keeps compounding until the root cause is fixed
+                  </>
+                ) : (
+                  <>the overcharge that keeps compounding until the root cause is fixed</>
+                )}
+                , the same leakage across every channel you sell on, and the backward
+                claims that need direct access to your account to chase down.
               </p>
               <Button size="lg" className="mt-6" asChild>
                 <a
@@ -279,12 +510,6 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {narrative?.methodology_note ??
                   "Each finding recomputes what Amazon should have charged or credited and matches it against what it actually did, using only your own Seller Central reports."}
-              </p>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Confidence reflects evidence strength: <strong>high</strong> = direct,
-                unambiguous match; <strong>medium</strong> = strong signal with a
-                legitimate-exception possibility; <strong>review</strong> = flagged for a
-                human look before filing.
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white/80 p-6 text-center text-xs text-muted-foreground shadow-sm backdrop-blur-sm">

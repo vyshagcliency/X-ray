@@ -493,6 +493,19 @@ const PRODUCT_GROUP_BY_SLUG = {
   "halcyon-audio": "Consumer Electronics", // flat 8% — overcharge shows as 15%
 };
 
+// P0.6: real Amazon Fee Preview `product-group` CODES (not the clean category labels).
+// Emitting codes forces the referral rule through reference/product-group-map.ts instead
+// of the identity/label path — so a broken/incomplete map surfaces as a loud smoke-test
+// failure now (the D6 class), not silently on the first real CSV. Each code below MUST
+// map to the referral category above in product-group-map.ts, or the planted overcharges
+// stop reconciling. (Amazon's code enum isn't public; these are the well-known ones.)
+const PRODUCT_GROUP_CODE_BY_SLUG = {
+  "novapeak-outdoor": "sporting_goods", // → Sports and Outdoors
+  "luxenest-home": "home_garden", // → Home and Kitchen
+  "pureglow-beauty": "hpc", // → Beauty, Health and Personal Care
+  "halcyon-audio": "ce", // → Consumer Electronics
+};
+
 // Mirrors the progressive model in referral-rates.ts so planted data is self-consistent.
 // [t1_cents, t2_cents, rate1, rate2, rate3]
 const REFERRAL_RATES = {
@@ -555,7 +568,9 @@ function generateFeePreview(brand, catalog, rng) {
     "item-package-weight", "unit-of-dimension", "unit-of-weight", "product-size-tier", "estimated-fee-total",
   ];
   const rows = [csvRow(headers)];
-  const pg = PRODUCT_GROUP_BY_SLUG[brand.slug];
+  // Emit the real product-group CODE (e.g. "ce"), not the category label — the rule must
+  // translate it via product-group-map.ts to reach the correct referral rate (P0.6).
+  const code = PRODUCT_GROUP_CODE_BY_SLUG[brand.slug];
 
   for (const item of catalog) {
     const small = rng() < 0.5;
@@ -570,7 +585,7 @@ function generateFeePreview(brand, catalog, rng) {
       fee = small ? 5.5 : 9.5;
     }
     rows.push(csvRow([
-      item.sku, item.asin, pg, longest, median, shortest, weight,
+      item.sku, item.asin, code, longest, median, shortest, weight,
       "inches", "ounces", tier, fee.toFixed(2),
     ]));
   }

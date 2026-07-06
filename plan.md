@@ -3,7 +3,9 @@
 **Version:** 1.0
 **Companion to:** prd.md, userstories.md, architecture.md, decisions.md
 **Status:** Active
-**Last updated:** 2026-05-08
+**Last updated:** 2026-07-05
+
+> [!important] Active in-flight rework (2026-07-05): **Report Killer**. After the first realistic synthetic run (Halcyon Audio) the payout-integrity repoint was confirmed shipped but the report's *credibility engineering + information hierarchy* were found lacking (numbers not reconciling, `[object Object]` render bugs, softest bucket heroed, estimates above the traceability promise). The report-quality rework — plus a curated bucket expansion, a richer visual system, and funnel consistency — is planned in **`report-killer-plan.md`** (with research builds `report-killer-referral-guard.md` + `report-killer-new-buckets.md`, and session prompts `report-killer-prompts.md`). It supersedes the report-surface parts of Phase 1.5/§4 here and continues the alignment `feex-rework.md` began (2026-06-13). Check items off in `report-killer-plan.md` during that work; fold shipped changes back here per its §7.
 
 ---
 
@@ -423,7 +425,7 @@ Each rule is: **pure SQL file + registry entry + Vitest CSV fixture + fixture te
 
 - [ ] Keep `returns_gap`, `inventory_lost`, `refund_reimbursement_mismatch` in the registry but **demote them out of the lead** — present as secondary add-on findings, not the headline
 - [ ] Flag `inventory_lost` specifically — it surfaces the exact category Amazon now auto-reimburses; either gate it behind a freshness note or weight it last so stale "wins" don't undercut credibility with a sharp Controller
-- [ ] Update report category ordering so payout-integrity buckets render first
+- [x] Update report category ordering so payout-integrity buckets render first *(done via Report Killer P0.2 — `report_data.categories` is canonically ordered wedge-first, reimbursement/estimated last; 2026-07-06)*
 
 ### 1.5.5 Messaging / positioning re-frame
 
@@ -652,6 +654,8 @@ These don't belong to a single phase — they're continuous discipline across al
 
 | Date | Change | Trigger |
 |---|---|---|
+| 2026-07-06 | **Report Killer Phase 1 shipped (re-hero + hierarchy + visual system)** — the tiered report shape from `report-killer-plan.md` §3. P1.1: the hero is now the **provable-forward monthly run-rate** ($281/mo on Halcyon, high-confidence rolling ÷ settlement months), with `total_recoverable` ($62,760) demoted to a secondary "total surfaced" sub-line — new `report_data` fields `provable_forward_cents`/`provable_forward_monthly_cents`. P1.2: `report_data.spotlight` + new `Spotlight.tsx` feature the sharpest high-confidence wedge with its shown math (Halcyon: size-tier `HA-HDP-001`, $916). P1.3: category ordering changed from `$ desc` to **confidence×punch** (`high_cents` desc, then `$`) so the sharp wedge leads and the $47k all-medium *Credits Never Applied* giant is demoted (inverts D4). P1.4: a how-computed / traceability / confidence-legend trust strip. P1.5: sell-the-system close names the recurring $/mo. P1.6: `RecoveryVisuals` (2 charts) → `ForensicVisuals` (4: forward-bleed area, confidence×punch category bar, confidence×dollars, urgency timeline); the category palette was recolored to a **CVD-validated** set in `category-meta.ts` (old referral-blue↔size-tier-violet collapsed at ΔE 1.7 under deuteranopia). +10 tests (data-builder P1 fields + Halcyon P1 assertions); `pnpm build/lint/test` green (101 pass). Report is light-only by locked §3 Q4. PDF (Typst) hero/visual re-alignment deferred to P4.1 (numbers already reconcile from `report_data`). | Report Killer plan §4 Phase 1 executed in a fresh session; awaiting user go-ahead for Phase 2/3. |
+| 2026-07-06 | **Report Killer Phase 0 shipped (credibility foundation)** — the report deliverable rework tracked in `report-killer-plan.md`. P0.1: central `normalizeDuckDBValue` (`src/lib/duckdb/normalize.ts`) kills the `[object Object]`/BigInt-serialization class (D1/D7 — found worse than framed: a `SUM()` beside a temporal column threw on insert). P0.2: `report_data` (`pdf/data-builder.ts`) is now the single source of truth, built from the complete in-memory finding set (not the PostgREST-1000-capped DB round-trip that caused the 1,122-vs-1,000 defect); report page + `CategoryDeepDive` render from it; paginated findings fetch; `assertReportDataConsistent` invariant. P0.3: provable/estimated split — hero shows the provable figure ($53,505 on Halcyon), flat-$15 reimbursement tier fenced below. P0.4: `windowLabel` (never "N/A") + provable-only hero urgency. P0.6: `generate-smoke-data.mjs` emits real product-group codes (`ce`, …) so the referral wedge fires through `product-group-map.ts` (D6 caught in CI). +27 tests (data-builder, normalize, halcyon-report). Halcyon reconciles end-to-end; `pnpm build/lint/test` green. Report-surface parts of Phase 1.5.4 folded in. | Report Killer plan §4 Phase 0 executed in a fresh session; awaiting user go-ahead for Phase 1. |
 | 2026-04-18 | Initial plan written | User requested comprehensive phased plan after PRD / architecture / decisions / userstories were frozen |
 | 2026-04-18 | Phase 0 research checkpoint completed | All 6 items verified. Corrected Sonnet model ID (`claude-sonnet-4-6` → `claude-sonnet-4-5-20250929`). |
 | 2026-04-18 | Phase 0.6, 0.7 descoped; 0.5 deferred | User: "don't overdo observability, CI/CD etc — just care about CX and customer value." Jumped to building CX-facing Phase 1 code. |

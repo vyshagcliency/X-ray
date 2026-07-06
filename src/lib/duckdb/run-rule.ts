@@ -1,4 +1,5 @@
 import { createDuckDB } from "./client";
+import { normalizeDuckDBValue } from "./normalize";
 import type { Rule } from "@/lib/rules";
 
 export interface FindingRow {
@@ -61,7 +62,9 @@ export async function runRule(
     for (const row of result.getRows()) {
       const rowObj: Record<string, unknown> = {};
       columnNames.forEach((col, i) => {
-        rowObj[col] = row[i];
+        // Coerce DuckDB temporal/bigint values to JSON-safe primitives before they
+        // land in `evidence` (D1/D7). Centralised so every rule benefits.
+        rowObj[col] = normalizeDuckDBValue(row[i]);
       });
 
       const windowClosesOn = rowObj.window_closes_on;

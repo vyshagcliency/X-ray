@@ -1,5 +1,6 @@
 import { DuckDBInstance } from "@duckdb/node-api";
 import path from "path";
+import { normalizeDuckDBValue } from "@/lib/duckdb/normalize";
 import type { Rule } from "@/lib/rules";
 
 export interface TestFinding {
@@ -67,7 +68,9 @@ export async function runRuleAgainstFixtures(
     for (const row of result.getRows()) {
       const rowObj: Record<string, unknown> = {};
       columnNames.forEach((col, i) => {
-        rowObj[col] = row[i];
+        // Mirror runRule: normalize DuckDB temporal/bigint values to JSON-safe
+        // primitives so fixtures assert against the same evidence shape production stores.
+        rowObj[col] = normalizeDuckDBValue(row[i]);
       });
 
       const windowClosesOn = rowObj.window_closes_on;

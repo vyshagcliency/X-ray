@@ -1,53 +1,53 @@
 sku,asin,product-group,longest-side,median-side,shortest-side,item-package-weight,unit-of-dimension,unit-of-weight,product-size-tier,estimated-fee-total
-PG-SKN-001,B0JL8LT71X,"Beauty, Health and Personal Care",10.27,10.71,0.42,4.05,inches,ounces,Large Standard,5.50
-PG-SKN-002,B08CP01A7Q,"Beauty, Health and Personal Care",9.97,9.6,0.54,4.92,inches,ounces,Small Standard,3.50
-PG-SKN-003,B0I2LZORL6,"Beauty, Health and Personal Care",16.31,8.54,3.11,289.84,inches,ounces,Large Standard,5.50
-PG-SKN-004,B0E178DNY9,"Beauty, Health and Personal Care",13.88,7.69,0.28,12.73,inches,ounces,Large Standard,5.50
-PG-SKN-005,B0WGKZD0PH,"Beauty, Health and Personal Care",11.86,3.58,0.25,3.37,inches,ounces,Small Standard,3.50
-PG-SKN-006,B0OZOR3ERI,"Beauty, Health and Personal Care",8.65,7.9,0.56,14.33,inches,ounces,Large Standard,5.50
-PG-SKN-007,B0YHKSQNF1,"Beauty, Health and Personal Care",7.9,4.68,0.24,8.74,inches,ounces,Small Standard,3.50
-PG-SKN-008,B0V5P4O2E6,"Beauty, Health and Personal Care",5.47,3.86,0.41,9,inches,ounces,Small Standard,3.50
-PG-SKN-009,B0XVOLFKXX,"Beauty, Health and Personal Care",7.79,10.64,0.46,4.49,inches,ounces,Small Standard,3.50
-PG-SKN-010,B0LLJVCU9I,"Beauty, Health and Personal Care",9.75,4.75,0.35,6.35,inches,ounces,Small Standard,3.50
-PG-HAR-001,B0TZ5LWQTK,"Beauty, Health and Personal Care",13.79,8.48,0.41,7.24,inches,ounces,Small Standard,3.50
-PG-HAR-002,B0XQ4F97OY,"Beauty, Health and Personal Care",6.82,7.88,0.3,12.14,inches,ounces,Large Standard,5.50
-PG-HAR-003,B07XIGYU1K,"Beauty, Health and Personal Care",17.14,11.78,1.07,34.76,inches,ounces,Large Standard,5.50
-PG-HAR-004,B0JROIOLSQ,"Beauty, Health and Personal Care",15.73,8.36,1.27,157.52,inches,ounces,Large Bulky,9.50
-PG-HAR-005,B0TYEBPH5X,"Beauty, Health and Personal Care",16.59,11.63,6.6,219.11,inches,ounces,Large Standard,5.50
-PG-HAR-006,B0VUOD9VQS,"Beauty, Health and Personal Care",13.68,3.39,0.66,8.41,inches,ounces,Small Standard,3.50
-PG-HAR-007,B03J3UNRBB,"Beauty, Health and Personal Care",12.54,8.56,0.4,14.78,inches,ounces,Small Standard,3.50
-PG-HAR-008,B0I85ALL52,"Beauty, Health and Personal Care",17.15,8.03,6.87,241.57,inches,ounces,Large Standard,5.50
-PG-BDY-001,B0XNLDDMAZ,"Beauty, Health and Personal Care",16.83,11.19,5.66,158.48,inches,ounces,Large Standard,5.50
-PG-BDY-002,B0DOY2DKKS,"Beauty, Health and Personal Care",15.64,9.49,6.82,176.8,inches,ounces,Large Standard,5.50
-PG-BDY-003,B0P2KX5Y8Q,"Beauty, Health and Personal Care",6.36,9.23,0.62,3.67,inches,ounces,Small Standard,3.50
-PG-BDY-004,B03JM28TAY,"Beauty, Health and Personal Care",16.17,12.04,6.35,180,inches,ounces,Large Standard,5.50
-PG-BDY-005,B04TIN4N1G,"Beauty, Health and Personal Care",8.6,8.21,0.24,10.71,inches,ounces,Large Standard,5.50
-PG-BDY-006,B0YS36IKHA,"Beauty, Health and Personal Care",16.03,10.19,3.66,146.68,inches,ounces,Large Standard,5.50
-PG-BDY-007,B01JAX79J4,"Beauty, Health and Personal Care",12.6,3.9,0.47,14.63,inches,ounces,Small Standard,3.50
-PG-BDY-008,B00C5R4HVU,"Beauty, Health and Personal Care",11.8,3.43,0.61,4.81,inches,ounces,Small Standard,3.50
-PG-MKP-001,B04734LWEG,"Beauty, Health and Personal Care",13.12,8.1,0.42,11,inches,ounces,Large Standard,5.50
-PG-MKP-002,B0486Y4TL6,"Beauty, Health and Personal Care",16.96,8.96,6.99,178.54,inches,ounces,Large Standard,5.50
-PG-MKP-003,B0KX122TK3,"Beauty, Health and Personal Care",12.93,3.65,0.53,2.65,inches,ounces,Small Standard,3.50
-PG-MKP-004,B0ZBCCDMJ8,"Beauty, Health and Personal Care",13.19,10.54,0.21,12.06,inches,ounces,Small Standard,3.50
-PG-MKP-005,B05YIY3JA4,"Beauty, Health and Personal Care",16.51,12.38,5.17,98.9,inches,ounces,Large Standard,5.50
-PG-MKP-006,B0MJMVH725,"Beauty, Health and Personal Care",10.27,5.43,0.43,6.06,inches,ounces,Small Standard,3.50
-PG-MKP-007,B0Q33MF2UN,"Beauty, Health and Personal Care",10.73,6.06,0.26,12.09,inches,ounces,Small Standard,3.50
-PG-MKP-008,B0MSKMJI8N,"Beauty, Health and Personal Care",11.62,10.92,0.45,8.26,inches,ounces,Small Standard,3.50
-PG-MKP-009,B02I6L1Q4R,"Beauty, Health and Personal Care",5.72,6.5,0.4,6.91,inches,ounces,Small Standard,3.50
-PG-NLS-001,B0ZPKH96SE,"Beauty, Health and Personal Care",10.52,10.36,0.21,6.8,inches,ounces,Small Standard,3.50
-PG-NLS-002,B089I6O4FA,"Beauty, Health and Personal Care",8.82,5.59,0.68,8.54,inches,ounces,Small Standard,3.50
-PG-NLS-003,B0UCRXK8QJ,"Beauty, Health and Personal Care",15.73,12.9,2.73,246.38,inches,ounces,Large Standard,5.50
-PG-NLS-004,B0VXMS4VYY,"Beauty, Health and Personal Care",11.04,7.07,0.4,9.58,inches,ounces,Large Standard,5.50
-PG-NLS-005,B0YMOBWDKK,"Beauty, Health and Personal Care",8.84,10.8,0.52,9.09,inches,ounces,Small Standard,3.50
-PG-NLS-006,B0GR3MZ1Y1,"Beauty, Health and Personal Care",11.86,10.66,0.36,5.43,inches,ounces,Small Standard,3.50
-PG-NLS-007,B02ZYOGWOU,"Beauty, Health and Personal Care",8.59,7.88,0.69,12.98,inches,ounces,Small Standard,3.50
-PG-TOL-001,B0WZOOMDG8,"Beauty, Health and Personal Care",17.28,8.13,2.35,261.59,inches,ounces,Large Standard,5.50
-PG-TOL-002,B05M6V6DV8,"Beauty, Health and Personal Care",15.99,8.79,6.66,195.83,inches,ounces,Large Standard,5.50
-PG-TOL-003,B0KKGYE15U,"Beauty, Health and Personal Care",5.81,9.41,0.65,3.99,inches,ounces,Small Standard,3.50
-PG-TOL-004,B0BFVGGGHU,"Beauty, Health and Personal Care",15.82,8.6,1.12,52.59,inches,ounces,Large Standard,5.50
-PG-TOL-005,B0GEDR9PLS,"Beauty, Health and Personal Care",17.08,10.43,4.5,243.02,inches,ounces,Large Standard,5.50
-PG-TOL-006,B0C9TGKAVR,"Beauty, Health and Personal Care",16.47,9.77,6.91,269.16,inches,ounces,Large Bulky,9.50
-PG-TOL-007,B04BOZRVA6,"Beauty, Health and Personal Care",6.62,3.01,0.36,12.09,inches,ounces,Small Standard,3.50
-PG-TOL-008,B0EO4WIE88,"Beauty, Health and Personal Care",15.9,9.2,2.24,207.35,inches,ounces,Large Standard,5.50
-PG-TOL-009,B05ZGH752M,"Beauty, Health and Personal Care",13.3,9.27,0.46,2.88,inches,ounces,Small Standard,3.50
-PG-TOL-010,B0UEQ50HW1,"Beauty, Health and Personal Care",13.16,8.13,0.59,14.1,inches,ounces,Small Standard,3.50
+PG-SKN-001,B0JL8LT71X,hpc,10.27,10.71,0.42,4.05,inches,ounces,Large Standard,5.50
+PG-SKN-002,B08CP01A7Q,hpc,9.97,9.6,0.54,4.92,inches,ounces,Small Standard,3.50
+PG-SKN-003,B0I2LZORL6,hpc,16.31,8.54,3.11,289.84,inches,ounces,Large Standard,5.50
+PG-SKN-004,B0E178DNY9,hpc,13.88,7.69,0.28,12.73,inches,ounces,Large Standard,5.50
+PG-SKN-005,B0WGKZD0PH,hpc,11.86,3.58,0.25,3.37,inches,ounces,Small Standard,3.50
+PG-SKN-006,B0OZOR3ERI,hpc,8.65,7.9,0.56,14.33,inches,ounces,Large Standard,5.50
+PG-SKN-007,B0YHKSQNF1,hpc,7.9,4.68,0.24,8.74,inches,ounces,Small Standard,3.50
+PG-SKN-008,B0V5P4O2E6,hpc,5.47,3.86,0.41,9,inches,ounces,Small Standard,3.50
+PG-SKN-009,B0XVOLFKXX,hpc,7.79,10.64,0.46,4.49,inches,ounces,Small Standard,3.50
+PG-SKN-010,B0LLJVCU9I,hpc,9.75,4.75,0.35,6.35,inches,ounces,Small Standard,3.50
+PG-HAR-001,B0TZ5LWQTK,hpc,13.79,8.48,0.41,7.24,inches,ounces,Small Standard,3.50
+PG-HAR-002,B0XQ4F97OY,hpc,6.82,7.88,0.3,12.14,inches,ounces,Large Standard,5.50
+PG-HAR-003,B07XIGYU1K,hpc,17.14,11.78,1.07,34.76,inches,ounces,Large Standard,5.50
+PG-HAR-004,B0JROIOLSQ,hpc,15.73,8.36,1.27,157.52,inches,ounces,Large Bulky,9.50
+PG-HAR-005,B0TYEBPH5X,hpc,16.59,11.63,6.6,219.11,inches,ounces,Large Standard,5.50
+PG-HAR-006,B0VUOD9VQS,hpc,13.68,3.39,0.66,8.41,inches,ounces,Small Standard,3.50
+PG-HAR-007,B03J3UNRBB,hpc,12.54,8.56,0.4,14.78,inches,ounces,Small Standard,3.50
+PG-HAR-008,B0I85ALL52,hpc,17.15,8.03,6.87,241.57,inches,ounces,Large Standard,5.50
+PG-BDY-001,B0XNLDDMAZ,hpc,16.83,11.19,5.66,158.48,inches,ounces,Large Standard,5.50
+PG-BDY-002,B0DOY2DKKS,hpc,15.64,9.49,6.82,176.8,inches,ounces,Large Standard,5.50
+PG-BDY-003,B0P2KX5Y8Q,hpc,6.36,9.23,0.62,3.67,inches,ounces,Small Standard,3.50
+PG-BDY-004,B03JM28TAY,hpc,16.17,12.04,6.35,180,inches,ounces,Large Standard,5.50
+PG-BDY-005,B04TIN4N1G,hpc,8.6,8.21,0.24,10.71,inches,ounces,Large Standard,5.50
+PG-BDY-006,B0YS36IKHA,hpc,16.03,10.19,3.66,146.68,inches,ounces,Large Standard,5.50
+PG-BDY-007,B01JAX79J4,hpc,12.6,3.9,0.47,14.63,inches,ounces,Small Standard,3.50
+PG-BDY-008,B00C5R4HVU,hpc,11.8,3.43,0.61,4.81,inches,ounces,Small Standard,3.50
+PG-MKP-001,B04734LWEG,hpc,13.12,8.1,0.42,11,inches,ounces,Large Standard,5.50
+PG-MKP-002,B0486Y4TL6,hpc,16.96,8.96,6.99,178.54,inches,ounces,Large Standard,5.50
+PG-MKP-003,B0KX122TK3,hpc,12.93,3.65,0.53,2.65,inches,ounces,Small Standard,3.50
+PG-MKP-004,B0ZBCCDMJ8,hpc,13.19,10.54,0.21,12.06,inches,ounces,Small Standard,3.50
+PG-MKP-005,B05YIY3JA4,hpc,16.51,12.38,5.17,98.9,inches,ounces,Large Standard,5.50
+PG-MKP-006,B0MJMVH725,hpc,10.27,5.43,0.43,6.06,inches,ounces,Small Standard,3.50
+PG-MKP-007,B0Q33MF2UN,hpc,10.73,6.06,0.26,12.09,inches,ounces,Small Standard,3.50
+PG-MKP-008,B0MSKMJI8N,hpc,11.62,10.92,0.45,8.26,inches,ounces,Small Standard,3.50
+PG-MKP-009,B02I6L1Q4R,hpc,5.72,6.5,0.4,6.91,inches,ounces,Small Standard,3.50
+PG-NLS-001,B0ZPKH96SE,hpc,10.52,10.36,0.21,6.8,inches,ounces,Small Standard,3.50
+PG-NLS-002,B089I6O4FA,hpc,8.82,5.59,0.68,8.54,inches,ounces,Small Standard,3.50
+PG-NLS-003,B0UCRXK8QJ,hpc,15.73,12.9,2.73,246.38,inches,ounces,Large Standard,5.50
+PG-NLS-004,B0VXMS4VYY,hpc,11.04,7.07,0.4,9.58,inches,ounces,Large Standard,5.50
+PG-NLS-005,B0YMOBWDKK,hpc,8.84,10.8,0.52,9.09,inches,ounces,Small Standard,3.50
+PG-NLS-006,B0GR3MZ1Y1,hpc,11.86,10.66,0.36,5.43,inches,ounces,Small Standard,3.50
+PG-NLS-007,B02ZYOGWOU,hpc,8.59,7.88,0.69,12.98,inches,ounces,Small Standard,3.50
+PG-TOL-001,B0WZOOMDG8,hpc,17.28,8.13,2.35,261.59,inches,ounces,Large Standard,5.50
+PG-TOL-002,B05M6V6DV8,hpc,15.99,8.79,6.66,195.83,inches,ounces,Large Standard,5.50
+PG-TOL-003,B0KKGYE15U,hpc,5.81,9.41,0.65,3.99,inches,ounces,Small Standard,3.50
+PG-TOL-004,B0BFVGGGHU,hpc,15.82,8.6,1.12,52.59,inches,ounces,Large Standard,5.50
+PG-TOL-005,B0GEDR9PLS,hpc,17.08,10.43,4.5,243.02,inches,ounces,Large Standard,5.50
+PG-TOL-006,B0C9TGKAVR,hpc,16.47,9.77,6.91,269.16,inches,ounces,Large Bulky,9.50
+PG-TOL-007,B04BOZRVA6,hpc,6.62,3.01,0.36,12.09,inches,ounces,Small Standard,3.50
+PG-TOL-008,B0EO4WIE88,hpc,15.9,9.2,2.24,207.35,inches,ounces,Large Standard,5.50
+PG-TOL-009,B05ZGH752M,hpc,13.3,9.27,0.46,2.88,inches,ounces,Small Standard,3.50
+PG-TOL-010,B0UEQ50HW1,hpc,13.16,8.13,0.59,14.1,inches,ounces,Small Standard,3.50
