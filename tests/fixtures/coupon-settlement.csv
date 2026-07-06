@@ -1,0 +1,8 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased,posted-date
+7300,Order,730-0000001,ItemPrice,Principal,40.00,CP-OK,1,2025-06-01
+7300,Order,730-0000001,ItemFees,CouponRedemptionFee,-0.60,CP-OK,1,2025-06-01
+7300,Order,730-0000001,Promotion,ItemPromotionDiscount,-4.00,CP-OK,1,2025-06-01
+7300,Order,730-0000002,ItemPrice,Principal,40.00,CP-BAD,1,2025-06-01
+7300,Order,730-0000002,ItemFees,CouponRedemptionFee,-0.60,CP-BAD,1,2025-06-01
+7300,Order,730-0000003,ItemPrice,Principal,40.00,CP-NONE,1,2025-06-01
+7300,Order,730-0000003,ItemFees,Commission,-6.00,CP-NONE,1,2025-06-01

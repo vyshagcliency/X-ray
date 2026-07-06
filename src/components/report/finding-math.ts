@@ -97,6 +97,58 @@ export function financeMath(
     };
   }
 
+  if (category === "low_price_fee") {
+    return {
+      formula:
+        "Missed discount = (billed fee − discounted rate) per unit × units. Peer rate is your own ≥$10 SKUs' fee in the same size tier.",
+      rows: [
+        { label: "Item price", value: formatDollarsExact(num(e.avg_price_cents)) },
+        { label: "Billed / unit", value: formatDollarsExact(num(e.billed_fee_cents)) },
+        { label: "Peer standard / unit", value: formatDollarsExact(num(e.peer_fee_cents)) },
+        {
+          label: `Missed discount / unit × ${count(e.units)}`,
+          value: formatDollarsExact(num(e.per_unit_overcharge_cents)),
+        },
+        result("Recoverable"),
+      ],
+    };
+  }
+
+  if (category === "coupon_fee") {
+    return {
+      formula:
+        "Coupon redemption fee charged with no matching promotion on the same order.",
+      rows: [
+        { label: "Redemption fees on order", value: count(e.coupon_fee_lines) },
+        result("Fee billed, no redemption"),
+      ],
+    };
+  }
+
+  if (category === "deal_fee") {
+    return {
+      formula: "Excess = total deal fees − one legitimate fee (a deal runs one fee).",
+      rows: [
+        { label: "Deal fees in window", value: count(e.fee_count) },
+        { label: "Total charged", value: formatDollarsExact(num(e.total_fee_cents)) },
+        result("Duplicate fees"),
+      ],
+    };
+  }
+
+  if (category === "storage_cube") {
+    return {
+      formula:
+        "Overcharge = billed storage fee × (billed cube − measured cube) ÷ billed cube. Measured cube = L×W×H ÷ 1,728.",
+      rows: [
+        { label: "Measured cube (cu ft)", value: num(e.measured_cuft).toFixed(2) },
+        { label: "Billed cube (cu ft)", value: num(e.billed_cuft).toFixed(2) },
+        { label: "Monthly fee billed", value: formatDollarsExact(num(e.fee_cents)) },
+        result("Inflated-cube overcharge"),
+      ],
+    };
+  }
+
   // Estimated reimbursement tier (returns, lost_inventory): flat placeholder, not a
   // row-level amount — say so honestly rather than dress it up as a computation (D3).
   if (category === "returns" || category === "lost_inventory") {

@@ -17,6 +17,13 @@ import { sizeTierMisclassification } from "./size-tier-misclassification";
 import { returnCreditUnapplied } from "./return-credit-unapplied";
 import { agedSurchargeOnSold } from "./aged-surcharge-on-sold";
 
+// Fee-line wedge additions (Phase 3): ride on the settlement fee lines (G1). Sharp,
+// contract-free, high-confidence "you found what?" checks.
+import { lowPriceFba } from "./low-price-fba";
+import { couponFeeError } from "./coupon-fee-error";
+import { dealFeeDoubleBooked } from "./deal-fee-double-booked";
+import { storageCubeOvercharge } from "./storage-cube-overcharge";
+
 // Bucket 3 reimbursement rules (Phase 1): demoted to table-stakes add-ons (Phase 1.5).
 import { returnsGap } from "./returns-gap";
 import { inventoryLost } from "./inventory-lost";
@@ -28,6 +35,12 @@ export const RULES: Rule[] = [
   sizeTierMisclassification,
   returnCreditUnapplied,
   agedSurchargeOnSold,
+  // Fee-line wedge additions (Phase 3, P3.2 / P3.6-D / P3.6-E).
+  lowPriceFba,
+  couponFeeError,
+  dealFeeDoubleBooked,
+  // Storage-cube overcharge (Phase 3, P3.3) — needs the Monthly Storage report (G2).
+  storageCubeOvercharge,
   // Reimbursement add-ons (PRD §5.1-5.3): demoted out of the lead.
   returnsGap,
   inventoryLost,

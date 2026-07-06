@@ -1,0 +1,6 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased,posted-date
+7400,Order,740-0000001,ItemFees,LightningDealFee,-150.00,DL-OK,1,2025-06-01
+7400,Order,740-0000002,ItemFees,LightningDealFee,-150.00,DL-BAD,1,2025-06-15
+7400,Order,740-0000002,ItemFees,LightningDealFee,-150.00,DL-BAD,1,2025-06-15
+7400,Order,740-0000003,ItemFees,LightningDealFee,-150.00,DL-DIFF,1,2025-06-01
+7400,Order,740-0000004,ItemFees,LightningDealFee,-150.00,DL-DIFF,1,2025-09-01

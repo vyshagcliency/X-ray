@@ -134,6 +134,11 @@ const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
   fba_dimension: "Size-Tier Overcharges",
   return_credit: "Credits Never Applied",
   aged_surcharge: "Aged-Stock Surcharges",
+  // Fee-line wedge additions (Phase 3)
+  low_price_fee: "Low-Price Discount Missed",
+  coupon_fee: "Coupon Fee Errors",
+  deal_fee: "Deal Fee Double-Bookings",
+  storage_cube: "Storage Cube Overcharges",
   // Reimbursement add-ons
   returns: "Customer Return Gaps",
   lost_inventory: "Lost & Damaged Inventory",

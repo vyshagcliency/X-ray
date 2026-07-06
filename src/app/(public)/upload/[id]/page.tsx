@@ -19,6 +19,7 @@ const OPTIONAL_REPORTS = [
   "inventory_ledger",
   "reimbursements",
   "storage_fees",
+  "monthly_storage",
 ] as const;
 
 

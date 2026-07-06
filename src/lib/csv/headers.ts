@@ -211,6 +211,35 @@ export const REPORT_SIGNATURES: Record<string, ReportSignature> = {
     optionalHeaders: ["product-name", "condition", "currency", "fulfillment-center"],
     description: "Aged-inventory surcharges Amazon billed, by SKU and snapshot date",
   },
+
+  // Phase 3 (G2): the Monthly Inventory Storage Fees report — the cubic-foot basis the
+  // storage-cube-overcharge rule (P3.3) checks against measured dimensions. Column names
+  // confirmed 2026-07 against Amazon Seller Central / report-directory docs (item-volume,
+  // average-quantity-on-hand, estimated-monthly-storage-fee are the load-bearing ones).
+  monthly_storage: {
+    reportType: "monthly_storage",
+    displayName: "Monthly Inventory Storage Fees",
+    sellerCentralPath: "Reports > Payments > Monthly Storage Fees (or Fulfillment > Inventory)",
+    dateRange: "Per month of charge",
+    requiredHeaders: [
+      "asin",
+      "item-volume",
+      "average-quantity-on-hand",
+      "estimated-monthly-storage-fee",
+      "month-of-charge",
+    ],
+    optionalHeaders: [
+      "fnsku",
+      "product-name",
+      "volume-units",
+      "product-size-tier",
+      "base-rate",
+      "currency",
+      "storage-utilization-ratio",
+      "average-quantity-pending-removal",
+    ],
+    description: "Amazon's billed cubic-foot volume + monthly storage fee, per SKU",
+  },
 };
 
 /**

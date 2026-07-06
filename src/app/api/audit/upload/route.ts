@@ -11,6 +11,7 @@ const OPTIONAL_REPORT_TYPES = [
   "inventory_ledger",
   "reimbursements",
   "storage_fees",
+  "monthly_storage",
 ] as const;
 const VALID_REPORT_TYPES = [...REQUIRED_REPORT_TYPES, ...OPTIONAL_REPORT_TYPES] as const;
 

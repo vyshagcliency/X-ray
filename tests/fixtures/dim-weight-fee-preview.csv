@@ -1,0 +1,4 @@
+sku,asin,product-group,longest-side,median-side,shortest-side,item-package-weight,unit-of-dimension,unit-of-weight,product-size-tier,estimated-fee-total
+DW-LEGIT,B000DW0001,Home and Kitchen,40,20,10,50,inches,ounces,Extra-Large,25.00
+DW-EXEMPT,B000DW0002,Home and Kitchen,40,20,10,8,inches,ounces,Extra-Large,25.00
+DW-LB-OK,B000DW0003,Home and Kitchen,40,10,3,200,inches,ounces,Large Bulky,9.50

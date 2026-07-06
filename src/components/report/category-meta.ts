@@ -79,6 +79,58 @@ export const CATEGORY_META: Record<string, CategoryMeta> = {
     confidenceWhy:
       "High when the SKU sold steadily in the 90 days before the surcharge snapshot; medium on low-velocity SKUs.",
   },
+  low_price_fee: {
+    label: "Low-Price Discount Missed",
+    color: "#0891b2",
+    recurring: true,
+    mechanism:
+      "Items priced under $10 qualify for Amazon's automatic Low-Price FBA fulfillment-fee discount (~$0.86/unit). These SKUs were billed the full, non-discounted fee — the discount never applied, and the gap recurs on every unit.",
+    filePath:
+      "In Seller Central, open Help → Get support → Fulfillment by Amazon and raise a fee-discrepancy case for these sub-$10 SKUs, asking Amazon to apply the Low-Price FBA fulfillment-fee discount and refund the difference on units already shipped.",
+    disputeWindow:
+      "Fulfillment-fee discrepancies are best disputed within ~90 days of each charge — but the missed discount keeps recurring on every future sub-$10 sale until it is applied.",
+    confidenceWhy:
+      "Medium: the missing discount is measured against your own ≥$10 SKUs' fees in the same size tier; the exact low-price schedule varies by tier, and a thin peer sample drops to review.",
+  },
+  coupon_fee: {
+    label: "Coupon Fee Errors",
+    color: "#9333ea",
+    recurring: false,
+    mechanism:
+      "Amazon charged a $0.60 coupon redemption fee on orders that carry no matching promotion discount — you were billed for a redemption that never happened.",
+    filePath:
+      "In Seller Central, open Help → Get support → Selling on Amazon and raise a case disputing the CouponRedemptionFee on the orders below, noting that no promotion discount appears on the same order.",
+    disputeWindow:
+      "Coupon-fee disputes are strongest within ~90 days of the charge date.",
+    confidenceWhy:
+      "High: the fee and the absent promotion are on the same order in your own settlement — an internal inconsistency with no legitimate reading.",
+  },
+  deal_fee: {
+    label: "Deal Fee Double-Bookings",
+    color: "#be185d",
+    recurring: false,
+    mechanism:
+      "A deal (Lightning/Best Deal) is charged one fee per run. These SKUs carry two or more deal fees within a single deal window — a duplicate or double-booked charge.",
+    filePath:
+      "In Seller Central, open Help → Get support → Selling on Amazon and raise a case citing the duplicate deal-fee lines for the same SKU and date, requesting a refund of the excess fee.",
+    disputeWindow:
+      "Deal-fee disputes are strongest within ~90 days of the deal date.",
+    confidenceWhy:
+      "High: two deal fees for one SKU in one window is a self-evident duplicate in your own settlement.",
+  },
+  storage_cube: {
+    label: "Storage Cube Overcharges",
+    color: "#7c3aed",
+    recurring: false,
+    mechanism:
+      "Monthly storage is billed on each SKU's cubic-foot volume. These SKUs were billed on a larger cube than their measured dimensions warrant, inflating the storage fee.",
+    filePath:
+      "In Seller Central, open Help → Get support → Fulfillment by Amazon and request a re-measurement (Cubiscan) for these SKUs, citing the Fee Preview dimensions, then dispute the storage fee billed on the inflated volume.",
+    disputeWindow:
+      "Storage-fee disputes are strongest within ~90 days of the month of charge.",
+    confidenceWhy:
+      "Review-leaning: packaged dimensions legitimately exceed bare unit dimensions, so only cube inflation beyond a generous tolerance is flagged; a re-measurement confirms it before filing.",
+  },
   returns: {
     label: "Customer Returns",
     color: "#1baf7a",

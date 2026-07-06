@@ -1,0 +1,6 @@
+sku,asin,product-group,longest-side,median-side,shortest-side,item-package-weight,unit-of-dimension,unit-of-weight,product-size-tier,estimated-fee-total
+LP-STD1,B000LP0001,Home and Kitchen,10,6,1,8,inches,ounces,Small Standard,3.06
+LP-STD2,B000LP0002,Home and Kitchen,10,6,1,8,inches,ounces,Small Standard,3.06
+LP-STD3,B000LP0003,Home and Kitchen,10,6,1,8,inches,ounces,Small Standard,3.06
+LP-CHEAP1,B000LP0004,Home and Kitchen,10,6,1,8,inches,ounces,Small Standard,3.06
+LP-CHEAP2,B000LP0005,Home and Kitchen,10,6,1,8,inches,ounces,Small Standard,2.20
