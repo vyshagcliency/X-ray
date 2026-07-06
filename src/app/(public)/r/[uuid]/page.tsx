@@ -4,6 +4,7 @@ import { formatDollars } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
   Download,
+  Table2,
   AlertTriangle,
   ArrowRight,
   ShieldCheck,
@@ -322,6 +323,12 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
                   <a href={`/api/audit/pdf?id=${uuid}`} download>
                     <Download className="mr-2 size-4" />
                     Download PDF
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <a href={`/api/audit/csv?id=${uuid}`} download>
+                    <Table2 className="mr-2 size-4" />
+                    Export CSV
                   </a>
                 </Button>
               </div>

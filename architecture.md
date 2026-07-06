@@ -230,7 +230,7 @@ Detection rules open these files via signed URL + `duckdb.sql("SELECT ... FROM r
 
 For the top-25 cases that get per-case PDF evidence pages, we materialize their source rows into a small Postgres table so the report renderer doesn't need to re-open Parquet just to display "Order #123-456 on 2025-08-14". Columns: `id, audit_id, finding_id, report_type, row_data jsonb, row_ref`.
 
-Everything else (full case list export to CSV — US-6.6) is served by a just-in-time DuckDB query over the Parquet files, not from Postgres.
+Full case-list export to CSV (US-6.6) is served by `GET /api/audit/csv?id=` reading the `findings` rows from Postgres (Report Killer P2.4) — one row per finding with its identifiers, dollar gap, window, and a copy-ready dispute message (`src/lib/report/findings-csv.ts`, RFC-4180-escaped). *(The original design was a just-in-time DuckDB query over Parquet; the MVP has no Parquet layer, so findings come from Postgres — see the plan's US-6.6 deviation note.)*
 
 ### 4.4 `findings` — the outputs
 

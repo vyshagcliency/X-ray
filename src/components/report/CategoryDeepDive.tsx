@@ -1,9 +1,14 @@
 import { Badge } from "@/components/ui/badge";
+import { FileText, Gauge, Calculator, ArrowRight } from "lucide-react";
 import { formatDollars } from "@/lib/format";
 import { catMeta } from "./category-meta";
+import { financeMath } from "./finding-math";
+import { DisputeDraftBlock } from "./DisputeDraftBlock";
+import { draftDispute } from "@/lib/llm/draft-dispute";
 
 interface Finding {
   id: string;
+  rule_id: string;
   category: string;
   amount_cents: number;
   confidence: string;
@@ -140,6 +145,7 @@ const ROW_CAP = 8;
 interface CategorySummary {
   count: number;
   total_cents: number;
+  urgent_count?: number;
   high: number;
   medium: number;
   low: number;
@@ -166,6 +172,25 @@ export function CategoryDeepDive({
   const low = summary.low;
   const rows = findings.slice(0, ROW_CAP);
   const remaining = summary.count - rows.length;
+  const urgentCount = summary.urgent_count ?? 0;
+
+  // The dossier's "math, shown" and "how to file" work from the largest case in the
+  // category (findings are fetched amount-desc), so the worked example and the copy-ready
+  // draft are deterministic and trace to a specific, verifiable row.
+  const lead = findings[0];
+  const math = lead ? financeMath(categoryKey, lead.evidence, lead.amount_cents) : null;
+  const leadDraft = lead
+    ? draftDispute({
+        rule_id: lead.rule_id,
+        category: lead.category,
+        amount_cents: lead.amount_cents,
+        confidence: lead.confidence,
+        evidence: lead.evidence,
+      })
+    : null;
+  const leadRef = lead
+    ? String(lead.evidence.order_id ?? lead.evidence.sku ?? "")
+    : "";
 
   return (
     <section
@@ -211,16 +236,9 @@ export function CategoryDeepDive({
             </div>
           ))}
         </div>
-
-        {/* Confidence summary */}
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {high > 0 && <Badge className="text-xs">{high} high confidence</Badge>}
-          {medium > 0 && <Badge variant="secondary" className="text-xs">{medium} medium</Badge>}
-          {low > 0 && <Badge variant="outline" className="text-xs">{low} flagged for review</Badge>}
-        </div>
       </div>
 
-      {/* Evidence table */}
+      {/* 2 — The evidence (exact rows, traceable) */}
       <div className="overflow-x-auto border-t border-slate-100">
         <table className="w-full text-sm">
           <thead>
@@ -263,6 +281,101 @@ export function CategoryDeepDive({
           + {remaining.toLocaleString()} more case{remaining !== 1 ? "s" : ""} in this category. Full detail is in the PDF and CSV export.
         </p>
       )}
+
+      {/* Dossier footer: the math, how to file, and confidence — so any single row is
+          filable from the report alone (Phase 2 exit gate). */}
+      <div className="space-y-5 border-t border-slate-200 bg-slate-50/30 p-6">
+        {/* 3 — The math, shown */}
+        {math && (
+          <div>
+            <div className="flex items-center gap-2 text-slate-700">
+              <Calculator className="size-4 stroke-[1.5]" />
+              <h4 className="text-sm font-semibold">The math, shown</h4>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              {math.formula}
+              {lead && leadRef && (
+                <>
+                  {" "}Worked from the largest case,{" "}
+                  <span className="font-mono">{leadRef}</span>.
+                </>
+              )}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {math.rows.map((m) => (
+                <div
+                  key={m.label}
+                  className={`rounded-lg border px-3 py-2 ${
+                    m.emphasis
+                      ? "border-slate-300 bg-white"
+                      : "border-slate-200 bg-white/70"
+                  }`}
+                >
+                  <p className="text-[11px] leading-tight text-muted-foreground">
+                    {m.label}
+                  </p>
+                  <p className="font-mono text-sm font-bold tabular-nums">{m.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 4 — How to file it */}
+        <div>
+          <div className="flex items-center gap-2 text-slate-700">
+            <FileText className="size-4 stroke-[1.5]" />
+            <h4 className="text-sm font-semibold">How to file it</h4>
+          </div>
+          <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
+            <ArrowRight className="mt-0.5 size-3.5 shrink-0 stroke-[1.5] text-slate-400" />
+            <span>{meta.filePath}</span>
+          </p>
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+            <span className="font-medium text-slate-600">Window:</span>{" "}
+            {meta.disputeWindow}
+            {urgentCount > 0 && (
+              <span className="font-medium text-amber-700">
+                {" "}
+                {urgentCount} case{urgentCount !== 1 ? "s" : ""} close within 14 days.
+              </span>
+            )}
+          </p>
+          {leadDraft && (
+            <div className="mt-3">
+              <DisputeDraftBlock
+                subject={leadDraft.subject}
+                body={leadDraft.body}
+                caption={leadRef ? `for ${leadRef}` : undefined}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 5 — Confidence & why */}
+        <div>
+          <div className="flex items-center gap-2 text-slate-700">
+            <Gauge className="size-4 stroke-[1.5]" />
+            <h4 className="text-sm font-semibold">Confidence &amp; why</h4>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {high > 0 && <Badge className="text-xs">{high} high confidence</Badge>}
+            {medium > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {medium} medium
+              </Badge>
+            )}
+            {low > 0 && (
+              <Badge variant="outline" className="text-xs">
+                {low} flagged for review
+              </Badge>
+            )}
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+            {meta.confidenceWhy}
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
