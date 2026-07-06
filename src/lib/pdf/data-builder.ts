@@ -5,9 +5,11 @@
  * downstream re-aggregates findings for headline / confidence / category numbers (D2).
  */
 
-import { formatDollars, formatDollarsExact } from "@/lib/format";
+import { formatDollars, formatDollarsExact, formatPct } from "@/lib/format";
 import { ROLLING_CATEGORIES, type NarrativeOutput } from "@/lib/llm/narrate";
 import { draftDispute, type DisputeDraft } from "@/lib/llm/draft-dispute";
+import { catMeta } from "@/components/report/category-meta";
+import { financeMath } from "@/components/report/finding-math";
 
 interface Finding {
   /** Present when built from DB rows; absent when built from the in-memory set. */
@@ -68,6 +70,72 @@ const URGENCY_BANDS: Array<{ label: string; max_days: number }> = [
   { label: "31–60 days", max_days: 60 },
 ];
 
+/**
+ * Precomputed, print-ready view (P4.1). The PDF renderers (Typst + React-PDF) cannot
+ * format currency or run `financeMath`, so we compute every display string here — with
+ * the SAME helpers the web uses — and both PDFs render straight from this. That is what
+ * keeps web ↔ PDF ↔ the two PDFs telling one tiered story with reconciled numbers.
+ */
+export interface PdfMathRow {
+  label: string;
+  value: string;
+  /** The result line (overcharge / recoverable) — rendered emphasized. */
+  emphasis: boolean;
+}
+
+export interface PdfSpotlight {
+  display_name: string;
+  color: string;
+  amount: string;
+  confidence: string;
+  trace_label: string;
+  trace_value: string;
+  /** Plain-English "you found what?" claim (mirrors the web Spotlight headline). */
+  claim: string;
+  formula: string;
+  math_rows: PdfMathRow[];
+}
+
+export interface PdfCategory {
+  category: string;
+  color: string;
+  display_name: string;
+  total: string;
+  count: number;
+  urgent_count: number;
+  /** e.g. "12 high · 5 medium · 1 review" — omits zero buckets. */
+  confidence_line: string;
+  recurring: boolean;
+  estimated: boolean;
+  mechanism: string;
+  /** LLM category narrative when present, else null (renderer falls back to mechanism). */
+  narrative: string | null;
+  file_path: string;
+  dispute_window: string;
+  confidence_why: string;
+  /** Worked from the category's largest case (as the web dossier does); null if empty. */
+  math: { formula: string; rows: PdfMathRow[] } | null;
+}
+
+export interface PdfView {
+  subtitle: string;
+  /** The cover hero: provable-forward monthly run-rate, or the provable total fallback. */
+  hero_amount: string;
+  hero_is_forward: boolean;
+  hero_headline: string;
+  /** The demoted "total surfaced" line with the provable/estimated + confidence mix. */
+  surfaced_line: string;
+  provable: string;
+  estimated: string;
+  estimated_note: string | null;
+  recurring_monthly: string | null;
+  /** Provable dollars whose dispute window closes ≤14 days — the cover urgency badge. */
+  urgent: string | null;
+  spotlight: PdfSpotlight | null;
+  provable_categories: PdfCategory[];
+  estimated_categories: PdfCategory[];
+}
+
 export interface ReportData {
   brand_name: string;
   generated_at: string;
@@ -126,6 +194,8 @@ export interface ReportData {
     dispute_draft: DisputeDraft | null;
   }>;
   narrative: NarrativeOutput;
+  /** Precomputed print-ready view — the single source for both PDF renderers (P4.1). */
+  pdf: PdfView;
 }
 
 const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
@@ -171,6 +241,149 @@ function pickSpotlight(findings: Finding[]): Finding | null {
   const anyHigh = findings.filter((f) => f.confidence === "high").sort(byAmount);
   if (anyHigh.length > 0) return anyHigh[0];
   return [...findings].sort(byAmount)[0];
+}
+
+const numE = (v: unknown) => Number(v ?? 0);
+
+/** "12 high · 5 medium · 1 review" — omits zero buckets. */
+function confidenceLine(high: number, medium: number, low: number): string {
+  const parts: string[] = [];
+  if (high > 0) parts.push(`${high} high`);
+  if (medium > 0) parts.push(`${medium} medium`);
+  if (low > 0) parts.push(`${low} review`);
+  return parts.length ? parts.join(" · ") : "0 findings";
+}
+
+/** Plain-English spotlight claim — mirrors the web Spotlight.headlineFor, as a string. */
+function spotlightClaim(s: SpotlightFinding): string {
+  const e = s.evidence;
+  const amount = formatDollars(s.amount_cents);
+  if (s.category === "referral_fee") {
+    const group = String(e.product_group ?? "this category");
+    return `Amazon charged ${s.sku} a ${formatPct(numE(e.actual_pct))} referral fee where ${group} publishes ${formatPct(
+      numE(e.expected_pct),
+    )}. On this one order that is a ${amount} overcharge — and it repeats on every ${group} sale until the category is fixed.`;
+  }
+  if (s.category === "fba_dimension") {
+    return `Amazon billed ${s.sku} at the ${String(e.amazon_tier)} size tier when its measured dimensions place it in ${String(
+      e.correct_tier,
+    )} — overcharging ${formatDollars(numE(e.per_unit_overcharge_cents))} on every one of ${numE(
+      e.units_sold,
+    ).toLocaleString()} units shipped, a ${amount} overcharge in total.`;
+  }
+  return `The single largest discrepancy we found: ${amount} on ${s.sku}.`;
+}
+
+const toPdfMathRows = (rows: { label: string; value: string; emphasis?: boolean }[]) =>
+  rows.map((r) => ({ label: r.label, value: r.value, emphasis: !!r.emphasis }));
+
+/**
+ * Assemble the print-ready view (P4.1). Every string is computed with the same helpers
+ * the web renders from (`formatDollars`, `catMeta`, `financeMath`), worked from the same
+ * "largest case per category" the web dossier uses — so the PDF cannot drift from the web.
+ */
+function buildPdfView(
+  brand_name: string,
+  categories: CategorySummary[],
+  spotlight: SpotlightFinding | null,
+  largestByCategory: Map<string, Finding>,
+  narrative: NarrativeOutput,
+  totals: {
+    total_recoverable: string;
+    provable_cents: number;
+    estimated_cents: number;
+    confidence: { high: number; medium: number; low: number };
+    provable_forward_monthly_cents: number | null;
+    recurring_monthly_cents: number | null;
+    provable_urgent_cents: number;
+  },
+): PdfView {
+  const provable = formatDollars(totals.provable_cents);
+  const estimated = formatDollars(totals.estimated_cents);
+
+  const heroIsForward =
+    totals.provable_forward_monthly_cents !== null &&
+    totals.provable_forward_monthly_cents > 0;
+  const heroAmount = heroIsForward
+    ? formatDollars(totals.provable_forward_monthly_cents!)
+    : provable;
+  const heroHeadline = heroIsForward
+    ? `Amazon is overbilling ${brand_name} about ${heroAmount} every month in high-confidence, provable overcharges — and it compounds until the wrong referral category and size-tier are corrected.`
+    : `Provable overcharges and missing credits we found in ${brand_name}'s own Seller Central data — every figure below traces to a specific row.`;
+
+  const surfacedLine = `${totals.total_recoverable} surfaced across ${categories.length} ${
+    categories.length === 1 ? "category" : "categories"
+  } · ${provable} provable${
+    totals.estimated_cents > 0 ? ` / ${estimated} estimated` : ""
+  } · ${totals.confidence.high} high · ${totals.confidence.medium} medium confidence.`;
+
+  const estimatedNote =
+    totals.estimated_cents > 0
+      ? `The estimated figure is a flat per-item placeholder for reimbursement buckets, not counted in the ${provable} provable number — Amazon may have already auto-reimbursed some.`
+      : null;
+
+  const toPdfCategory = (c: CategorySummary): PdfCategory => {
+    const meta = catMeta(c.category);
+    const lead = largestByCategory.get(c.category);
+    const math = lead ? financeMath(c.category, lead.evidence, lead.amount_cents) : null;
+    return {
+      category: c.category,
+      color: meta.color,
+      display_name: c.display_name,
+      total: c.total,
+      count: c.count,
+      urgent_count: c.urgent_count,
+      confidence_line: confidenceLine(c.high, c.medium, c.low),
+      recurring: c.recurring,
+      estimated: c.estimated,
+      mechanism: meta.mechanism,
+      narrative: narrative.category_narratives?.[c.category] ?? null,
+      file_path: meta.filePath,
+      dispute_window: meta.disputeWindow,
+      confidence_why: meta.confidenceWhy,
+      math: math ? { formula: math.formula, rows: toPdfMathRows(math.rows) } : null,
+    };
+  };
+
+  let spotlightView: PdfSpotlight | null = null;
+  if (spotlight) {
+    const meta = catMeta(spotlight.category);
+    const m = financeMath(spotlight.category, spotlight.evidence, spotlight.amount_cents);
+    const hasOrder = spotlight.order_id !== "" && spotlight.order_id !== "N/A";
+    spotlightView = {
+      display_name: spotlight.display_name,
+      color: meta.color,
+      amount: spotlight.amount,
+      confidence: spotlight.confidence,
+      trace_label: hasOrder ? "order" : "SKU",
+      trace_value: hasOrder ? spotlight.order_id : spotlight.sku,
+      claim: spotlightClaim(spotlight),
+      formula: m.formula,
+      math_rows: toPdfMathRows(m.rows),
+    };
+  }
+
+  return {
+    subtitle: "Settlement Truth Audit",
+    hero_amount: heroAmount,
+    hero_is_forward: heroIsForward,
+    hero_headline: heroHeadline,
+    surfaced_line: surfacedLine,
+    provable,
+    estimated,
+    estimated_note: estimatedNote,
+    recurring_monthly:
+      totals.recurring_monthly_cents !== null
+        ? formatDollars(totals.recurring_monthly_cents)
+        : null,
+    urgent:
+      totals.provable_urgent_cents > 0
+        ? formatDollars(totals.provable_urgent_cents)
+        : null,
+    spotlight: spotlightView,
+    provable_categories: categories.filter((c) => !c.estimated).map(toPdfCategory),
+    estimated_categories: categories.filter((c) => c.estimated).map(toPdfCategory),
+  };
 }
 
 /**
@@ -221,6 +434,46 @@ export function assertReportDataConsistent(data: ReportData): void {
       `report_data invariant: provable confidence dollars (${provableConf}) != provable_cents (${data.provable_cents})`,
     );
   }
+  // The PDF view must render the exact same category set as the web (P4.1 parity).
+  const pdfCatCount =
+    data.pdf.provable_categories.length + data.pdf.estimated_categories.length;
+  if (pdfCatCount !== data.categories.length) {
+    throw new Error(
+      `report_data invariant: pdf categories (${pdfCatCount}) != categories (${data.categories.length})`,
+    );
+  }
+}
+
+/**
+ * Deploy-safety guard: a report_data row built before the Phase-4 `pdf` view existed has
+ * no `pdf` block, which would make both PDF renderers throw. This reconstructs the view
+ * from the report_data fields that DO exist (spotlight keeps its evidence, so spotlight
+ * math survives; per-category dossier math has no per-row evidence to work from, so it
+ * degrades to omitted). Every renderer normalizes through this, so a legacy report
+ * downloads a coherent PDF instead of failing. Fresh reports keep their precomputed view.
+ */
+export function ensurePdfView(data: ReportData): PdfView {
+  if (data.pdf) return data.pdf;
+  const totalCents = data.total_recoverable_cents ?? 0;
+  const provableCents = data.provable_cents ?? totalCents;
+  return buildPdfView(
+    data.brand_name,
+    data.categories ?? [],
+    data.spotlight ?? null,
+    // No per-row evidence in a stored report_data → no per-category math (renderers skip it).
+    new Map<string, Finding>(),
+    data.narrative,
+    {
+      total_recoverable: formatDollars(totalCents),
+      provable_cents: provableCents,
+      estimated_cents: data.estimated_cents ?? 0,
+      confidence: data.confidence ?? { high: 0, medium: 0, low: 0 },
+      provable_forward_monthly_cents: data.provable_forward_monthly_cents ?? null,
+      recurring_monthly_cents: data.recurring_monthly_cents ?? null,
+      provable_urgent_cents:
+        data.provable_urgent_cents ?? data.urgent_recoverable_cents ?? 0,
+    },
+  );
 }
 
 export function buildReportData(
@@ -408,6 +661,24 @@ export function buildReportData(
     .sort((a, b) => b.amount_cents - a.amount_cents)
     .slice(0, 25);
 
+  // Largest case per category — the dossier math + how-to-file work from this exact row,
+  // matching the web CategoryDeepDive (which reads findings[0] of an amount-desc fetch).
+  const largestByCategory = new Map<string, Finding>();
+  for (const f of findings) {
+    const cur = largestByCategory.get(f.category);
+    if (!cur || f.amount_cents > cur.amount_cents) largestByCategory.set(f.category, f);
+  }
+
+  const pdf = buildPdfView(brand_name, categories, spotlight, largestByCategory, narrative, {
+    total_recoverable: formatDollars(totalCents),
+    provable_cents: provableCents,
+    estimated_cents: estimatedCents,
+    confidence,
+    provable_forward_monthly_cents: provableForwardMonthlyCents,
+    recurring_monthly_cents: recurringMonthlyCents,
+    provable_urgent_cents: provableUrgentCents,
+  });
+
   const reportData: ReportData = {
     brand_name,
     generated_at: now.toISOString(),
@@ -453,6 +724,7 @@ export function buildReportData(
       }),
     })),
     narrative,
+    pdf,
   };
 
   // Guard against a future change that lets any displayed number drift out of sync.

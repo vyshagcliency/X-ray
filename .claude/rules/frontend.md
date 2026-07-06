@@ -16,6 +16,14 @@ The X-Ray product surface feels like a premium financial tool, not a SaaS dashbo
 - **Max content width:** 1100px. Never edge-to-edge layouts.
 - **Cards:** glass-subtle — `bg-card/50` with `backdrop-blur` and 1px border, not heavy shadows.
 
+### Exception — the report surface is a light printable document (LOCKED, P4.2)
+
+The dark near-black direction above governs the **product** surfaces (landing, start, upload, processing, admin). The **report deliverable** — the web report at `src/app/(public)/r/[uuid]/` **and** the PDF (`templates/report.typ` + `src/lib/pdf/react-pdf-render.tsx`) — is a deliberate, locked exception: a **light printable document** (Vyshag, 2026-07-05; report-killer-plan §3 Q4). Rationale: the report is a forensic audit a Controller downloads, prints, and forwards to a CFO — it must read like a document, not a dashboard. Do **not** migrate the report to near-black.
+
+- **Report palette (web + PDF share it, so they read as one document):** slate — ink `#0f172a`, body `#334155`, muted `#64748b`, faint `#94a3b8`, hairline `#e2e8f0`, panel `#f8fafc`. Web uses the Tailwind `slate-*` scale; the PDF (`react-pdf-render.tsx` constants + `report.typ` `#let`s) uses the same hexes verbatim.
+- **Category accents:** the CVD-validated hues in `src/components/report/category-meta.ts` (`CategoryMeta.color`) are the single source — web charts/cards and both PDF renderers all read from it, so a category is the same color everywhere.
+- **Web ↔ PDF parity:** both render the **same tiered story** from the single precomputed `report_data.pdf` view (`data-builder.ts`) — provable-forward hero → spotlight → trust strip → dossiers (confidence×punch) → fenced estimated tier → dispute-ready cases → sell-the-system close. Every figure is a pre-formatted string from `data-builder`, so no number can drift between surfaces.
+
 ## Component patterns
 
 - Functional components, TypeScript strict, named exports (except `page.tsx` which uses default).

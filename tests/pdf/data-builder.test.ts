@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   buildReportData,
   assertReportDataConsistent,
+  ensurePdfView,
+  type ReportData,
 } from "@/lib/pdf/data-builder";
+import { formatDollars, formatDollarsExact } from "@/lib/format";
 import { generateNarrative } from "@/lib/llm/narrate";
 
 /**
@@ -271,5 +274,139 @@ describe("assertReportDataConsistent", () => {
       confidence: { ...good.confidence, high: good.confidence.high + 1 },
     };
     expect(() => assertReportDataConsistent(broken)).toThrow();
+  });
+});
+
+/**
+ * P4.1 — Web/PDF parity: the PDF renders the SAME tiered story off a precomputed `pdf`
+ * view, so both PDF renderers reconcile with the web and each other. Every string here
+ * traces back to the cents-level numbers the web hero shows (single source of truth).
+ */
+describe("PDF parity view (P4.1)", () => {
+  it("leads with the provable-forward hero, not the big total (aligns the cover)", () => {
+    const r = build();
+    // Halcyon-shape: provable_forward_monthly is 500¢/mo (6000 high rolling / 12mo).
+    expect(r.pdf.hero_is_forward).toBe(true);
+    expect(r.pdf.hero_amount).toBe(formatDollars(r.provable_forward_monthly_cents!));
+    // The big total is demoted to the secondary surfaced line, not the hero.
+    expect(r.pdf.hero_amount).not.toBe(r.total_recoverable);
+    expect(r.pdf.subtitle).toBe("Settlement Truth Audit");
+  });
+
+  it("falls back to the provable figure when the settlement window is unknown", () => {
+    const r = buildReportData("T", FINDINGS, narrative, null);
+    expect(r.pdf.hero_is_forward).toBe(false);
+    expect(r.pdf.hero_amount).toBe(formatDollars(r.provable_cents));
+  });
+
+  it("reconciles the surfaced line + provable/estimated split with the cents", () => {
+    const r = build();
+    expect(r.pdf.provable).toBe(formatDollars(r.provable_cents));
+    expect(r.pdf.estimated).toBe(formatDollars(r.estimated_cents));
+    expect(r.pdf.surfaced_line).toContain(r.total_recoverable);
+    expect(r.pdf.surfaced_line).toContain(r.pdf.provable);
+  });
+
+  it("partitions categories into provable vs fenced estimated, preserving order", () => {
+    const r = build();
+    const provableKeys = r.categories.filter((c) => !c.estimated).map((c) => c.category);
+    const estimatedKeys = r.categories.filter((c) => c.estimated).map((c) => c.category);
+    expect(r.pdf.provable_categories.map((c) => c.category)).toEqual(provableKeys);
+    expect(r.pdf.estimated_categories.map((c) => c.category)).toEqual(estimatedKeys);
+    // Every rendered category $ string traces to its cents total (no re-computation).
+    for (const c of r.categories) {
+      const pdfCat = [...r.pdf.provable_categories, ...r.pdf.estimated_categories].find(
+        (p) => p.category === c.category,
+      )!;
+      expect(pdfCat.total).toBe(formatDollars(c.total_cents));
+      expect(pdfCat.count).toBe(c.count);
+    }
+  });
+
+  it("carries the dossier depth per category (how-to-file + confidence + math)", () => {
+    const r = build();
+    const referral = r.pdf.provable_categories.find((c) => c.category === "referral_fee")!;
+    expect(referral.file_path.length).toBeGreaterThan(0);
+    expect(referral.dispute_window.length).toBeGreaterThan(0);
+    expect(referral.confidence_why.length).toBeGreaterThan(0);
+    expect(referral.confidence_line).toContain("high");
+    // The math is worked from the category's largest case and reconciles to its own row.
+    expect(referral.math?.rows.at(-1)?.emphasis).toBe(true);
+  });
+
+  it("spotlights the sharpest finding with shown math that reconciles to its amount", () => {
+    const r = build();
+    expect(r.pdf.spotlight).not.toBeNull();
+    const s = r.pdf.spotlight!;
+    // Spotlight is fba_dimension 3000¢ (largest high wedge) — see the P1.2 tests above.
+    expect(s.claim.length).toBeGreaterThan(0);
+    expect(s.claim).toContain("C"); // the spotlighted SKU
+    const resultRow = s.math_rows.at(-1)!;
+    expect(resultRow.emphasis).toBe(true);
+    expect(resultRow.value).toBe(formatDollarsExact(r.spotlight!.amount_cents));
+  });
+
+  it("is exhaustive: pdf categories partition the full category set", () => {
+    const r = build();
+    expect(
+      r.pdf.provable_categories.length + r.pdf.estimated_categories.length,
+    ).toBe(r.categories.length);
+  });
+});
+
+/**
+ * Guard (deploy-safety): a stored report_data built before Phase 4 has no `pdf` block.
+ * Both PDF renderers must still work — `ensurePdfView` reconstructs the view from the
+ * report_data fields that DO exist, so a legacy report downloads instead of throwing.
+ */
+describe("ensurePdfView — legacy report_data with no pdf block", () => {
+  it("returns the existing pdf view untouched when present", () => {
+    const r = build();
+    expect(ensurePdfView(r)).toBe(r.pdf);
+  });
+
+  it("reconstructs a reconciled pdf view when the pdf block is absent", () => {
+    const r = build();
+    // Simulate a legacy row: report_data with every number but no precomputed pdf view.
+    const legacy = { ...r, pdf: undefined } as unknown as ReportData;
+    const view = ensurePdfView(legacy);
+
+    // Hero + surfaced line reconcile with the same cents the web hero shows.
+    expect(view.hero_is_forward).toBe(true);
+    expect(view.hero_amount).toBe(formatDollars(r.provable_forward_monthly_cents!));
+    expect(view.subtitle).toBe("Settlement Truth Audit");
+    expect(view.surfaced_line).toContain(r.total_recoverable);
+
+    // Categories still partition exactly as the web renders them.
+    expect(
+      view.provable_categories.length + view.estimated_categories.length,
+    ).toBe(r.categories.length);
+
+    // The spotlight keeps its evidence in report_data, so its shown math survives.
+    expect(view.spotlight).not.toBeNull();
+    expect(view.spotlight!.math_rows.at(-1)?.emphasis).toBe(true);
+
+    // Per-category dossier math degrades to omitted (no per-row evidence in report_data).
+    expect(view.provable_categories.every((c) => c.math === null)).toBe(true);
+  });
+
+  it("survives a sparse legacy row missing the newer summary fields", () => {
+    const r = build();
+    const sparse = {
+      ...r,
+      pdf: undefined,
+      spotlight: null,
+      provable_forward_monthly_cents: null,
+      provable_cents: undefined,
+      estimated_cents: undefined,
+      confidence: undefined,
+    } as unknown as ReportData;
+    const view = ensurePdfView(sparse);
+    // Falls back to the provable/total figure for the hero; never throws.
+    expect(view.hero_is_forward).toBe(false);
+    expect(view.spotlight).toBeNull();
+    expect(view.provable_categories.length + view.estimated_categories.length).toBe(
+      r.categories.length,
+    );
   });
 });

@@ -1,7 +1,7 @@
 import { createTypstCompiler } from "@myriaddreamin/typst.ts";
 import fs from "fs";
 import path from "path";
-import type { ReportData } from "./data-builder";
+import { ensurePdfView, type ReportData } from "./data-builder";
 
 /**
  * Render a PDF report using Typst WASM compiler.
@@ -26,8 +26,12 @@ export async function renderTypstPdf(
   // Add the template as the main source file
   compiler.addSource("/main.typ", templateSource);
 
-  // Add the report data as a JSON shadow file
-  const dataJson = JSON.stringify(reportData);
+  // Add the report data as a JSON shadow file. The template reads `data.pdf.*`, so
+  // guarantee that view exists even for a legacy report_data built before it (P4.1).
+  const dataJson = JSON.stringify({
+    ...reportData,
+    pdf: ensurePdfView(reportData),
+  });
   compiler.mapShadow(
     "/report.data.json",
     new TextEncoder().encode(dataJson),

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/db/supabase";
 import { formatDollars } from "@/lib/format";
@@ -118,6 +119,37 @@ function deriveCategorySummaries(
       const rb = REIMBURSEMENT_CATEGORIES.has(b.category) ? 1 : 0;
       return ra !== rb ? ra - rb : b.total_cents - a.total_cents;
     });
+}
+
+/**
+ * OG/share tags read "Settlement Truth Audit" (payout integrity), never "FBA
+ * reimbursement" (P4.3) — so a report shared on LinkedIn/Slack unfurls on-message. The
+ * page is `noindex`: it holds a seller's financials behind an unguessable UUID and must
+ * never be search-indexed (matches the security model — report URLs are never listed).
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ uuid: string }>;
+}): Promise<Metadata> {
+  const { uuid } = await params;
+  const { data } = await supabaseAdmin()
+    .from("audits")
+    .select("brand_name")
+    .eq("id", uuid)
+    .single();
+  const brand = (data as { brand_name?: string } | null)?.brand_name;
+  const title = brand ? `Settlement Truth Audit — ${brand}` : "Settlement Truth Audit";
+  const description = brand
+    ? `A forensic audit of ${brand}'s Amazon payouts — every provable overcharge traced to a row in ${brand}'s own Seller Central data.`
+    : "A forensic audit that proves, row by row, where Amazon's settlement doesn't reconcile.";
+  return {
+    title,
+    description,
+    robots: { index: false, follow: false },
+    openGraph: { type: "article", title, description },
+    twitter: { card: "summary", title, description },
+  };
 }
 
 export default async function ReportPage({ params }: { params: Promise<{ uuid: string }> }) {
