@@ -13,6 +13,8 @@ import type { Rule } from "./index";
  * Contract-free: needs only the seller's own Returns, Inventory Ledger, and
  * Settlement reports.
  */
+// REAL-DATA ASTERISK (P5.3): the `detailed-disposition` + ledger `Event Type`/`Reason` ('G','R')
+// code sets are unverified against a real export — see real-data-asterisks.md §A(b)(c)+§B.
 export const returnCreditUnapplied: Rule = {
   id: "return_credit_unapplied",
   version: "1.0.0",

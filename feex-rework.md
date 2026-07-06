@@ -101,7 +101,7 @@ Phases are ordered by what unblocks shipping an *aligned* self-serve lead magnet
 - [ ] **decisions.md** — add a change-log row dated 2026-06-13: the self-serve-as-LinkedIn-lead-magnet decision, framed as air cover not acquisition engine; CTA shifts to sell-the-system; privacy-as-trust-device. Update the §1 "Free lead-magnet tool" row's rationale to note the role flip (it is fulfillment + corroboration now, full self-serve acquisition at scale).
 - [ ] **prd.md** — PRD is frozen; do **not** edit. Add a one-line deviation pointer in `decisions.md` noting §4.1 (headline), §4.5/§6.1 (CTA), §11 (phase ordering), and §12 (success metric) are superseded by this rework + Phase 1.5.
 - [ ] **architecture.md** — only if a data-shape changes (new ingest report schemas, reference tables). Fold into the relevant section, don't append.
-- [ ] **R0.3 — recalibrate success metric** — note in `plan.md` Phase 1.5 + admin that "median report value" is no longer the primary gate (see Nuance 8); the gate is "surfaces a specific verifiable non-commoditized discrepancy."
+- [x] **R0.3 — recalibrate success metric** — note in `plan.md` Phase 1.5 + admin that "median report value" is no longer the primary gate (see Nuance 8); the gate is "surfaces a specific verifiable non-commoditized discrepancy." **DONE 2026-07-07 (Report Killer P5.2):** admin dashboard carries the recalibration note; `plan.md` funnel-page line + `decisions.md` change-log record the deviation from frozen PRD §12; the full rationale (synthetic $ are generator artifacts) lives in `real-data-asterisks.md` §C.
 
 **Exit gate:** CLAUDE.md and decisions.md read consistently with the wiki; no canonical doc still calls the self-serve tool the acquisition engine or leads with FBA reimbursement.
 

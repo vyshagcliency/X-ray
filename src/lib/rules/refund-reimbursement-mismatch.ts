@@ -6,6 +6,8 @@ import type { Rule } from "./index";
  * Finds customer returns where Amazon refunded the customer
  * but never reimbursed the seller.
  */
+// REAL-DATA ASTERISK (P5.3): the returns `status`/`detailed-disposition` code set + the flat-$15
+// estimate (fenced) are unverified against a real Returns export — see real-data-asterisks.md §A(c)+§B+§C.
 export const refundReimbursementMismatch: Rule = {
   id: "refund_reimbursement_mismatch",
   version: "1.0.0",

@@ -21,6 +21,9 @@ import type { Rule } from "./index";
  *
  * Contract-free: needs only the seller's own Settlement and Fee Preview reports.
  */
+// REAL-DATA ASTERISK (P5.3): does NOT fire on synthetic smoke (the generator's fulfillment fee is
+// price-banded, not tier-correlated); it self-calibrates by size tier, so it is validated ONLY on
+// real, tier-based FBA fulfillment fees — see real-data-asterisks.md §A(b)+§B.
 export const lowPriceFba: Rule = {
   id: "low_price_fba",
   version: "1.0.0",

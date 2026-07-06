@@ -15,6 +15,8 @@ import type { Rule } from "./index";
  *
  * Contract-free: needs only the seller's own Settlement report.
  */
+// REAL-DATA ASTERISK (P5.3): assumes a legit coupon always books a matching promo line on the
+// same order — a FALSE-POSITIVE risk if Amazon pairs fee/discount differently — see real-data-asterisks.md §A(b)+§B.
 export const couponFeeError: Rule = {
   id: "coupon_fee_error",
   version: "1.0.0",

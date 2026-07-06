@@ -27,6 +27,9 @@ import {
  *
  * Contract-free: needs only the seller's own Fee Preview and Settlement reports.
  */
+// REAL-DATA ASTERISK (P5.3): the `product-size-tier` enum labels + Fee Preview dimension column
+// names (longest/median/shortest-side, item-package-weight) are unverified against a real export —
+// see real-data-asterisks.md §A(b)(e)+§B.
 export const sizeTierMisclassification: Rule = {
   id: "size_tier_misclassification",
   // 2.0.0: correct tier now models 2026 dimensional weight + the <12oz/>150lb exemption.

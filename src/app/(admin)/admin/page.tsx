@@ -30,6 +30,19 @@ export default async function AdminPage() {
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-2xl font-bold">X-Ray Admin</h1>
 
+      {/* Success-metric recalibration (P5.2 / feex-rework Nuance 8). The recoverable $ shown
+          below is NOT the north star — "median report value $30–75k" was an old FBA fantasy
+          and synthetic magnitudes are generator artifacts. Judge an audit by the discrepancy
+          it surfaces, not its dollar size. */}
+      <p className="mt-3 rounded-md border border-dashed bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">Success metric (recalibrated 2026-07-07):</span>{" "}
+        recoverable&nbsp;$ is <span className="font-medium">not</span> the gate — real payout-integrity
+        findings run ~1–3% of GMV, 90-day-capped, and synthetic magnitudes are generator artifacts.
+        Judge an audit by whether it surfaces a{" "}
+        <span className="font-medium text-foreground">specific, verifiable, high-confidence,
+        non-commoditized discrepancy that earns the call</span> — not raw dollar size.
+      </p>
+
       {/* Stats */}
       <div className="mt-6 grid gap-4 sm:grid-cols-4">
         <Card>

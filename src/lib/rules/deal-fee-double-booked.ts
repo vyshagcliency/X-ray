@@ -13,6 +13,8 @@ import type { Rule } from "./index";
  *
  * Contract-free: needs only the seller's own Settlement report.
  */
+// REAL-DATA ASTERISK (P5.3): assumes a legit deal bills its fee once per window — a FALSE-POSITIVE
+// risk if real multi-day deals bill the fee per day — see real-data-asterisks.md §A(b)(d)+§B.
 export const dealFeeDoubleBooked: Rule = {
   id: "deal_fee_double_booked",
   version: "1.0.0",

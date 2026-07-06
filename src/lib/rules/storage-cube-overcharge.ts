@@ -18,6 +18,8 @@ import type { Rule } from "./index";
  *
  * Contract-free: needs only the seller's own Monthly Storage Fees and Fee Preview reports.
  */
+// REAL-DATA ASTERISK (P5.3): the Monthly Storage `item-volume` basis + the packaged-vs-bare dims
+// 1.25× tolerance are unverified against a real export (review-tier by design) — see real-data-asterisks.md §A(b)(d)(e)+§B.
 export const storageCubeOvercharge: Rule = {
   id: "storage_cube_overcharge",
   version: "1.0.0",

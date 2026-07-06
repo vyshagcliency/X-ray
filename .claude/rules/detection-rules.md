@@ -73,6 +73,8 @@ Phase 1.5 (payout integrity / "Settlement Truth Audit" — the lead):
 
 Bump the matching `*_VERSION` and the rule `version` when values change. **DuckDB gotcha:** `at` is a reserved keyword — alias tier joins as `amzt`, not `at`.
 
+**Real-data asterisks (P5.3).** Every rule is validated only against synthetic data, which proves it *runs*, not that its format assumptions (Amazon `amount-description` strings, disposition/reason code sets, `product-group` codes, header names, date/currency formats) match a real export. Each rule carries a `// REAL-DATA ASTERISK (P5.3):` comment pointing to **`real-data-asterisks.md`** (repo root) — the "before you trust the numbers on a real seller" checklist, keyed by the safe-failure direction (a false finding is catastrophic; a missed one is safe). When you add or change a rule, add/refresh its asterisk there.
+
 **Note:** Amazon deprecated "FBA Inventory Adjustments" in Jan 2023. The internal key was renamed from `adjustments` to `inventory_ledger` (2026-05-08).
 
 ## Testing — fixture first, always

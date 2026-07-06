@@ -12,6 +12,8 @@ import type { Rule } from "./index";
  * Lower confidence: flagged for human review, not auto-included in the headline
  * (PRD §5.8). Contract-free: seller's own Aged Surcharge + Inventory Ledger reports.
  */
+// REAL-DATA ASTERISK (P5.3): the `surcharge-type` values + ledger `Event Type='Shipments'`
+// string set are unverified against a real Aged-Surcharge export — see real-data-asterisks.md §A(c)+§B.
 export const agedSurchargeOnSold: Rule = {
   id: "aged_surcharge_on_sold",
   version: "1.0.0",

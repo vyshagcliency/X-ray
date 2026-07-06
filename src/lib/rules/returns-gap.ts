@@ -6,6 +6,8 @@ import type { Rule } from "./index";
  * Finds returns marked as damaged/defective where Amazon never issued
  * a reimbursement and the item wasn't returned to sellable inventory.
  */
+// REAL-DATA ASTERISK (P5.3): the damaged-`detailed-disposition` + ledger `Reason` code sets and the
+// flat-$15 estimate (fenced) are unverified against a real export — see real-data-asterisks.md §A(c)+§B+§C.
 export const returnsGap: Rule = {
   id: "returns_gap",
   version: "1.0.0",

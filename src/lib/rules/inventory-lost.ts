@@ -6,6 +6,8 @@ import type { Rule } from "./index";
  * Finds inventory adjustment events where Amazon lost or damaged
  * items but never issued a reimbursement.
  */
+// REAL-DATA ASTERISK (P5.3): the ledger `Reason` code set + the flat-$15 estimate (fenced) are
+// unverified against a real Inventory Ledger export — see real-data-asterisks.md §A(c)+§B+§C.
 export const inventoryLost: Rule = {
   id: "inventory_lost",
   version: "1.0.0",

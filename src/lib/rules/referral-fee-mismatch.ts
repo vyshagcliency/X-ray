@@ -30,6 +30,9 @@ import { PRODUCT_GROUP_MAP_CTE } from "./reference/product-group-map";
  *
  * Contract-free: needs only the seller's own Settlement and Fee Preview reports.
  */
+// REAL-DATA ASTERISK (P5.3): the `product-group` code→referral-category map coverage/correctness
+// (D6) is research-seeded + guarded but unverified until a real Fee Preview export — this is the
+// lead wedge, so confirm no mapped code sits below its true rate — see real-data-asterisks.md §A(a)+§B.
 export const referralFeeMismatch: Rule = {
   id: "referral_fee_mismatch",
   // 2.0.0: false-positive guard (Signals A+B) + confidence tiering by mapping certainty.
