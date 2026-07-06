@@ -64,6 +64,7 @@ Phase 1.5 (payout integrity / "Settlement Truth Audit" — the lead):
 - `settlement` — Payments All Statements V2 flat file. Per `(order-id, sku)`: `amount-description='Principal'` = revenue, `='Commission'` = referral fee charged. Source of truth for the referral % and per-SKU unit volume.
 - `fba_fee_preview` — FBA Fee Preview. Amazon's measured `longest-side`/`median-side`/`shortest-side`/`item-package-weight`, assigned `product-size-tier`, and `estimated-fee-total`.
 - `storage_fees` — FBA Aged Inventory Surcharge (`snapshot-date`, `sku`, `qty-charged`, `surcharge-type`, `surcharge-amount`).
+- `monthly_storage` — Monthly Inventory Storage Fees (Phase 3 / G2): `asin`, `item-volume` (Amazon's billed cu-ft), `average-quantity-on-hand`, `estimated-monthly-storage-fee`, `month-of-charge`. The storage-cube rule recomputes the true cube from fee-preview dims and compares it to this billed `item-volume`.
 
 **Reference tables** (`src/lib/rules/reference/`, versioned SQL `VALUES` CTEs composed into rule SQL):
 - `referral-rates.ts` — category referral %, progressive/tiered model. Authoritative (Amazon public pricing page).
@@ -116,16 +117,25 @@ export interface Rule {
 
 export const RULES: Rule[] = [
   // Payout-integrity wedge (Phase 1.5) — the lead.
-  referralFeeMismatch,         // PRD §5.6 — settlement + fba_fee_preview
-  sizeTierMisclassification,   // PRD §5.5 — fba_fee_preview + settlement
+  referralFeeMismatch,         // PRD §5.6 — settlement + fba_fee_preview (v2.0.0: +false-positive guard, P3.5)
+  sizeTierMisclassification,   // PRD §5.5 — fba_fee_preview + settlement (v2.0.0: +dim-weight modeling, P3.1)
   returnCreditUnapplied,       // PRD §5.4 — returns + inventory_ledger + settlement
   agedSurchargeOnSold,         // PRD §5.8 — storage_fees + inventory_ledger
+  // Fee-line wedge additions (Phase 3) — ride on the G1 settlement fee lines.
+  lowPriceFba,                 // P3.2 — settlement (FBAPerUnitFulfillmentFee) + fba_fee_preview
+  couponFeeError,              // P3.6-D — settlement (CouponRedemptionFee vs ItemPromotionDiscount)
+  dealFeeDoubleBooked,         // P3.6-E — settlement (LightningDealFee duplicates)
+  storageCubeOvercharge,       // P3.3 — monthly_storage (item-volume) + fba_fee_preview (dims)
   // Reimbursement add-ons (Phase 1) — demoted out of the lead.
   returnsGap,                  // PRD §5.1
   inventoryLost,               // PRD §5.2
   refundReimbursementMismatch, // PRD §5.3
 ]
 ```
+
+**Settlement fee lines (G1, Phase 3):** the synthetic `settlement.csv` and real Settlement V2 both carry billed fee lines under `amount-description` beyond `Principal`/`Commission` — `FBAPerUnitFulfillmentFee`, `CouponRedemptionFee`, `ItemPromotionDiscount`, `LightningDealFee`. Three of the Phase-3 rules read these; no new report type or header signature is needed (they're additional rows in the existing settlement columns). New `finding_category` enum values `low_price_fee`/`coupon_fee`/`deal_fee` land in migration `005`.
+
+**Monthly Storage report (G2, Phase 3):** the storage-cube rule needs a fourth report type, `monthly_storage`, added to `headers.ts` + the upload tiles. Migration `006` adds the `monthly_storage` report_type and the `storage_cube` finding_category. Migrate 005 + 006 before running on the live DB or inserts silently drop.
 
 ## CSV → DuckDB patterns
 

@@ -1,0 +1,11 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased,posted-date
+7200,Order,720-0000001,ItemPrice,Principal,200.00,LP-STD1,10,2025-06-01
+7200,Order,720-0000001,ItemFees,FBAPerUnitFulfillmentFee,-30.60,LP-STD1,10,2025-06-01
+7200,Order,720-0000002,ItemPrice,Principal,250.00,LP-STD2,10,2025-06-01
+7200,Order,720-0000002,ItemFees,FBAPerUnitFulfillmentFee,-30.60,LP-STD2,10,2025-06-01
+7200,Order,720-0000003,ItemPrice,Principal,300.00,LP-STD3,10,2025-06-01
+7200,Order,720-0000003,ItemFees,FBAPerUnitFulfillmentFee,-30.60,LP-STD3,10,2025-06-01
+7200,Order,720-0000004,ItemPrice,Principal,80.00,LP-CHEAP1,10,2025-06-01
+7200,Order,720-0000004,ItemFees,FBAPerUnitFulfillmentFee,-30.60,LP-CHEAP1,10,2025-06-01
+7200,Order,720-0000005,ItemPrice,Principal,80.00,LP-CHEAP2,10,2025-06-01
+7200,Order,720-0000005,ItemFees,FBAPerUnitFulfillmentFee,-22.00,LP-CHEAP2,10,2025-06-01

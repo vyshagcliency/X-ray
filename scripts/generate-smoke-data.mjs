@@ -523,9 +523,42 @@ function correctCommissionCents(pg, revenueCents) {
   return Math.max(Math.round(fee), 30);
 }
 
+// G1 fee-line economics (Phase 3). Amazon bills a per-unit fulfillment fee; items priced
+// under $10 get an automatic ~$0.86/unit Low-Price FBA discount (P3.2). Coupons carry a
+// $0.60 redemption fee (P3.6-D); Lightning/Best deals carry a per-run deal fee (P3.6-E).
+const LOW_PRICE_THRESHOLD_CENTS = 1000;
+const LOW_PRICE_DISCOUNT_CENTS = 86;
+const COUPON_FEE_CENTS = 60;
+const DEAL_FEE_CENTS = 15000;
+
+// Standard (non-discounted) per-unit fulfillment fee by price band — a representative
+// synthetic schedule so a tier's ≥$10 SKUs share a stable peer baseline the Low-Price
+// rule self-calibrates against.
+function standardFulfillmentFeeCents(priceCents) {
+  if (priceCents < 2000) return 306;
+  if (priceCents < 5000) return 450;
+  return 600;
+}
+
+// Demo: one SKU per brand has a referral rate that JUMPS partway through its history —
+// billed correctly before the cutoff, overcharged after. This trips the referral rule's
+// Signal A (within-SKU temporal rate change) → a HIGH-confidence "you found what?" finding,
+// where a steady-state overcharge only rates medium (it rests on the category-map guess).
+// Chosen by index so no RNG draw is added (the rest of the dataset stays byte-stable).
+const RATE_JUMP_SKU_INDEX = 2; // e.g. Halcyon HA-HDP-003 (Sport Headphones)
+const RATE_JUMP_CUTOFF = "2025-07-15"; // ~midpoint of the DATE_START..DATE_END window
+
 // Settlement V2 flat file. Charges the correct referral fee on most orders; inflates
 // it on ~15% of SKUs (referral_fee_mismatch). Also supplies per-SKU unit volume that
 // the size-tier and return-credit rules consume.
+//
+// G1 (Phase 3): also emits the billed fee lines real Settlement V2 carries under
+// `amount-description` — FBAPerUnitFulfillmentFee, CouponRedemptionFee /
+// ItemPromotionDiscount, and LightningDealFee — with planted leak knobs (missed low-price
+// discount, coupon fee without a matching promo, double-booked deal fee). All fee-line
+// randomness is drawn from an ISOLATED stream (`feeRng`) and every added row is
+// non-Principal / non-Commission, so the main RNG sequence and every existing finding
+// stay byte-stable — regenerating changes only settlement.csv (adds rows).
 function generateSettlement(brand, catalog, rng) {
   const headers = [
     "settlement-id", "transaction-type", "order-id", "amount-type",
@@ -538,36 +571,84 @@ function generateSettlement(brand, catalog, rng) {
   // amount/volume RNG (keeps existing findings stable). Orders spread across the
   // 18-month window, giving the report a real settlement date range to rate-per-month.
   const dateRng = mulberry32(brand.seed + 7);
+  // Fully isolated fee-line stream (never touches the main rng) so G1's lines don't shift
+  // any existing Principal/Commission byte.
+  const feeRng = mulberry32(brand.seed + 11);
 
-  for (const item of catalog) {
+  catalog.forEach((item, idx) => {
+    const priceCents = Math.round(item.price * 100);
+    const stdFeeCents = standardFulfillmentFeeCents(priceCents);
+    const isLowPrice = priceCents < LOW_PRICE_THRESHOLD_CENTS;
+    // Leak knob: ~half of sub-$10 SKUs miss the auto-discount. Force the first eligible SKU
+    // so the rule fires deterministically on any brand that has sub-$10 items.
+    const missedDiscount = isLowPrice && (idx === 0 || feeRng() < 0.5);
+    const billedFeeCents =
+      isLowPrice && !missedDiscount ? stdFeeCents - LOW_PRICE_DISCOUNT_CENTS : stdFeeCents;
+
     // Realistic 18-month per-SKU order volume so fee overcharges accumulate to
     // believable dollars (a real mid-market brand has far more than a handful).
     const orderCount = randInt(rng, 40, 160);
     const overcharged = rng() < 0.15;
+    const isRateJumpSku = idx === RATE_JUMP_SKU_INDEX;
     for (let o = 0; o < orderCount; o++) {
       const oid = orderId(rng);
       const qty = rng() < 0.85 ? 1 : randInt(rng, 2, 4);
       const revenueCents = Math.round(item.price * qty * 100);
+      // postedDate is drawn up front (isolated dateRng) so the jump SKU can decide its
+      // overcharge by date. Moving the draw here doesn't change the dateRng sequence.
+      const postedDate = fmtDate(randDate(dateRng, DATE_START, DATE_END));
+      // Jump SKU: correct before the cutoff, +7% after → an 8%→15% temporal rate change
+      // (Signal A, high). Every other SKU keeps its steady per-SKU overcharge flag.
+      const applyOvercharge = isRateJumpSku
+        ? postedDate >= RATE_JUMP_CUTOFF
+        : overcharged;
       let commissionCents = correctCommissionCents(pg, revenueCents);
-      if (overcharged) commissionCents += Math.round(revenueCents * 0.07);
+      if (applyOvercharge) commissionCents += Math.round(revenueCents * 0.07);
       const revenue = (revenueCents / 100).toFixed(2);
       const commission = (-commissionCents / 100).toFixed(2);
-      const postedDate = fmtDate(randDate(dateRng, DATE_START, DATE_END));
       rows.push(csvRow([settlementId, "Order", oid, "ItemPrice", "Principal", revenue, item.sku, qty, postedDate]));
       rows.push(csvRow([settlementId, "Order", oid, "ItemFees", "Commission", commission, item.sku, qty, postedDate]));
+      // G1: billed per-unit fulfillment fee (Low-Price FBA detection, P3.2).
+      const fulfillmentCents = billedFeeCents * qty;
+      rows.push(csvRow([settlementId, "Order", oid, "ItemFees", "FBAPerUnitFulfillmentFee", (-fulfillmentCents / 100).toFixed(2), item.sku, qty, postedDate]));
+      // G1: coupon redemption fee (P3.6-D). ~10% of orders redeem a coupon; most carry a
+      // matching ItemPromotionDiscount, a knobbed subset do NOT (the billing error).
+      if (feeRng() < 0.1) {
+        rows.push(csvRow([settlementId, "Order", oid, "ItemFees", "CouponRedemptionFee", (-COUPON_FEE_CENTS / 100).toFixed(2), item.sku, qty, postedDate]));
+        const couponError = (idx === 0 && o === 0) || feeRng() < 0.25;
+        if (!couponError) {
+          const discountCents = Math.round(revenueCents * 0.1);
+          rows.push(csvRow([settlementId, "Order", oid, "Promotion", "ItemPromotionDiscount", (-discountCents / 100).toFixed(2), item.sku, qty, postedDate]));
+        }
+      }
     }
-  }
+
+    // G1: deal fees (P3.6-E). ~8% of SKUs run a deal; a knobbed subset are double-booked
+    // (two deal fees for the same SKU in one window). Force the first SKU so the rule fires.
+    const runsDeal = idx === 0 || feeRng() < 0.08;
+    if (runsDeal) {
+      const dealDate = fmtDate(randDate(feeRng, DATE_START, DATE_END));
+      const dealOid = orderId(feeRng);
+      rows.push(csvRow([settlementId, "Order", dealOid, "ItemFees", "LightningDealFee", (-DEAL_FEE_CENTS / 100).toFixed(2), item.sku, 1, dealDate]));
+      if (idx === 0 || feeRng() < 0.4) {
+        rows.push(csvRow([settlementId, "Order", dealOid, "ItemFees", "LightningDealFee", (-DEAL_FEE_CENTS / 100).toFixed(2), item.sku, 1, dealDate]));
+      }
+    }
+  });
   return rows.join("\n");
 }
 
 // FBA Fee Preview. Dimensions genuinely fit Small or Large Standard; ~15% of SKUs are
-// labelled one tier up (size_tier_misclassification).
+// labelled one tier up (size_tier_misclassification). Returns { csv, dims } — the per-SKU
+// measured dimensions are captured (NOT re-drawn) so the Monthly Storage generator can bill
+// a consistent (or knob-inflated) cube against the same dims, without perturbing this RNG.
 function generateFeePreview(brand, catalog, rng) {
   const headers = [
     "sku", "asin", "product-group", "longest-side", "median-side", "shortest-side",
     "item-package-weight", "unit-of-dimension", "unit-of-weight", "product-size-tier", "estimated-fee-total",
   ];
   const rows = [csvRow(headers)];
+  const dims = [];
   // Emit the real product-group CODE (e.g. "ce"), not the category label — the rule must
   // translate it via product-group-map.ts to reach the correct referral rate (P0.6).
   const code = PRODUCT_GROUP_CODE_BY_SLUG[brand.slug];
@@ -588,8 +669,45 @@ function generateFeePreview(brand, catalog, rng) {
       item.sku, item.asin, code, longest, median, shortest, weight,
       "inches", "ounces", tier, fee.toFixed(2),
     ]));
+    dims.push({ sku: item.sku, asin: item.asin, fnsku: item.fnsku, title: item.title, longest, median, shortest, tier });
   }
-  return rows.join("\n");
+  return { csv: rows.join("\n"), dims };
+}
+
+// G2 (Phase 3): Monthly Inventory Storage Fees report. Bills each SKU on a cubic-foot
+// volume × ~$0.78/cu ft. Most SKUs are billed on their true cube (measured L×W×H ÷ 1,728
+// from the fee-preview dims); a knobbed subset are billed on an INFLATED cube
+// (storage_cube_overcharge). Isolated RNG (seed+17) so it never perturbs any other file.
+const STORAGE_RATE_PER_CUFT = 0.78; // representative 2026 standard-size rate; report carries the real fee
+function generateMonthlyStorage(brand, dims) {
+  const headers = [
+    "asin", "fnsku", "product-name", "item-volume", "volume-units",
+    "average-quantity-on-hand", "product-size-tier", "base-rate",
+    "estimated-monthly-storage-fee", "month-of-charge", "currency",
+  ];
+  const rows = [csvRow(headers)];
+  const rng = mulberry32(brand.seed + 17);
+  const MONTH = "2026-04-01";
+  const MIN_FLAGGED = 5; // force the first few so the rule fires on every brand
+  let flagged = 0;
+
+  dims.forEach((d, idx) => {
+    const measuredCuft = (d.longest * d.median * d.shortest) / 1728;
+    const inflate = idx < MIN_FLAGGED || rng() < 0.12;
+    if (inflate) flagged++;
+    // Inflated: billed on 1.4–1.8× the true cube. Legit: within ±8% (packaging vs bare
+    // dims) — below the rule's 25% tolerance, so it never false-flags.
+    const billedCuft = +(
+      measuredCuft * (inflate ? randFloat(rng, 1.4, 1.8) : randFloat(rng, 0.99, 1.08))
+    ).toFixed(4);
+    const qty = randInt(rng, 20, 300);
+    const fee = (billedCuft * qty * STORAGE_RATE_PER_CUFT).toFixed(2);
+    rows.push(csvRow([
+      d.asin, d.fnsku, d.title, billedCuft, "cubic feet",
+      qty, d.tier, STORAGE_RATE_PER_CUFT.toFixed(2), fee, MONTH, "USD",
+    ]));
+  });
+  return { csv: rows.join("\n"), flagged };
 }
 
 // Aged Inventory Surcharge report. ~12% of SKUs are surcharged; ~60% of those also get a
@@ -671,9 +789,15 @@ for (const brand of brands) {
   writeFileSync(join(dir, "settlement.csv"), settlement);
   console.log(`  settlement.csv: ${settlement.split("\n").length - 1} rows`);
 
-  const feePreview = generateFeePreview(brand, catalog, rng);
+  const { csv: feePreview, dims: skuDims } = generateFeePreview(brand, catalog, rng);
   writeFileSync(join(dir, "fba-fee-preview.csv"), feePreview);
   console.log(`  fba-fee-preview.csv: ${feePreview.split("\n").length - 1} rows`);
+
+  // G2: Monthly Storage Fees report (billed cube per SKU, some inflated). Isolated RNG,
+  // so it doesn't perturb any other file — regenerating only adds monthly-storage.csv.
+  const { csv: monthlyStorage, flagged: storageFlagged } = generateMonthlyStorage(brand, skuDims);
+  writeFileSync(join(dir, "monthly-storage.csv"), monthlyStorage);
+  console.log(`  monthly-storage.csv: ${monthlyStorage.split("\n").length - 1} rows (${storageFlagged} inflated-cube)`);
 
   const { csv: storage, extraShipments } = generateStorageFees(brand, catalog, rng);
   writeFileSync(join(dir, "storage-fees.csv"), storage);

@@ -25,6 +25,7 @@ const REPORT_FILES: Record<string, string> = {
   settlement: "settlement.csv",
   fba_fee_preview: "fba-fee-preview.csv",
   storage_fees: "storage-fees.csv",
+  monthly_storage: "monthly-storage.csv",
 };
 
 interface BuiltFinding {
@@ -124,6 +125,14 @@ describe("Halcyon report (P0.5 acceptance)", () => {
     expect(report.spotlight!.confidence).toBe("high");
     // The confidence×punch ordering leads with a high-confidence wedge, not the biggest $.
     expect(report.categories[0].high_cents).toBeGreaterThan(0);
+
+    // Demo property (P3.5 / Signal A): a planted rate-jump SKU makes the referral wedge
+    // demonstrate HIGH confidence — not stuck all-medium on steady-state overcharges. The
+    // guard still keeps the medium findings medium (asymmetric safety), so both tiers show.
+    const referral = report.categories.find((c) => c.category === "referral_fee");
+    expect(referral).toBeDefined();
+    expect(referral!.high).toBeGreaterThan(0);
+    expect(referral!.medium).toBeGreaterThan(0);
 
     const fmt = (c: number) =>
       new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(c / 100);

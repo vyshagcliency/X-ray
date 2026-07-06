@@ -1,0 +1,10 @@
+sku,asin,product-group,longest-side,median-side,shortest-side,item-package-weight,unit-of-dimension,unit-of-weight,product-size-tier,estimated-fee-total
+ACC-1,B000AC0001,ce,8,5,1,6,inches,ounces,Small Standard,3.50
+ACC-2,B000AC0002,ce,8,5,1,6,inches,ounces,Small Standard,3.50
+ACC-3,B000AC0003,ce,8,5,1,6,inches,ounces,Small Standard,3.50
+ACC-4,B000AC0004,ce,8,5,1,6,inches,ounces,Small Standard,3.50
+DEV-1,B000DV0001,ce,10,6,4,20,inches,ounces,Large Standard,5.50
+DEV-2,B000DV0002,ce,10,6,4,20,inches,ounces,Large Standard,5.50
+DEV-3,B000DV0003,ce,10,6,4,20,inches,ounces,Large Standard,5.50
+DEV-4,B000DV0004,ce,10,6,4,20,inches,ounces,Large Standard,5.50
+DEV-BAD,B000DVBAD1,ce,10,6,4,20,inches,ounces,Large Standard,5.50

@@ -35,7 +35,14 @@ interface NarrativeInput {
  * Single source of truth for the "recurring" split; mirrored by category-meta's
  * `recurring` flag on the report page.
  */
-export const ROLLING_CATEGORIES = new Set(["referral_fee", "fba_dimension"]);
+export const ROLLING_CATEGORIES = new Set([
+  "referral_fee",
+  "fba_dimension",
+  // Low-Price FBA discount misses recur on every sub-$10 sale until corrected — a rolling
+  // overcharge with no dispute deadline (like referral/size-tier). Coupon/deal fees are
+  // discrete one-time charges with real windows, so they are NOT rolling.
+  "low_price_fee",
+]);
 
 export interface NarrativeOutput {
   executive_summary: string;
@@ -91,6 +98,10 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
       fba_dimension: `We found ${cat.count} SKUs Amazon placed in a larger size tier than their measured dimensions warrant, overcharging the fulfillment fee on every unit shipped, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
       return_credit: `We found ${cat.count} SKUs where customer returns were credited back on paper but the inventory or cash credit never landed in your account, totaling ${catTotal}. Top affected SKUs: ${skuList || "multiple products"}.${urgentNote}`,
       aged_surcharge: `We found ${cat.count} SKUs charged an aged-inventory surcharge while they were actively selling, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
+      low_price_fee: `We found ${cat.count} sub-$10 SKUs billed the full fulfillment fee where Amazon's automatic Low-Price FBA discount should have applied, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}. The missed discount recurs on every unit until it's corrected.${urgentNote}`,
+      coupon_fee: `We found ${cat.count} orders charged a coupon redemption fee with no matching promotion on the same order, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"} — you were billed for a redemption that didn't happen.${urgentNote}`,
+      deal_fee: `We found ${cat.count} SKUs charged two or more deal fees within a single deal window, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}. A deal runs one fee; the duplicates are recoverable.${urgentNote}`,
+      storage_cube: `We found ${cat.count} SKUs billed monthly storage on a larger cubic-foot volume than their measured dimensions warrant, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}. A re-measurement confirms the true cube before filing.${urgentNote}`,
       // Reimbursement findings (demoted add-ons).
       returns: `We identified ${cat.count} customer returns where Amazon received damaged or defective items but never issued a reimbursement, totaling ${catTotal}. The most affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
       lost_inventory: `We found ${cat.count} instances of inventory reported as lost or damaged in Amazon's fulfillment centers without a corresponding reimbursement, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,

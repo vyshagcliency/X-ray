@@ -193,7 +193,7 @@ All tables use `uuid` PKs, `created_at timestamptz default now()`, `updated_at` 
 |---|---|---|
 | `id` | `uuid` pk | |
 | `audit_id` | `uuid` fk | |
-| `report_type` | `report_type enum` | `returns`, `inventory_ledger`, `reimbursements`, `listings`, `settlement`, `fee_preview`, `removal_orders`, `manage_inventory`. |
+| `report_type` | `report_type enum` | Lead pair: `settlement`, `fba_fee_preview`. Optional: `returns`, `inventory_ledger`, `reimbursements`, `storage_fees`, `monthly_storage` (Phase 3/G2). Legacy/unused: `adjustments`, `listings`, `fee_preview`, `removal_orders`, `manage_inventory`. (enum grown by migrations 004 + 006). |
 | `storage_key` | `text` | Path in Supabase Storage. |
 | `size_bytes` | `bigint` | |
 | `row_count` | `int` | Populated post-parse. |

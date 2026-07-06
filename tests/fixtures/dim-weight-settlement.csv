@@ -1,0 +1,4 @@
+settlement-id,transaction-type,order-id,amount-type,amount-description,amount,sku,quantity-purchased
+7001,Order,333-0000001,ItemPrice,Principal,60.00,DW-LEGIT,10
+7001,Order,333-0000002,ItemPrice,Principal,60.00,DW-EXEMPT,20
+7001,Order,333-0000003,ItemPrice,Principal,60.00,DW-LB-OK,5

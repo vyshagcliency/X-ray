@@ -94,6 +94,66 @@ Please review the sales velocity for this SKU and refund the surcharge if it was
 
 [SELLER_SIGNATURE]`,
     },
+    // Fee-line wedge additions (Phase 3).
+    low_price_fba: {
+      subject: `Fee Dispute: Low-Price FBA Discount Not Applied (SKU: ${sku})`,
+      body: `I am writing to dispute an FBA fulfillment fee charged without the automatic Low-Price FBA discount my sub-$10 product qualifies for.
+
+SKU: ${sku}
+Item price: ${String(input.evidence.avg_price_cents != null ? formatDollarsExact(Number(input.evidence.avg_price_cents)) : "under $10")}
+Fee billed per unit: ${String(input.evidence.billed_fee_cents != null ? formatDollarsExact(Number(input.evidence.billed_fee_cents)) : "See attached")}
+Recoverable: ${amount}
+
+Items priced under $10 receive an automatic Low-Price FBA fulfillment-fee discount. This SKU was billed the full, non-discounted fee — matching what my ≥$10 SKUs in the same size tier pay — so the discount was not applied.
+
+Please apply the Low-Price FBA fulfillment-fee discount to this SKU and refund the difference on the units already shipped.
+
+[SELLER_SIGNATURE]`,
+    },
+    coupon_fee_error: {
+      subject: `Fee Dispute: Coupon Redemption Fee With No Promotion (Order ${orderId})`,
+      body: `I am writing to dispute a coupon redemption fee charged on an order that carries no matching promotion discount.
+
+Order ID: ${orderId}
+SKU: ${sku}
+Redemption fee charged: ${amount}
+
+Amazon charges a coupon redemption fee only when a coupon is actually redeemed. This order shows the redemption fee but no corresponding promotion discount on the same order in my settlement data — I was billed for a redemption that did not occur.
+
+Please review this order and refund the coupon redemption fee.
+
+[SELLER_SIGNATURE]`,
+    },
+    deal_fee_double_booked: {
+      subject: `Fee Dispute: Duplicate Deal Fee (SKU: ${sku})`,
+      body: `I am writing to dispute duplicate deal fees charged on a single deal run.
+
+SKU: ${sku}
+Deal date: ${String(input.evidence.deal_date ?? "See attached")}
+Deal fees charged in this window: ${String(input.evidence.fee_count ?? "2 or more")}
+Excess (recoverable): ${amount}
+
+A deal is charged one fee per run. My settlement data shows two or more deal fees for this SKU within a single deal window, which is a duplicate charge.
+
+Please refund the excess deal fee(s) beyond the one legitimate charge.
+
+[SELLER_SIGNATURE]`,
+    },
+    storage_cube_overcharge: {
+      subject: `Fee Dispute: Storage Fee on Inflated Cube (SKU: ${sku})`,
+      body: `I am writing to dispute a monthly storage fee billed on a larger cubic-foot volume than my product's measured dimensions warrant.
+
+SKU: ${sku}
+Measured cube (cu ft): ${String(input.evidence.measured_cuft ?? "See attached")}
+Billed cube (cu ft): ${String(input.evidence.billed_cuft ?? "See attached")}
+Overcharge: ${amount}
+
+The dimensions in my FBA Fee Preview report compute a smaller cubic-foot volume than the volume Amazon billed for storage. The storage fee was therefore charged on an inflated cube.
+
+Please re-measure this product (a cubiscan request may be required) and refund the storage fee charged on the excess volume.
+
+[SELLER_SIGNATURE]`,
+    },
     // Reimbursement disputes (demoted add-ons).
     returns_gap: {
       subject: `Reimbursement Request: Damaged Return Not Credited (Order ${orderId})`,
