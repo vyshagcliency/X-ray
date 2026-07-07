@@ -23,6 +23,7 @@ The dark near-black direction above governs the **product** surfaces (landing, s
 - **Report palette (web + PDF share it, so they read as one document):** slate — ink `#0f172a`, body `#334155`, muted `#64748b`, faint `#94a3b8`, hairline `#e2e8f0`, panel `#f8fafc`. Web uses the Tailwind `slate-*` scale; the PDF (`react-pdf-render.tsx` constants + `report.typ` `#let`s) uses the same hexes verbatim.
 - **Category accents:** the CVD-validated hues in `src/components/report/category-meta.ts` (`CategoryMeta.color`) are the single source — web charts/cards and both PDF renderers all read from it, so a category is the same color everywhere.
 - **Web ↔ PDF parity:** both render the **same tiered story** from the single precomputed `report_data.pdf` view (`data-builder.ts`) — provable-forward hero → spotlight → trust strip → dossiers (confidence×punch) → fenced estimated tier → dispute-ready cases → sell-the-system close. Every figure is a pre-formatted string from `data-builder`, so no number can drift between surfaces.
+- **Web reading shell (2026-07-07, Vyshag — supersedes "one scrolling page"):** the **web** report is wrapped in a premium 3-zone reading shell on `xl+` — a left scroll-spy ledger rail (`ReportNav.tsx`: numbered contents, collapsible category submenus with running $) and a right sticky action dock (`ReportDock.tsx`: recoverable-now + CTA/PDF/CSV), on a flat slate desk (no gradient blobs; solid-white hairline panels). This chrome is **web-only and `print:hidden`**; the **PDF/print deliverable stays a single linear document**, and `data-builder.ts` + both PDF renderers are untouched, so parity holds. See decisions.md 2026-07-07.
 
 ## Component patterns
 
@@ -63,7 +64,7 @@ The dark near-black direction above governs the **product** surfaces (landing, s
 
 ## What NOT to do
 
-- No SaaS-style sidebars, tabs, or navigation on user-facing pages. One scrolling report page.
+- No SaaS-style sidebars, tabs, or navigation on the **funnel** pages (landing, start, upload, processing). **Exception (2026-07-07, Vyshag):** the **web report** is a premium 3-zone reading shell — a left scroll-spy ledger rail + a right sticky action dock around the document (`ReportNav`/`ReportDock`), web-only and `print:hidden`. The PDF/print deliverable stays a single linear document. See the Exception section above.
 - No modals or popups on the landing or report page. No newsletter captures, no exit intents.
 - No "Loading..." text. Use skeleton shimmers matching the final layout.
 - No animated counters on the headline $. The number appears, period. Trust survives on stillness.

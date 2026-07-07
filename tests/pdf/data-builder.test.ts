@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   buildReportData,
+  computeNarrativeFigures,
   assertReportDataConsistent,
   ensurePdfView,
   type ReportData,
@@ -407,6 +408,68 @@ describe("ensurePdfView — legacy report_data with no pdf block", () => {
     expect(view.spotlight).toBeNull();
     expect(view.provable_categories.length + view.estimated_categories.length).toBe(
       r.categories.length,
+    );
+  });
+});
+
+describe("exec summary reconciles with the hero (decisions.md 2026-07-07)", () => {
+  // The two axes the divergence lived on: high + medium rolling (so the high-confidence
+  // forward run-rate < the all-confidence rolling sum), and a provable urgent + an
+  // estimated urgent (so the provable urgent < the all-findings urgent).
+  const MIXED: BuilderFinding[] = [
+    finding("referral_fee", 190000, "high", "A"),
+    finding("referral_fee", 50000, "medium", "B"),
+    { ...finding("return_credit", 100000, "high", "C"), window_days_remaining: 5 },
+    { ...finding("returns", 150000, "low", "D"), window_days_remaining: 5 }, // estimated tier
+  ];
+  const MONTHS = 10;
+
+  it("computeNarrativeFigures isolates high-confidence forward + provable-only urgent", () => {
+    const figs = computeNarrativeFigures(MIXED, MONTHS);
+    expect(figs.provable_forward_cents).toBe(190000); // high rolling only (not the 50000 medium)
+    expect(figs.provable_forward_monthly_cents).toBe(19000); // 190000 / 10
+    expect(figs.provable_urgent_cents).toBe(100000); // provable urgent (not the 150000 estimated)
+  });
+
+  it("quotes the hero figures, not the pre-reconciliation aggregates", () => {
+    const figs = computeNarrativeFigures(MIXED, MONTHS);
+    const n = generateNarrative({
+      brand_name: "Test",
+      total_recoverable_cents: MIXED.reduce((s, f) => s + f.amount_cents, 0),
+      urgent_recoverable_cents: 250000, // all urgent (provable 100000 + estimated 150000)
+      findings_count: MIXED.length,
+      settlement_months: MONTHS,
+      provable_urgent_cents: figs.provable_urgent_cents,
+      provable_forward_cents: figs.provable_forward_cents,
+      provable_forward_monthly_cents: figs.provable_forward_monthly_cents,
+      categories: [],
+    });
+    // The hero basis appears in the prose...
+    expect(n.executive_summary).toContain(formatDollars(19000)); // $190/mo recurring run-rate
+    expect(n.executive_summary).toContain(formatDollars(190000)); // $1,900 built up over the window
+    expect(n.executive_summary).toContain(formatDollars(100000)); // $1,000 time-sensitive
+    // ...and the all-confidence / all-urgent aggregates do NOT (the bug we fixed).
+    expect(n.executive_summary).not.toContain(formatDollars(24000)); // $240 all-rolling ÷ months
+    expect(n.executive_summary).not.toContain(formatDollars(250000)); // $2,500 all urgent
+  });
+
+  it("the exec-summary figures equal what buildReportData puts in the hero", () => {
+    const narr = generateNarrative({
+      brand_name: "Test",
+      total_recoverable_cents: MIXED.reduce((s, f) => s + f.amount_cents, 0),
+      urgent_recoverable_cents: 250000,
+      findings_count: MIXED.length,
+      settlement_months: MONTHS,
+      categories: [],
+      ...computeNarrativeFigures(MIXED, MONTHS),
+    });
+    const r = buildReportData("Test", MIXED, narr, MONTHS);
+    // The exact strings the headline shows must also be in the exec summary.
+    expect(r.narrative.executive_summary).toContain(
+      formatDollars(r.provable_forward_monthly_cents!),
+    );
+    expect(r.narrative.executive_summary).toContain(
+      formatDollars(r.provable_urgent_cents),
     );
   });
 });

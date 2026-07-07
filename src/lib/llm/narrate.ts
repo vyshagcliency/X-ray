@@ -27,6 +27,16 @@ interface NarrativeInput {
   /** Whole months the settlement report spans; null when no date column was present. */
   settlement_months?: number | null;
   categories: FindingSummary[];
+  // Reconciled hero figures from data-builder (`computeNarrativeFigures`). When provided,
+  // the executive summary quotes THESE so it can never diverge from the headline — the
+  // hero leads with the high-confidence rolling run-rate and provable-only urgent, and the
+  // narrative must match (fixes the recurring/urgent "two bases on one page" bug,
+  // decisions.md 2026-07-07). Optional: legacy callers fall back to the old aggregates.
+  provable_urgent_cents?: number;
+  /** High-confidence rolling overcharge, cumulative across the settlement window. */
+  provable_forward_cents?: number;
+  /** High-confidence rolling overcharge as a monthly run-rate; null when window unknown. */
+  provable_forward_monthly_cents?: number | null;
 }
 
 /**
@@ -59,22 +69,34 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
   const { brand_name, total_recoverable_cents, urgent_recoverable_cents, findings_count, categories, settlement_months } = input;
 
   const totalFormatted = formatDollars(total_recoverable_cents);
-  const urgentFormatted = formatDollars(urgent_recoverable_cents);
 
-  // Executive summary
-  const urgentLine = urgent_recoverable_cents > 0
-    ? ` Of this, ${urgentFormatted} is time-sensitive: dispute windows close within 14 days.`
+  // The exec summary quotes the SAME figures the hero leads with. When data-builder passes
+  // reconciled figures, trust them exactly; otherwise fall back to the pre-reconciliation
+  // aggregates (legacy callers / tests). `?? ` only falls back on undefined, so a provided
+  // 0 is honored.
+  const reconciled = input.provable_forward_cents !== undefined;
+
+  // Time-sensitive line = the hero's PROVABLE urgent figure (the estimated tier is fenced
+  // out of the headline), not the all-findings urgent.
+  const urgentForNarrative = input.provable_urgent_cents ?? urgent_recoverable_cents;
+  const urgentLine = urgentForNarrative > 0
+    ? ` Of this, ${formatDollars(urgentForNarrative)} is time-sensitive: dispute windows close within 14 days.`
     : "";
 
-  // Rolling overcharges (referral %, size-tier) have no deadline; they keep accruing.
-  // The cumulative figure spans the whole settlement history, so quote a per-month
-  // run-rate (cumulative ÷ months) rather than implying the cumulative recurs monthly.
-  const recurringCents = categories
-    .filter((c) => ROLLING_CATEGORIES.has(c.category))
-    .reduce((s, c) => s + c.total_cents, 0);
-  const recurringMonthlyCents = settlement_months && settlement_months > 0
-    ? Math.round(recurringCents / settlement_months)
-    : null;
+  // Rolling overcharges (referral %, size-tier) have no deadline; they keep accruing. The
+  // hero leads with the HIGH-confidence rolling overcharge as a monthly run-rate, so the
+  // narrative uses the reconciled provable-forward figures when present (else the old
+  // all-confidence rolling sum ÷ months).
+  const recurringCents = reconciled
+    ? input.provable_forward_cents!
+    : categories
+        .filter((c) => ROLLING_CATEGORIES.has(c.category))
+        .reduce((s, c) => s + c.total_cents, 0);
+  const recurringMonthlyCents = reconciled
+    ? (input.provable_forward_monthly_cents ?? null)
+    : settlement_months && settlement_months > 0
+      ? Math.round(recurringCents / settlement_months)
+      : null;
   const recurringLine = recurringCents > 0
     ? recurringMonthlyCents !== null
       ? ` About ${formatDollars(recurringMonthlyCents)} of that is a recurring overcharge that keeps accruing each month until the root cause is corrected — ${formatDollars(recurringCents)} has built up over the ${settlement_months} months of data you provided.`

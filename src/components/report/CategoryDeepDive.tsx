@@ -194,7 +194,7 @@ export function CategoryDeepDive({
 
   return (
     <section
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white/80 shadow-sm backdrop-blur-sm"
+      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
       style={{ borderTop: `3px solid ${meta.color}` }}
     >
       <div className="p-6">

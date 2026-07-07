@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/db/supabase";
 import { RULES } from "@/lib/rules";
 import { runRule } from "@/lib/duckdb/run-rule";
 import { generateNarrative } from "@/lib/llm/narrate";
-import { buildReportData } from "@/lib/pdf/data-builder";
+import { buildReportData, computeNarrativeFigures } from "@/lib/pdf/data-builder";
 import { getSettlementMonths } from "@/lib/duckdb/settlement-window";
 
 export const auditRun = task({
@@ -163,12 +163,20 @@ export const auditRun = task({
         .filter((f) => f.window_days_remaining !== null && f.window_days_remaining >= 0 && f.window_days_remaining <= 14)
         .reduce((sum, f) => sum + f.amount_cents, 0);
 
+      // The hero's reconciled figures (high-confidence forward run-rate + provable-only
+      // urgent), from the same helper buildReportData uses — so the exec summary quotes
+      // the same numbers as the headline (decisions.md 2026-07-07).
+      const narrativeFigures = computeNarrativeFigures(allFindings, settlementMonths);
+
       const narrative = generateNarrative({
         brand_name: brandName,
         total_recoverable_cents: totalCents,
         urgent_recoverable_cents: urgentCents,
         findings_count: allFindings.length,
         settlement_months: settlementMonths,
+        provable_urgent_cents: narrativeFigures.provable_urgent_cents,
+        provable_forward_cents: narrativeFigures.provable_forward_cents,
+        provable_forward_monthly_cents: narrativeFigures.provable_forward_monthly_cents,
         categories: Array.from(catMap.entries()).map(([cat, data]) => ({
           category: cat,
           count: data.count,

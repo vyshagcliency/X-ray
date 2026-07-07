@@ -85,7 +85,7 @@ function ChartCard({
 }) {
   return (
     <div
-      className={`rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm ${className ?? ""}`}
+      className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${className ?? ""}`}
     >
       <div className="flex items-center gap-2 text-slate-700">
         {icon}

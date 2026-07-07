@@ -11,7 +11,7 @@ import { draftDispute, type DisputeDraft } from "@/lib/llm/draft-dispute";
 import { catMeta } from "@/components/report/category-meta";
 import { financeMath } from "@/components/report/finding-math";
 
-interface Finding {
+export interface Finding {
   /** Present when built from DB rows; absent when built from the in-memory set. */
   id?: string;
   rule_id: string;
@@ -225,6 +225,40 @@ const isUrgent = (f: Finding) =>
   f.window_days_remaining !== null &&
   f.window_days_remaining >= 0 &&
   f.window_days_remaining <= 14;
+
+export interface NarrativeFigures {
+  /** High-confidence rolling overcharge, cumulative across the settlement window. */
+  provable_forward_cents: number;
+  /** …as a monthly run-rate; null when the settlement window is unknown. */
+  provable_forward_monthly_cents: number | null;
+  /** Urgent dollars in the PROVABLE tier only (the estimated tier is fenced out). */
+  provable_urgent_cents: number;
+}
+
+/**
+ * The reconciled figures the hero leads with: the high-confidence rolling run-rate
+ * (referral/size-tier, no dispute window) and the provable-only urgent total. Exported so
+ * the narrative — generated before the full view in `audit-run` — can quote the SAME
+ * numbers as the headline and never diverge (fixes the recurring/urgent "two bases on one
+ * page" bug, decisions.md 2026-07-07). `buildReportData` derives its hero figures from
+ * this exact helper, so there is one definition, not two.
+ */
+export function computeNarrativeFigures(
+  findings: Finding[],
+  settlementMonths: number | null,
+): NarrativeFigures {
+  const provable_forward_cents = findings
+    .filter((f) => ROLLING_CATEGORIES.has(f.category) && f.confidence === "high")
+    .reduce((s, f) => s + f.amount_cents, 0);
+  const provable_forward_monthly_cents =
+    settlementMonths && settlementMonths > 0
+      ? Math.round(provable_forward_cents / settlementMonths)
+      : null;
+  const provable_urgent_cents = findings
+    .filter((f) => isUrgent(f) && !REIMBURSEMENT_CATEGORIES.has(f.category))
+    .reduce((s, f) => s + f.amount_cents, 0);
+  return { provable_forward_cents, provable_forward_monthly_cents, provable_urgent_cents };
+}
 
 /**
  * The sharpest finding to spotlight (P1.2): prefer the largest high-confidence rolling
@@ -488,10 +522,11 @@ export function buildReportData(
   const urgentCents = findings
     .filter(isUrgent)
     .reduce((s, f) => s + f.amount_cents, 0);
-  // Hero urgency counts provable findings only — the estimated tier is fenced (D5).
-  const provableUrgentCents = findings
-    .filter((f) => isUrgent(f) && !REIMBURSEMENT_CATEGORIES.has(f.category))
-    .reduce((s, f) => s + f.amount_cents, 0);
+  // The hero figures (high-confidence forward run-rate + provable-only urgent), from the
+  // one shared helper the narrative also uses — so the headline and the exec summary
+  // quote identical numbers (D5; decisions.md 2026-07-07).
+  const figs = computeNarrativeFigures(findings, settlementMonths);
+  const provableUrgentCents = figs.provable_urgent_cents;
 
   // Recurring overcharges (referral %, size-tier) accrued across the settlement
   // history. Divide by the window to get an honest per-month run-rate.
@@ -583,17 +618,12 @@ export function buildReportData(
     findings.map((f) => f.evidence.sku).filter(Boolean) as string[],
   ).size;
 
-  // The hero (P1.1): the HIGH-confidence rolling overcharge, as a monthly run-rate.
-  // Rolling = referral/size-tier (no dispute window, recurs until fixed). Filtering to
-  // high-confidence keeps the headline undeniable (asymmetric-safety); a medium rolling
-  // finding still shows in its category card, just not in the hero number.
-  const provableForwardCents = findings
-    .filter((f) => ROLLING_CATEGORIES.has(f.category) && f.confidence === "high")
-    .reduce((s, f) => s + f.amount_cents, 0);
-  const provableForwardMonthlyCents =
-    settlementMonths && settlementMonths > 0
-      ? Math.round(provableForwardCents / settlementMonths)
-      : null;
+  // The hero (P1.1): the HIGH-confidence rolling overcharge, as a monthly run-rate —
+  // computed once in `computeNarrativeFigures` (above, as `figs`) so the narrative and the
+  // headline can never diverge. Rolling = referral/size-tier (no dispute window, recurs
+  // until fixed); high-confidence-only keeps the headline undeniable (asymmetric-safety).
+  const provableForwardCents = figs.provable_forward_cents;
+  const provableForwardMonthlyCents = figs.provable_forward_monthly_cents;
 
   // Provable dollars by confidence (P1.6 confidence×dollars chart). Provable = every
   // finding with a real per-row amount (non-estimated); this sums to provable_cents.
