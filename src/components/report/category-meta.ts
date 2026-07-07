@@ -36,7 +36,7 @@ export const CATEGORY_META: Record<string, CategoryMeta> = {
     filePath:
       "In Seller Central, open Help → Get support → Selling on Amazon and raise a fee-discrepancy case disputing the referral category for the SKUs below. A SAFE-T / fee-investigation claim accepts the settlement line as evidence.",
     disputeWindow:
-      "Fee discrepancies are best disputed within ~90 days of each charge — but the category error keeps recurring on every future sale until it is corrected.",
+      "Fee discrepancies are best disputed within ~90 days of each charge, but the category error keeps recurring on every future sale until it is corrected.",
     confidenceWhy:
       "High when the settlement's own commission rate exceeds the category's published rate on the same order; medium where the category mapping is less certain.",
   },
@@ -84,11 +84,11 @@ export const CATEGORY_META: Record<string, CategoryMeta> = {
     color: "#0891b2",
     recurring: true,
     mechanism:
-      "Items priced under $10 qualify for Amazon's automatic Low-Price FBA fulfillment-fee discount (~$0.86/unit). These SKUs were billed the full, non-discounted fee — the discount never applied, and the gap recurs on every unit.",
+      "Items priced under $10 qualify for Amazon's automatic Low-Price FBA fulfillment-fee discount (~$0.86/unit). These SKUs were billed the full, non-discounted fee, so the discount never applied, and the gap recurs on every unit.",
     filePath:
       "In Seller Central, open Help → Get support → Fulfillment by Amazon and raise a fee-discrepancy case for these sub-$10 SKUs, asking Amazon to apply the Low-Price FBA fulfillment-fee discount and refund the difference on units already shipped.",
     disputeWindow:
-      "Fulfillment-fee discrepancies are best disputed within ~90 days of each charge — but the missed discount keeps recurring on every future sub-$10 sale until it is applied.",
+      "Fulfillment-fee discrepancies are best disputed within ~90 days of each charge, but the missed discount keeps recurring on every future sub-$10 sale until it is applied.",
     confidenceWhy:
       "Medium: the missing discount is measured against your own ≥$10 SKUs' fees in the same size tier; the exact low-price schedule varies by tier, and a thin peer sample drops to review.",
   },
@@ -97,20 +97,20 @@ export const CATEGORY_META: Record<string, CategoryMeta> = {
     color: "#9333ea",
     recurring: false,
     mechanism:
-      "Amazon charged a $0.60 coupon redemption fee on orders that carry no matching promotion discount — you were billed for a redemption that never happened.",
+      "Amazon charged a $0.60 coupon redemption fee on orders that carry no matching promotion discount, so you were billed for a redemption that never happened.",
     filePath:
       "In Seller Central, open Help → Get support → Selling on Amazon and raise a case disputing the CouponRedemptionFee on the orders below, noting that no promotion discount appears on the same order.",
     disputeWindow:
       "Coupon-fee disputes are strongest within ~90 days of the charge date.",
     confidenceWhy:
-      "High: the fee and the absent promotion are on the same order in your own settlement — an internal inconsistency with no legitimate reading.",
+      "High: the fee and the absent promotion are on the same order in your own settlement, an internal inconsistency with no legitimate reading.",
   },
   deal_fee: {
     label: "Deal Fee Double-Bookings",
     color: "#be185d",
     recurring: false,
     mechanism:
-      "A deal (Lightning/Best Deal) is charged one fee per run. These SKUs carry two or more deal fees within a single deal window — a duplicate or double-booked charge.",
+      "A deal (Lightning/Best Deal) is charged one fee per run. These SKUs carry two or more deal fees within a single deal window, a duplicate or double-booked charge.",
     filePath:
       "In Seller Central, open Help → Get support → Selling on Amazon and raise a case citing the duplicate deal-fee lines for the same SKU and date, requesting a refund of the excess fee.",
     disputeWindow:
@@ -142,7 +142,7 @@ export const CATEGORY_META: Record<string, CategoryMeta> = {
     disputeWindow:
       "Reimbursement claims for FC-received returns are generally filable up to 18 months after the return.",
     confidenceWhy:
-      "Estimated — flagged from your reports but valued at a flat per-item placeholder; the real per-item value is confirmed before filing.",
+      "Estimated: flagged from your reports but valued at a flat per-item placeholder; the real per-item value is confirmed before filing.",
   },
   lost_inventory: {
     label: "Lost & Damaged Inventory",
@@ -155,7 +155,7 @@ export const CATEGORY_META: Record<string, CategoryMeta> = {
     disputeWindow:
       "Lost/damaged-in-fulfillment claims have up to an 18-month window; inbound-shipment claims 9 months.",
     confidenceWhy:
-      "Estimated — flagged from the ledger but valued at a flat per-item placeholder; the real per-item value is confirmed before filing.",
+      "Estimated: flagged from the ledger but valued at a flat per-item placeholder; the real per-item value is confirmed before filing.",
   },
 };
 
@@ -168,7 +168,7 @@ export function catMeta(key: string): CategoryMeta {
       mechanism: "Discrepancies detected in this category.",
       filePath:
         "In Seller Central, open Help → Get support and raise a case citing the rows below as evidence.",
-      disputeWindow: "File promptly — Amazon dispute windows are time-limited.",
+      disputeWindow: "File promptly. Amazon dispute windows are time-limited.",
       confidenceWhy:
         "Confidence reflects how directly the discrepancy is evidenced by your own reports.",
     }
