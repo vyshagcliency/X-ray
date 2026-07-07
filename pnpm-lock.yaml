@@ -26,6 +26,9 @@ importers:
       '@t3-oss/env-nextjs':
         specifier: ^0.12.0
         version: 0.12.0(typescript@5.9.3)(zod@3.25.76)
+      '@trigger.dev/react-hooks':
+        specifier: 4.4.4
+        version: 4.4.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@trigger.dev/sdk':
         specifier: ^4.4.4
         version: 4.4.4(zod@3.25.76)
@@ -2043,6 +2046,13 @@ packages:
   '@trigger.dev/core@4.4.4':
     resolution: {integrity: sha512-m748W6tF/eIGzEaFjuvlicCqxop5GFxnt/eSb7kg0g9ZC2VW0iBa/rOx4aCQlkHd4MKn3B+t2LQLhn/eI9kHDw==}
     engines: {node: '>=18.20.0'}
+
+  '@trigger.dev/react-hooks@4.4.4':
+    resolution: {integrity: sha512-2rnr2r7ANXG9hb+4UMI89CfOaJFPpCDQVOboFikazHUrJsJqhSb58Jp/ht7KwBNZk5/ti8nPHOsYfHyNoU6xIA==}
+    engines: {node: '>=18.20.0'}
+    peerDependencies:
+      react: ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
 
   '@trigger.dev/sdk@4.4.4':
     resolution: {integrity: sha512-X2R1BCZlptxJw2oT6SJAU8bDKO8pgfNIFrNdo7p6XUjW7gha9s1oNZEicL7cmvJF8rO35MO70vO/Wqo8tjQjPQ==}
@@ -4203,6 +4213,11 @@ packages:
 
   svg-arc-to-cubic-bezier@3.2.0:
     resolution: {integrity: sha512-djbJ/vZKZO+gPoSDThGNpKDO+o+bAeA4XQKovvkNCqnIS2t+S4qnLAGQhyyrulhCFRl1WWzAp0wUDV8PpTVU3g==}
+
+  swr@2.4.2:
+    resolution: {integrity: sha512-ej644Y2bvkIajfR32KGeSSdBXQW+ScjGjkybZgSE7kFpk9eGnV44XY9FJylXi+W75pavSX1PVNB57W5EbhGIYw==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
@@ -6422,6 +6437,17 @@ snapshots:
       zod: 3.25.76
       zod-error: 1.5.0
       zod-validation-error: 1.5.0(zod@3.25.76)
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  '@trigger.dev/react-hooks@4.4.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+    dependencies:
+      '@trigger.dev/core': 4.4.4
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+      swr: 2.4.2(react@19.2.5)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -8855,6 +8881,12 @@ snapshots:
   supports-preserve-symlinks-flag@1.0.0: {}
 
   svg-arc-to-cubic-bezier@3.2.0: {}
+
+  swr@2.4.2(react@19.2.5):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.2.5
+      use-sync-external-store: 1.6.0(react@19.2.5)
 
   symbol-tree@3.2.4: {}
 

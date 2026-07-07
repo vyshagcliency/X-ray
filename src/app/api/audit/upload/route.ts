@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/db/supabase";
-import { tasks } from "@trigger.dev/sdk/v3";
+import { tasks, auth } from "@trigger.dev/sdk/v3";
 import { uploadRateLimit } from "@/lib/security/rate-limit";
 
 // Lead with payout integrity: settlement + fee-preview are required (they power the
@@ -115,5 +115,13 @@ export async function POST(req: NextRequest) {
   // Enqueue Trigger.dev audit.run task
   const handle = await tasks.trigger("audit.run", { auditId });
 
-  return NextResponse.json({ success: true, runId: handle.id });
+  // Mint a read-only token scoped to just this run so the processing page can stream
+  // real progress via useRealtimeRun. 1h TTL comfortably covers a 3–8 min audit plus a
+  // Controller who leaves the tab; the auto-token from trigger() expires in 15 min.
+  const publicAccessToken = await auth.createPublicToken({
+    scopes: { read: { runs: [handle.id] } },
+    expirationTime: "1h",
+  });
+
+  return NextResponse.json({ success: true, runId: handle.id, publicAccessToken });
 }

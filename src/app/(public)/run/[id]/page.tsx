@@ -3,46 +3,80 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Check, Shield, Mail, Monitor } from "lucide-react";
 import { motion } from "motion/react";
+import { useRealtimeRun } from "@trigger.dev/react-hooks";
 import { NavBar } from "@/components/nav-bar";
 
-// The forensic passes the audit runs, in order. Labels describe the real
-// payout-integrity work the pipeline does (settlement → fees → credits → evidence).
-const STAGES = [
-  "Reading your settlement and fee reports",
-  "Recomputing referral fees on every sale",
-  "Re-checking size-tier fulfillment fees",
-  "Reconciling return credits and reimbursements",
-  "Flagging aged-stock surcharges",
-  "Compiling evidence and drafting disputes",
-];
+// Fallback label shown before the first real stage arrives from the worker (or when
+// realtime is unavailable and we fall back to status polling). Real stage strings —
+// including the actual rule being run — come from metadata.stage on the worker; we never
+// hard-code the pipeline's stage names here (frontend.md streaming rule).
+const FALLBACK_STAGE = "Auditing your settlement data…";
+const MAX_VISIBLE_STAGES = 5;
 
 export default function ProcessingPage({ params }: { params: Promise<{ id: string }> }) {
-  const [stageIndex, setStageIndex] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [auditId, setAuditId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("processing");
+  // Run id + a run-scoped read token handed over by the upload page via sessionStorage.
+  const [creds, setCreds] = useState<{ runId: string; token: string } | null>(null);
+  // Distinct worker stages seen so far, in order — the checklist fills from real work.
+  const [history, setHistory] = useState<string[]>([]);
+  const [lastStage, setLastStage] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     params.then((p) => setAuditId(p.id));
   }, [params]);
 
-  // Simulate stage progression (will be replaced with useRealtimeRun)
+  // Pick up the realtime credentials the upload page stashed for this audit.
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsed((e) => e + 1);
-    }, 1000);
+    if (!auditId) return;
+    try {
+      const raw = sessionStorage.getItem(`xray-run:${auditId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.runId && parsed.publicAccessToken) {
+          // sessionStorage is browser-only, so this one-shot read must happen after
+          // mount; a lazy useState initializer would run during SSR and mismatch.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setCreds({ runId: parsed.runId, token: parsed.publicAccessToken });
+        }
+      }
+    } catch {
+      // No realtime — progress falls back to the status poll below.
+    }
+  }, [auditId]);
 
-    const stageTimer = setInterval(() => {
-      setStageIndex((i) => (i < STAGES.length - 1 ? i + 1 : i));
-    }, 15000);
+  // Stream real progress. Inert until we have both a run id and a token (enabled=false),
+  // so the page degrades gracefully to polling when realtime isn't available.
+  const { run } = useRealtimeRun(creds?.runId, {
+    accessToken: creds?.token,
+    enabled: Boolean(creds?.runId && creds?.token),
+  });
 
-    return () => {
-      clearInterval(timer);
-      clearInterval(stageTimer);
-    };
+  const stage =
+    typeof run?.metadata?.stage === "string" ? (run.metadata.stage as string) : undefined;
+  const progress =
+    typeof run?.metadata?.progress === "number"
+      ? (run.metadata.progress as number)
+      : undefined;
+  const runCompleted = run?.status === "COMPLETED";
+
+  // Accumulate each new distinct worker stage into the visible checklist. Adjusting
+  // state during render when a value changes (guarded so it runs once per new stage) is
+  // React's recommended alternative to a setState-in-an-effect.
+  if (stage && stage !== lastStage) {
+    setLastStage(stage);
+    setHistory((h) => [...h, stage]);
+  }
+
+  // Elapsed timer (display only).
+  useEffect(() => {
+    const timer = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  // Poll for completion
+  // Completion + failure authority: the audit's DB status (set by the worker). Realtime
+  // drives the on-screen stages; this decides when to send them to the report.
   useEffect(() => {
     if (!auditId) return;
 
@@ -115,10 +149,18 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const activeLabel = STAGES[stageIndex];
-  // Progress never reaches 100% while waiting — the redirect happens on completion,
-  // so the bar leaves headroom rather than sitting "done" for minutes.
-  const pct = Math.round(((stageIndex + 1) / (STAGES.length + 1)) * 100);
+  // Stages to render: the most recent worker stages (or a single fallback before the
+  // first one lands). The last one is "active" (scanning) until the run completes.
+  const items = history.length > 0 ? history.slice(-MAX_VISIBLE_STAGES) : [FALLBACK_STAGE];
+  const activeIndex = items.length - 1;
+  const activeLabel = items[activeIndex];
+
+  // Progress bar: driven by the real progress metadata; before it arrives (or without
+  // realtime) fall back to a gentle, capped elapsed estimate so the bar still moves.
+  const pct =
+    progress != null
+      ? Math.round(progress * 100)
+      : Math.min(90, Math.round(elapsed * 2));
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -149,15 +191,15 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
             </p>
           </div>
 
-          {/* Forensic passes */}
+          {/* Forensic passes — real stages streamed from the worker */}
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white/80 p-2 shadow-sm backdrop-blur-sm sm:p-2.5">
             <ol aria-live="polite" className="space-y-0.5">
-              {STAGES.map((label, i) => {
-                const done = i < stageIndex;
-                const active = i === stageIndex;
+              {items.map((label, i) => {
+                const active = i === activeIndex && !runCompleted;
+                const done = i < activeIndex || (i === activeIndex && runCompleted);
                 return (
                   <li
-                    key={label}
+                    key={`${label}-${i}`}
                     className={`relative flex items-center gap-3.5 overflow-hidden rounded-xl px-3.5 py-3 transition-colors ${
                       active ? "bg-blue-50/70" : ""
                     }`}
@@ -214,9 +256,7 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
               />
             </div>
             <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-              <span>
-                Step {stageIndex + 1} of {STAGES.length}
-              </span>
+              <span className="tabular-nums">{pct}% complete</span>
               <span className="font-mono tabular-nums">{formatTime(elapsed)}</span>
             </div>
             <span className="sr-only">{activeLabel}</span>

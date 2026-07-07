@@ -332,7 +332,7 @@ audit.run (parent)
 
 ### 5.1 Realtime progress stream
 
-Every stage emits a `metadata.set(...)` update that the Next.js processing page subscribes to via `useRealtimeRun()` from `@trigger.dev/react-hooks`. This is the same pattern as ChannelScope — no FlowToken, no server-sent-events handroll.
+Every stage emits a `metadata.set(...)` update (`stage` string + `progress` 0–1) that the Next.js processing page subscribes to via `useRealtimeRun()` from `@trigger.dev/react-hooks`. This is the same pattern as ChannelScope — no FlowToken, no server-sent-events handroll. **Token handoff (Report Killer P6.1):** the upload route mints a 1h run-scoped read token (`auth.createPublicToken({ scopes:{ read:{ runs:[runId] } } })`) and returns `{ runId, publicAccessToken }`; the upload page stashes them in `sessionStorage` for the processing page. Realtime is a pure enhancement — the `/api/audit/status` poll remains the redirect/failure authority and the fallback when no token is present.
 
 ```ts
 // inside detect.rule task

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Shield, CheckCircle2 } from "lucide-react";
+import { Lock, Shield, CheckCircle2, EyeOff, UserX, Trash2, Ban, FileX2 } from "lucide-react";
 import { motion } from "motion/react";
 import { NavBar } from "@/components/nav-bar";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,21 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
         return;
       }
 
+      // Hand the run id + a run-scoped read token to the processing page so it can
+      // stream real progress (useRealtimeRun). Best-effort — if this fails, the
+      // processing page falls back to status polling.
+      try {
+        const data = await res.json();
+        if (data.runId && data.publicAccessToken) {
+          sessionStorage.setItem(
+            `xray-run:${id}`,
+            JSON.stringify({ runId: data.runId, publicAccessToken: data.publicAccessToken }),
+          );
+        }
+      } catch {
+        // Ignore — progress will fall back to polling.
+      }
+
       router.push(`/run/${id}`);
     } catch {
       alert("Upload failed. Please check your connection and try again.");
@@ -105,6 +120,64 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
             Add the optional ones to find more.
           </p>
         </motion.div>
+
+        {/* Data-trust block (P6.3). The data-trust cliff is the #1 self-serve conversion
+            risk for a Controller uploading financials — make "we literally can't keep or
+            misuse your data" scannable before they commit a single file. */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, duration: 0.5 }}
+          className="mt-6 rounded-xl border border-border bg-card/60 p-5 shadow-sm backdrop-blur-sm"
+          aria-label="How we protect your data"
+        >
+          <div className="flex items-center gap-2">
+            <Shield className="size-4 text-primary" strokeWidth={2} />
+            <h2 className="text-sm font-semibold">Your data never leaves your control</h2>
+          </div>
+
+          {/* The differentiator, elevated: no model ever touches raw rows. */}
+          <div className="mt-4 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+            <EyeOff className="mt-0.5 size-5 shrink-0 text-primary" strokeWidth={1.75} />
+            <p className="text-sm text-foreground/90">
+              <span className="font-semibold">No AI ever sees your rows.</span> Our models
+              receive computed totals only — never a single line of your Seller Central data.
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {[
+              {
+                icon: UserX,
+                title: "No account, no login",
+                text: "Nothing to sign up for — the report URL is the only key.",
+              },
+              {
+                icon: Trash2,
+                title: "Auto-deleted in 30 days",
+                text: "Raw CSVs are purged automatically, enforced in code.",
+              },
+              {
+                icon: Ban,
+                title: "Never shared or trained on",
+                text: "Not sold, not shared, never used to train anything.",
+              },
+              {
+                icon: FileX2,
+                title: "Delete anytime",
+                text: "One request wipes everything we hold, on demand.",
+              },
+            ].map((item) => (
+              <div key={item.title} className="flex items-start gap-3">
+                <item.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.section>
 
         {/* Required report tiles: 2-up grid */}
         <motion.div
@@ -173,9 +246,7 @@ export default function UploadPage({ params }: { params: Promise<{ id: string }>
         >
           <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground sm:justify-start">
             <Lock className="size-3" />
-            Encrypted in transit &amp; at rest. Auto-deleted after 30 days.
-            <Shield className="ml-1 size-3" />
-            Never shared.
+            Encrypted in transit &amp; at rest.
           </p>
           <Button
             onClick={handleRunAudit}
