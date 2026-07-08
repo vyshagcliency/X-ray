@@ -142,6 +142,7 @@ export function ReportShell({ model: m }: { model: ReportModel }) {
               {tab === "deadlines" && (
                 <DeadlinesTab
                   forwardMonthlyCents={m.forwardMonthlyCents}
+                  recoverableNowCents={m.provableOneTimeCents}
                   urgentCents={m.urgentCents}
                   chartCategories={m.chartCategories}
                   provableConfidenceCents={m.provableConfidenceCents}

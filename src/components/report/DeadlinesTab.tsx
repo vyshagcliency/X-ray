@@ -11,6 +11,7 @@ const CALENDLY = "https://calendly.com/vyshag-baslix/30min";
 
 export function DeadlinesTab({
   forwardMonthlyCents,
+  recoverableNowCents,
   urgentCents,
   chartCategories,
   provableConfidenceCents,
@@ -19,6 +20,7 @@ export function DeadlinesTab({
   catLabel,
 }: {
   forwardMonthlyCents: number | null;
+  recoverableNowCents: number;
   urgentCents: number;
   chartCategories: { key: string; label: string; total: number; color: string }[];
   provableConfidenceCents: { high: number; medium: number; low: number };
@@ -27,40 +29,33 @@ export function DeadlinesTab({
   catLabel: (key: string) => string;
 }) {
   const hasForward = forwardMonthlyCents !== null && forwardMonthlyCents > 0;
-  const windowsTracked = urgencyBuckets.reduce((s, b) => s + b.count, 0);
-  const trackedCents = urgencyBuckets.reduce((s, b) => s + b.cents, 0);
 
   return (
     <div className="space-y-4">
-      {/* At-a-glance urgency metrics */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* Anchor on the real recoverable figure, then the imminent subset + the recurring drip.
+          Most of the recovery has a long (up to 18-month) window, so the ≤14-day number is small
+          by nature; leading with it alone made the tab read as tiny. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {recoverableNowCents > 0 && (
+          <StatTile
+            label="Recoverable now"
+            value={formatDollars(recoverableNowCents)}
+            hint="provable, file each within its window (up to 18 months)"
+            accent
+          />
+        )}
         {urgentCents > 0 && (
           <StatTile
             label="Closing ≤ 14 days"
             value={formatDollars(urgentCents)}
-            hint={`${closingSoon.length} finding${closingSoon.length === 1 ? "" : "s"}`}
-            accent
-          />
-        )}
-        {windowsTracked > 0 && (
-          <StatTile
-            label="On the clock"
-            value={windowsTracked.toLocaleString()}
-            hint={`${formatDollars(trackedCents)} with a closing window`}
+            hint={`${closingSoon.length} finding${closingSoon.length === 1 ? "" : "s"}, file these first`}
           />
         )}
         {hasForward && (
           <StatTile
             label="Recurring drain"
             value={`${formatDollars(forwardMonthlyCents!)}/mo`}
-            hint="compounds until the root cause is fixed"
-          />
-        )}
-        {hasForward && (
-          <StatTile
-            label="12-month projection"
-            value={formatDollars(forwardMonthlyCents! * 12)}
-            hint="if left uncorrected"
+            hint="keeps billing until the root cause is fixed"
           />
         )}
       </div>
