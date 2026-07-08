@@ -126,9 +126,9 @@ export async function generateMetadata({
     .eq("id", uuid)
     .single();
   const brand = (data as { brand_name?: string } | null)?.brand_name;
-  const title = brand ? `Settlement Truth Audit — ${brand}` : "Settlement Truth Audit";
+  const title = brand ? `Settlement Truth Audit: ${brand}` : "Settlement Truth Audit";
   const description = brand
-    ? `A forensic audit of ${brand}'s Amazon payouts — every provable overcharge traced to a row in ${brand}'s own Seller Central data.`
+    ? `A forensic audit of ${brand}'s Amazon payouts. Every provable overcharge traced to a row in ${brand}'s own Seller Central data.`
     : "A forensic audit that proves, row by row, where Amazon's settlement doesn't reconcile.";
   return {
     title,
