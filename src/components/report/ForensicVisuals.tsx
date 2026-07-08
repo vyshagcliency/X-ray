@@ -7,6 +7,8 @@ import {
   BarChart,
   Cell,
   LabelList,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -230,6 +232,72 @@ function HBarChart({
   );
 }
 
+/** Provable dollars by confidence, as a donut (part-to-whole). The hole carries the total,
+ *  the legend direct-labels each tier with its $ and share. Dominant medium + a small high
+ *  wedge visually says "the sharp wedge is smaller but undeniable" (dataviz: ≤5 slices,
+ *  direct labels, no animation, colors match the confidence bar). */
+function ConfidenceDonut({
+  data,
+}: {
+  data: Array<{ label: string; value: number; color: string }>;
+}) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  return (
+    <div className="mt-4 flex flex-col items-center gap-5 sm:flex-row sm:justify-center sm:gap-8">
+      <div className="relative shrink-0" style={{ width: 168, height: 168 }}>
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="label"
+              cx="50%"
+              cy="50%"
+              innerRadius={54}
+              outerRadius={80}
+              paddingAngle={data.length > 1 ? 2 : 0}
+              stroke="none"
+              isAnimationActive={false}
+            >
+              {data.map((d) => (
+                <Cell key={d.label} fill={d.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(v, n) => [formatDollars(Number(v)), String(n)]}
+              contentStyle={{ fontSize: 12, borderRadius: 8, borderColor: GRID }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+            {shortDollars(total)}
+          </span>
+          <span className="text-[10px] uppercase tracking-wider text-slate-400">provable</span>
+        </div>
+      </div>
+      <ul className="space-y-2.5">
+        {data.map((d) => {
+          const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
+          return (
+            <li key={d.label} className="flex items-center gap-2.5 text-sm">
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: d.color }}
+              />
+              <span className="w-16 text-slate-600">{d.label}</span>
+              <span className="font-mono font-semibold tabular-nums text-slate-900">
+                {shortDollars(d.value)}
+              </span>
+              <span className="text-xs tabular-nums text-slate-400">{pct}%</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function ForensicVisuals({
   categories,
   confidenceCents,
@@ -288,7 +356,7 @@ export function ForensicVisuals({
           title="How solid is each dollar?"
           subtitle="Provable dollars by evidence strength, the sharp wedge is smaller but undeniable"
         >
-          <HBarChart data={confData} height={confData.length * 52 + 24} yWidth={70} />
+          <ConfidenceDonut data={confData} />
         </ChartBlock>
       )}
 
