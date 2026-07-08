@@ -14,10 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatDollars } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { ACCENT, CTA_CLASS } from "./DashboardCard";
 
 const CALENDLY = "https://calendly.com/vyshag-baslix/30min";
-/** Stripe-style primary button (indigo). Overrides the dark default Button bg. */
-const CTA_CLASS = "bg-[#635bff] text-white hover:bg-[#544ee6]";
 
 export type TabKey = "overview" | "findings" | "deadlines";
 export const TABS: { key: TabKey; label: string; icon: LucideIcon }[] = [
@@ -86,7 +85,7 @@ export function ReportSidebar({
               >
                 <Icon
                   className="size-4 stroke-[1.5]"
-                  style={active ? { color: "#635bff" } : undefined}
+                  style={active ? { color: ACCENT } : undefined}
                 />
                 {t.label}
               </button>

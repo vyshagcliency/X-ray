@@ -13,11 +13,10 @@ import { cn } from "@/lib/utils";
 import { formatDollars } from "@/lib/format";
 import { Spotlight, type SpotlightProps } from "./Spotlight";
 import { ForensicVisuals, ForwardBleedChart } from "./ForensicVisuals";
-import { DashboardCard, CARD_CLASS, ACCENT } from "./DashboardCard";
+import { DashboardCard, CARD_CLASS, CTA_CLASS, ACCENT } from "./DashboardCard";
 import { StatTile } from "./StatTile";
 
 const CALENDLY = "https://calendly.com/vyshag-baslix/30min";
-const CTA_CLASS = "bg-[#635bff] text-white hover:bg-[#544ee6]";
 
 export interface OverviewTabProps {
   brand: string;
@@ -38,23 +37,40 @@ export interface OverviewTabProps {
   methodologyNote?: string;
 }
 
-const TRUST = [
-  {
-    icon: Calculator,
-    h: "Recomputed, not guessed",
-    b: "We recompute what Amazon should have charged or credited on each sale and match it against what it actually did, using only your own reports.",
-  },
-  {
-    icon: ScanLine,
-    h: "Every figure traces to a row",
-    b: "Each provable dollar carries the source order, SKU and date from your Seller Central data, defensible line by line, in the PDF and CSV.",
-  },
-  {
-    icon: Gauge,
-    h: "Honest confidence",
-    b: "High is a direct, unambiguous match. Medium is a strong signal with a legitimate exception possible. Review needs a human look before filing.",
-  },
+/** Confidence tiers, shown as a color-dot legend instead of a run-on sentence. */
+const CONFIDENCE_LEGEND = [
+  { dot: "#2563eb", term: "High", def: "a direct, unambiguous match" },
+  { dot: "#d97706", term: "Medium", def: "a strong signal, a legitimate exception possible" },
+  { dot: "#94a3b8", term: "Review", def: "needs a human look before filing" },
 ];
+
+/** The method, shown as three steps instead of one dense clause. */
+const METHOD_STEPS = [
+  { n: "1", term: "Recompute", def: "what Amazon should have charged or credited on each sale" },
+  { n: "2", term: "Match", def: "it against what Amazon actually did" },
+  { n: "3", term: "Flag", def: "every discrepancy, with a confidence level" },
+];
+
+/** The Seller Central reports the audit reads (the fixed ingest surface). */
+const REPORTS_READ = [
+  "Settlement",
+  "FBA Fee Preview",
+  "Returns",
+  "Reimbursements",
+  "Inventory Ledger",
+];
+
+/** A soft accent square holding a trust icon. */
+function TrustBadge({ icon }: { icon: React.ReactNode }) {
+  return (
+    <span
+      className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+      style={{ backgroundColor: "rgba(73,113,255,0.1)", color: ACCENT }}
+    >
+      {icon}
+    </span>
+  );
+}
 
 export function OverviewTab(p: OverviewTabProps) {
   const hasForward = p.forwardMonthlyCents !== null && p.forwardMonthlyCents > 0;
@@ -176,29 +192,122 @@ export function OverviewTab(p: OverviewTabProps) {
         </DashboardCard>
       )}
 
-      {/* Trust row */}
+      {/* Trust row: each claim illustrated, not just stated */}
       <div className="grid gap-4 sm:grid-cols-3">
-        {TRUST.map((t) => (
-          <div key={t.h} className={cn(CARD_CLASS, "p-5")}>
-            <div className="flex items-center gap-2 text-slate-800">
-              <t.icon className="size-4 stroke-[1.5]" />
-              <p className="text-sm font-semibold">{t.h}</p>
-            </div>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{t.b}</p>
+        {/* 1. Recomputed */}
+        <div className={cn(CARD_CLASS, "p-5")}>
+          <div className="flex items-center gap-2.5">
+            <TrustBadge icon={<Calculator className="size-4 stroke-[1.5]" />} />
+            <p className="text-sm font-semibold text-slate-900">Recomputed, not guessed</p>
           </div>
-        ))}
+          <p className="mt-2.5 text-xs leading-relaxed text-slate-500">
+            We recompute what Amazon should have charged or credited on each sale and match it
+            against what it actually did, using only your own reports.
+          </p>
+          <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium">
+            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">What it charged</span>
+            <span className="text-slate-300">vs</span>
+            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">What it should</span>
+            <span className="text-slate-300">=</span>
+            <span
+              className="rounded-md px-2 py-1"
+              style={{ backgroundColor: "rgba(73,113,255,0.1)", color: ACCENT }}
+            >
+              the gap
+            </span>
+          </div>
+        </div>
+
+        {/* 2. Traces to a row */}
+        <div className={cn(CARD_CLASS, "p-5")}>
+          <div className="flex items-center gap-2.5">
+            <TrustBadge icon={<ScanLine className="size-4 stroke-[1.5]" />} />
+            <p className="text-sm font-semibold text-slate-900">Every figure traces to a row</p>
+          </div>
+          <p className="mt-2.5 text-xs leading-relaxed text-slate-500">
+            Each provable dollar is defensible line by line, in the PDF and CSV. Every one carries
+            its source from your Seller Central data:
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-600">
+            <span className="rounded-md bg-slate-100 px-2 py-1">Order</span>
+            <span className="rounded-md bg-slate-100 px-2 py-1">SKU</span>
+            <span className="rounded-md bg-slate-100 px-2 py-1">Date</span>
+          </div>
+        </div>
+
+        {/* 3. Honest confidence, as a legend */}
+        <div className={cn(CARD_CLASS, "p-5")}>
+          <div className="flex items-center gap-2.5">
+            <TrustBadge icon={<Gauge className="size-4 stroke-[1.5]" />} />
+            <p className="text-sm font-semibold text-slate-900">Honest confidence</p>
+          </div>
+          <ul className="mt-2.5 space-y-1.5">
+            {CONFIDENCE_LEGEND.map((c) => (
+              <li key={c.term} className="flex items-start gap-2 text-xs leading-relaxed">
+                <span
+                  className="mt-1 size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: c.dot }}
+                />
+                <span className="text-slate-500">
+                  <span className="font-medium text-slate-700">{c.term}</span> is {c.def}.
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
-      {/* Executive summary + method */}
+      {/* Executive summary + method, illustrated */}
       {(p.execSummary || p.methodologyNote) && (
         <div className="grid gap-4 lg:grid-cols-2">
           {p.execSummary && (
             <DashboardCard title="Executive summary">
+              <div className="mb-3 flex flex-wrap gap-1.5 text-[11px] font-medium">
+                <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
+                  {p.stats.find((s) => s.label === "Findings")?.value ?? p.stats[0]?.value}{" "}
+                  discrepancies
+                </span>
+                <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
+                  {formatDollars(p.totalCents)} surfaced
+                </span>
+                {p.urgentCents > 0 && (
+                  <span className="rounded-md bg-amber-50 px-2 py-1 text-amber-700">
+                    {formatDollars(p.urgentCents)} time-sensitive
+                  </span>
+                )}
+              </div>
               <p className="text-sm leading-relaxed text-slate-600">{p.execSummary}</p>
             </DashboardCard>
           )}
           {p.methodologyNote && (
             <DashboardCard title="How we found this">
+              <ol className="mb-3 space-y-2">
+                {METHOD_STEPS.map((s) => (
+                  <li key={s.n} className="flex items-start gap-2.5">
+                    <span
+                      className="flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
+                      style={{ backgroundColor: "rgba(73,113,255,0.1)", color: ACCENT }}
+                    >
+                      {s.n}
+                    </span>
+                    <span className="text-xs leading-relaxed text-slate-600">
+                      <span className="font-medium text-slate-800">{s.term}</span> {s.def}.
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <div className="mb-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  Reports we read
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-600">
+                  {REPORTS_READ.map((r) => (
+                    <span key={r} className="rounded-md bg-slate-100 px-2 py-1">
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              </div>
               <p className="text-sm leading-relaxed text-slate-600">{p.methodologyNote}</p>
             </DashboardCard>
           )}

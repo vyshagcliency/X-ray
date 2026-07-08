@@ -1,9 +1,12 @@
 import { cn } from "@/lib/utils";
 
-/** The Stripe-dashboard indigo, used for the primary CTA, active nav, and hero accents.
+/** The brand accent, used for the primary CTA, active nav, and hero accents.
  *  Data-viz keeps its own category hues (this is the brand accent, not a data color). */
-export const ACCENT = "#635bff";
-export const ACCENT_HOVER = "#544ee6";
+export const ACCENT = "#4971ff";
+export const ACCENT_HOVER = "#3f63e0";
+
+/** Shared primary-button treatment (the "Book a call" CTA) so the accent lives in one place. */
+export const CTA_CLASS = "bg-[#4971ff] text-white hover:bg-[#3f63e0]";
 
 /** The single card treatment every panel/tile shares: white, hairline cool-gray border,
  *  restrained radius, very soft two-layer shadow. No colored edges. */

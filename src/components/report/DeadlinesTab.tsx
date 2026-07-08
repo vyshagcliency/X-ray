@@ -3,14 +3,15 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatDollars } from "@/lib/format";
 import { ForensicVisuals } from "./ForensicVisuals";
-import { DashboardCard } from "./DashboardCard";
+import { DashboardCard, CTA_CLASS } from "./DashboardCard";
+import { StatTile } from "./StatTile";
 import type { ClosingSoonRow } from "./urgent-cases";
 
 const CALENDLY = "https://calendly.com/vyshag-baslix/30min";
-const CTA_CLASS = "bg-[#635bff] text-white hover:bg-[#544ee6]";
 
 export function DeadlinesTab({
   forwardMonthlyCents,
+  urgentCents,
   chartCategories,
   provableConfidenceCents,
   urgencyBuckets,
@@ -18,14 +19,52 @@ export function DeadlinesTab({
   catLabel,
 }: {
   forwardMonthlyCents: number | null;
+  urgentCents: number;
   chartCategories: { key: string; label: string; total: number; color: string }[];
   provableConfidenceCents: { high: number; medium: number; low: number };
   urgencyBuckets: { label: string; cents: number; count: number }[];
   closingSoon: ClosingSoonRow[];
   catLabel: (key: string) => string;
 }) {
+  const hasForward = forwardMonthlyCents !== null && forwardMonthlyCents > 0;
+  const windowsTracked = urgencyBuckets.reduce((s, b) => s + b.count, 0);
+  const trackedCents = urgencyBuckets.reduce((s, b) => s + b.cents, 0);
+
   return (
     <div className="space-y-4">
+      {/* At-a-glance urgency metrics */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {urgentCents > 0 && (
+          <StatTile
+            label="Closing ≤ 14 days"
+            value={formatDollars(urgentCents)}
+            hint={`${closingSoon.length} finding${closingSoon.length === 1 ? "" : "s"}`}
+            accent
+          />
+        )}
+        {windowsTracked > 0 && (
+          <StatTile
+            label="On the clock"
+            value={windowsTracked.toLocaleString()}
+            hint={`${formatDollars(trackedCents)} with a closing window`}
+          />
+        )}
+        {hasForward && (
+          <StatTile
+            label="Recurring drain"
+            value={`${formatDollars(forwardMonthlyCents!)}/mo`}
+            hint="compounds until the root cause is fixed"
+          />
+        )}
+        {hasForward && (
+          <StatTile
+            label="12-month projection"
+            value={formatDollars(forwardMonthlyCents! * 12)}
+            hint="if left uncorrected"
+          />
+        )}
+      </div>
+
       <ForensicVisuals
         only="urgency"
         categories={chartCategories}

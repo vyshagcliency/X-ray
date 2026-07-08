@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import { formatDollars } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ReportDrawer } from "./ReportDrawer";
 import { CategoryDeepDive } from "./CategoryDeepDive";
-import { CARD_CLASS } from "./DashboardCard";
+import { CARD_CLASS, DashboardCard } from "./DashboardCard";
 
 interface Finding {
   id: string;
@@ -93,6 +92,72 @@ export function FindingsTab({
 
   const open = categories.find((c) => c.category === openKey) ?? null;
   const hasEstimated = categories.some((c) => c.estimated);
+
+  // Escape returns from the detail page to the list.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenKey(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Clicking a row swaps the list for a full detail page (with a back button), not a drawer.
+  if (open) {
+    return (
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setOpenKey(null)}
+          className={cn(
+            CARD_CLASS,
+            "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900",
+          )}
+        >
+          <ArrowLeft className="size-4 stroke-[1.5]" /> All findings
+        </button>
+
+        <DashboardCard
+          icon={
+            <span
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: open.color }}
+            />
+          }
+          title={open.label}
+          action={
+            <div className="flex items-center gap-1.5">
+              {open.recurring && (
+                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                  recurring
+                </span>
+              )}
+              {open.estimated && (
+                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                  estimated
+                </span>
+              )}
+            </div>
+          }
+        >
+          <CategoryDeepDive
+            categoryKey={open.category}
+            summary={{
+              count: open.count,
+              total_cents: open.totalCents,
+              urgent_count: open.urgentCount,
+              high: open.high,
+              medium: open.medium,
+              low: open.low,
+            }}
+            findings={findingsByCategory[open.category] ?? []}
+            narrative={narratives?.[open.category]}
+          />
+        </DashboardCard>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -216,29 +281,6 @@ export function FindingsTab({
           per-item value before filing.
         </p>
       )}
-
-      <ReportDrawer
-        open={open !== null}
-        onClose={() => setOpenKey(null)}
-        title={open?.label ?? ""}
-        colorDot={open?.color}
-      >
-        {open && (
-          <CategoryDeepDive
-            categoryKey={open.category}
-            summary={{
-              count: open.count,
-              total_cents: open.totalCents,
-              urgent_count: open.urgentCount,
-              high: open.high,
-              medium: open.medium,
-              low: open.low,
-            }}
-            findings={findingsByCategory[open.category] ?? []}
-            narrative={narratives?.[open.category]}
-          />
-        )}
-      </ReportDrawer>
     </div>
   );
 }

@@ -113,8 +113,8 @@ export function ForwardBleedChart({ monthlyCents }: { monthlyCents: number }) {
         <AreaChart data={data} margin={{ top: 16, right: 64, left: 8, bottom: 4 }}>
           <defs>
             <linearGradient id="forwardFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#635bff" stopOpacity={0.18} />
-              <stop offset="100%" stopColor="#635bff" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="#4971ff" stopOpacity={0.18} />
+              <stop offset="100%" stopColor="#4971ff" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <XAxis
@@ -140,7 +140,7 @@ export function ForwardBleedChart({ monthlyCents }: { monthlyCents: number }) {
           <Area
             type="monotone"
             dataKey="cumulative"
-            stroke="#635bff"
+            stroke="#4971ff"
             strokeWidth={2}
             fill="url(#forwardFill)"
             isAnimationActive={false}
