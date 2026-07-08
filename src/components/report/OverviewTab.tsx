@@ -1,6 +1,6 @@
 import {
   AlertTriangle,
-  FileSearch,
+  Repeat,
   Calculator,
   ScanLine,
   Gauge,
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatDollars } from "@/lib/format";
 import { Spotlight, type SpotlightProps } from "./Spotlight";
-import { ForensicVisuals, ForwardBleedChart } from "./ForensicVisuals";
+import { ForensicVisuals } from "./ForensicVisuals";
 import { DashboardCard, CARD_CLASS, CTA_CLASS, ACCENT } from "./DashboardCard";
 import { StatTile } from "./StatTile";
 
@@ -39,9 +39,9 @@ export interface OverviewTabProps {
 
 /** Confidence tiers, shown as a color-dot legend instead of a run-on sentence. */
 const CONFIDENCE_LEGEND = [
-  { dot: "#2563eb", term: "High", def: "a direct, unambiguous match" },
-  { dot: "#d97706", term: "Medium", def: "a strong signal, a legitimate exception possible" },
-  { dot: "#94a3b8", term: "Review", def: "needs a human look before filing" },
+  { dot: "#2563eb", term: "High", def: "direct, unambiguous match" },
+  { dot: "#d97706", term: "Medium", def: "strong signal, exception possible" },
+  { dot: "#94a3b8", term: "Review", def: "human look before filing" },
 ];
 
 /** The method, shown as three steps instead of one dense clause. */
@@ -74,31 +74,30 @@ function TrustBadge({ icon }: { icon: React.ReactNode }) {
 
 export function OverviewTab(p: OverviewTabProps) {
   const hasForward = p.forwardMonthlyCents !== null && p.forwardMonthlyCents > 0;
+  // Lead with the big, provable, one-time recoverable figure; the recurring run-rate is
+  // the "and it keeps bleeding" hook beneath it (Vyshag, 2026-07-08).
+  const leadOneTime = p.provableOneTimeCents > 0;
+  const heroCents = leadOneTime ? p.provableOneTimeCents : p.provableCents;
 
   return (
     <div className="space-y-4">
-      {/* Hero: big metric + area chart (Stripe "Gross volume" pattern) */}
+      {/* Hero: the provable recoverable-now figure (Stripe metric card) */}
       <div className={cn(CARD_CLASS, "overflow-hidden")}>
         <div className="p-6 lg:p-7">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-                {hasForward ? "High-confidence overcharge run-rate" : "Provable recovery"}
+                {leadOneTime ? "Recoverable now, provable line by line" : "Provable recovery"}
               </p>
               <p className="mt-1 font-mono text-4xl font-semibold tabular-nums text-slate-900 sm:text-5xl">
-                {hasForward ? formatDollars(p.forwardMonthlyCents!) : formatDollars(p.provableCents)}
-                {hasForward && (
-                  <span className="ml-1 align-baseline text-2xl font-medium text-slate-400">
-                    /mo
-                  </span>
-                )}
+                {formatDollars(heroCents)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {p.provableOneTimeCents > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 ring-1 ring-indigo-100">
-                  <FileSearch className="size-3.5 stroke-[1.5]" />
-                  {formatDollars(p.provableOneTimeCents)} recoverable now
+              {hasForward && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-100">
+                  <Repeat className="size-3.5 stroke-[1.5]" />
+                  {formatDollars(p.forwardMonthlyCents!)}/mo still bleeding
                 </span>
               )}
               {p.urgentCents > 0 && (
@@ -110,14 +109,22 @@ export function OverviewTab(p: OverviewTabProps) {
             </div>
           </div>
           <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-slate-600">
-            {hasForward ? (
+            {leadOneTime ? (
               <>
-                Amazon is overbilling {p.brand} about{" "}
-                <span className="font-semibold text-slate-900">
-                  {formatDollars(p.forwardMonthlyCents!)} every month
-                </span>{" "}
-                in high-confidence, provable overcharges, and it compounds until the wrong referral
-                category and size-tier are corrected.
+                We found{" "}
+                <span className="font-semibold text-slate-900">{formatDollars(heroCents)}</span> in
+                provable overcharges and missing credits in {p.brand}&apos;s own Seller Central
+                data, every dollar traced to a specific row.
+                {hasForward && (
+                  <>
+                    {" "}
+                    On top of that, Amazon keeps overbilling about{" "}
+                    <span className="font-semibold text-slate-900">
+                      {formatDollars(p.forwardMonthlyCents!)}/mo
+                    </span>{" "}
+                    until the wrong referral category and size-tier are corrected.
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -127,12 +134,6 @@ export function OverviewTab(p: OverviewTabProps) {
             )}
           </p>
         </div>
-
-        {hasForward && (
-          <div className="border-t border-slate-100 px-4 pb-3">
-            <ForwardBleedChart monthlyCents={p.forwardMonthlyCents!} />
-          </div>
-        )}
 
         <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-3">
           <p className="text-xs leading-relaxed text-slate-500">
@@ -159,6 +160,27 @@ export function OverviewTab(p: OverviewTabProps) {
           <StatTile key={s.label} label={s.label} value={s.value} />
         ))}
       </div>
+
+      {/* Executive summary (right after the KPIs, as the narrative lead-in) */}
+      {p.execSummary && (
+        <DashboardCard title="Executive summary">
+          <div className="mb-3 flex flex-wrap gap-1.5 text-[11px] font-medium">
+            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
+              {p.stats.find((s) => s.label === "Findings")?.value ?? p.stats[0]?.value}{" "}
+              discrepancies
+            </span>
+            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
+              {formatDollars(p.totalCents)} surfaced
+            </span>
+            {p.urgentCents > 0 && (
+              <span className="rounded-md bg-amber-50 px-2 py-1 text-amber-700">
+                {formatDollars(p.urgentCents)} time-sensitive
+              </span>
+            )}
+          </div>
+          <p className="text-sm leading-relaxed text-slate-600">{p.execSummary}</p>
+        </DashboardCard>
+      )}
 
       {/* Charts bento (category + confidence cards) */}
       <ForensicVisuals
@@ -192,111 +214,110 @@ export function OverviewTab(p: OverviewTabProps) {
         </DashboardCard>
       )}
 
-      {/* Trust row: each claim illustrated, not just stated */}
+      {/* Trust row: each claim carried by a visual, with minimal words */}
       <div className="grid gap-4 sm:grid-cols-3">
-        {/* 1. Recomputed */}
-        <div className={cn(CARD_CLASS, "p-5")}>
+        {/* 1. Recomputed — a charged/correct/gap diagram */}
+        <div className={cn(CARD_CLASS, "flex flex-col p-5")}>
           <div className="flex items-center gap-2.5">
             <TrustBadge icon={<Calculator className="size-4 stroke-[1.5]" />} />
             <p className="text-sm font-semibold text-slate-900">Recomputed, not guessed</p>
           </div>
-          <p className="mt-2.5 text-xs leading-relaxed text-slate-500">
-            We recompute what Amazon should have charged or credited on each sale and match it
-            against what it actually did, using only your own reports.
-          </p>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium">
-            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">What it charged</span>
-            <span className="text-slate-300">vs</span>
-            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">What it should</span>
-            <span className="text-slate-300">=</span>
-            <span
-              className="rounded-md px-2 py-1"
-              style={{ backgroundColor: "rgba(73,113,255,0.1)", color: ACCENT }}
+          <div className="mt-4 flex items-stretch gap-2 text-center">
+            <div className="flex-1 rounded-lg bg-slate-100 px-2 py-2.5">
+              <p className="text-[10px] uppercase tracking-wide text-slate-400">Charged</p>
+              <p className="mt-0.5 font-mono text-sm font-semibold text-slate-700">$9.50</p>
+            </div>
+            <div className="flex items-center text-slate-300">&minus;</div>
+            <div className="flex-1 rounded-lg bg-slate-100 px-2 py-2.5">
+              <p className="text-[10px] uppercase tracking-wide text-slate-400">Correct</p>
+              <p className="mt-0.5 font-mono text-sm font-semibold text-slate-700">$5.50</p>
+            </div>
+            <div className="flex items-center text-slate-300">=</div>
+            <div
+              className="flex-1 rounded-lg px-2 py-2.5"
+              style={{ backgroundColor: "rgba(73,113,255,0.1)" }}
             >
-              the gap
-            </span>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: ACCENT }}>
+                Gap
+              </p>
+              <p className="mt-0.5 font-mono text-sm font-semibold" style={{ color: ACCENT }}>
+                $4.00
+              </p>
+            </div>
           </div>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            Matched against your own reports, never estimated.
+          </p>
         </div>
 
-        {/* 2. Traces to a row */}
-        <div className={cn(CARD_CLASS, "p-5")}>
+        {/* 2. Traces to a row — a sample evidence row */}
+        <div className={cn(CARD_CLASS, "flex flex-col p-5")}>
           <div className="flex items-center gap-2.5">
             <TrustBadge icon={<ScanLine className="size-4 stroke-[1.5]" />} />
             <p className="text-sm font-semibold text-slate-900">Every figure traces to a row</p>
           </div>
-          <p className="mt-2.5 text-xs leading-relaxed text-slate-500">
-            Each provable dollar is defensible line by line, in the PDF and CSV. Every one carries
-            its source from your Seller Central data:
-          </p>
-          <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-600">
-            <span className="rounded-md bg-slate-100 px-2 py-1">Order</span>
-            <span className="rounded-md bg-slate-100 px-2 py-1">SKU</span>
-            <span className="rounded-md bg-slate-100 px-2 py-1">Date</span>
+          <div className="mt-4 overflow-hidden rounded-lg ring-1 ring-slate-200">
+            <div className="grid grid-cols-4 bg-slate-50 px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-wide text-slate-400">
+              <span>Order</span>
+              <span>SKU</span>
+              <span>Date</span>
+              <span className="text-right">Amount</span>
+            </div>
+            <div className="grid grid-cols-4 items-center px-2.5 py-2 font-mono text-[11px] text-slate-600">
+              <span className="truncate">583…4688</span>
+              <span className="truncate">HA-HDP-003</span>
+              <span>Mar 2026</span>
+              <span className="text-right font-semibold text-slate-900">$59.67</span>
+            </div>
           </div>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            Defensible line by line, in the PDF and CSV.
+          </p>
         </div>
 
-        {/* 3. Honest confidence, as a legend */}
-        <div className={cn(CARD_CLASS, "p-5")}>
+        {/* 3. Honest confidence — an aligned legend */}
+        <div className={cn(CARD_CLASS, "flex flex-col p-5")}>
           <div className="flex items-center gap-2.5">
             <TrustBadge icon={<Gauge className="size-4 stroke-[1.5]" />} />
             <p className="text-sm font-semibold text-slate-900">Honest confidence</p>
           </div>
-          <ul className="mt-2.5 space-y-1.5">
+          <ul className="mt-4 space-y-2.5">
             {CONFIDENCE_LEGEND.map((c) => (
-              <li key={c.term} className="flex items-start gap-2 text-xs leading-relaxed">
+              <li key={c.term} className="flex items-center gap-2.5 text-xs">
                 <span
-                  className="mt-1 size-2 shrink-0 rounded-full"
+                  className="size-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: c.dot }}
                 />
-                <span className="text-slate-500">
-                  <span className="font-medium text-slate-700">{c.term}</span> is {c.def}.
-                </span>
+                <span className="w-14 shrink-0 font-semibold text-slate-700">{c.term}</span>
+                <span className="text-slate-500">{c.def}</span>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      {/* Executive summary + method, illustrated */}
-      {(p.execSummary || p.methodologyNote) && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {p.execSummary && (
-            <DashboardCard title="Executive summary">
-              <div className="mb-3 flex flex-wrap gap-1.5 text-[11px] font-medium">
-                <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
-                  {p.stats.find((s) => s.label === "Findings")?.value ?? p.stats[0]?.value}{" "}
-                  discrepancies
-                </span>
-                <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
-                  {formatDollars(p.totalCents)} surfaced
-                </span>
-                {p.urgentCents > 0 && (
-                  <span className="rounded-md bg-amber-50 px-2 py-1 text-amber-700">
-                    {formatDollars(p.urgentCents)} time-sensitive
+      {/* How we found this: method steps + reports read + prose */}
+      {p.methodologyNote && (
+        <DashboardCard title="How we found this">
+          <div className="grid gap-5 lg:grid-cols-3">
+            <ol className="space-y-2 lg:col-span-1">
+              {METHOD_STEPS.map((s) => (
+                <li key={s.n} className="flex items-start gap-2.5">
+                  <span
+                    className="flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
+                    style={{ backgroundColor: "rgba(73,113,255,0.1)", color: ACCENT }}
+                  >
+                    {s.n}
                   </span>
-                )}
-              </div>
-              <p className="text-sm leading-relaxed text-slate-600">{p.execSummary}</p>
-            </DashboardCard>
-          )}
-          {p.methodologyNote && (
-            <DashboardCard title="How we found this">
-              <ol className="mb-3 space-y-2">
-                {METHOD_STEPS.map((s) => (
-                  <li key={s.n} className="flex items-start gap-2.5">
-                    <span
-                      className="flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
-                      style={{ backgroundColor: "rgba(73,113,255,0.1)", color: ACCENT }}
-                    >
-                      {s.n}
-                    </span>
-                    <span className="text-xs leading-relaxed text-slate-600">
-                      <span className="font-medium text-slate-800">{s.term}</span> {s.def}.
-                    </span>
-                  </li>
-                ))}
-              </ol>
-              <div className="mb-3">
+                  <span className="text-xs leading-relaxed text-slate-600">
+                    <span className="font-medium text-slate-800">{s.term}</span> {s.def}.
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <div className="lg:col-span-2">
+              <p className="text-sm leading-relaxed text-slate-600">{p.methodologyNote}</p>
+              <div className="mt-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Reports we read
                 </p>
@@ -308,10 +329,9 @@ export function OverviewTab(p: OverviewTabProps) {
                   ))}
                 </div>
               </div>
-              <p className="text-sm leading-relaxed text-slate-600">{p.methodologyNote}</p>
-            </DashboardCard>
-          )}
-        </div>
+            </div>
+          </div>
+        </DashboardCard>
       )}
 
       {/* Close */}
