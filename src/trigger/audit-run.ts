@@ -174,6 +174,7 @@ export const auditRun = task({
         urgent_recoverable_cents: urgentCents,
         findings_count: allFindings.length,
         settlement_months: settlementMonths,
+        provable_cents: narrativeFigures.provable_cents,
         provable_urgent_cents: narrativeFigures.provable_urgent_cents,
         provable_forward_cents: narrativeFigures.provable_forward_cents,
         provable_forward_monthly_cents: narrativeFigures.provable_forward_monthly_cents,

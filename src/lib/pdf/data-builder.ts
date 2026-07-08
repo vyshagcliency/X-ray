@@ -227,6 +227,9 @@ const isUrgent = (f: Finding) =>
   f.window_days_remaining <= 14;
 
 export interface NarrativeFigures {
+  /** Provable-tier total (row-level amounts; the estimated reimbursement tier is fenced
+   *  out). This is what the exec summary leads with, not the soft all-in total. */
+  provable_cents: number;
   /** High-confidence rolling overcharge, cumulative across the settlement window. */
   provable_forward_cents: number;
   /** …as a monthly run-rate; null when the settlement window is unknown. */
@@ -247,6 +250,9 @@ export function computeNarrativeFigures(
   findings: Finding[],
   settlementMonths: number | null,
 ): NarrativeFigures {
+  const provable_cents = findings
+    .filter((f) => !REIMBURSEMENT_CATEGORIES.has(f.category))
+    .reduce((s, f) => s + f.amount_cents, 0);
   const provable_forward_cents = findings
     .filter((f) => ROLLING_CATEGORIES.has(f.category) && f.confidence === "high")
     .reduce((s, f) => s + f.amount_cents, 0);
@@ -257,7 +263,12 @@ export function computeNarrativeFigures(
   const provable_urgent_cents = findings
     .filter((f) => isUrgent(f) && !REIMBURSEMENT_CATEGORIES.has(f.category))
     .reduce((s, f) => s + f.amount_cents, 0);
-  return { provable_forward_cents, provable_forward_monthly_cents, provable_urgent_cents };
+  return {
+    provable_cents,
+    provable_forward_cents,
+    provable_forward_monthly_cents,
+    provable_urgent_cents,
+  };
 }
 
 /**

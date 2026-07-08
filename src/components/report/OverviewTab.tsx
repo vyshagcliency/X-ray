@@ -135,22 +135,45 @@ export function OverviewTab(p: OverviewTabProps) {
           </p>
         </div>
 
-        <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-3">
-          <p className="text-xs leading-relaxed text-slate-500">
-            <span className="font-semibold text-slate-700">{formatDollars(p.totalCents)}</span>{" "}
-            surfaced in total across {p.categoryCount}{" "}
-            {p.categoryCount === 1 ? "category" : "categories"}: {formatDollars(p.provableCents)}{" "}
-            provable
-            {p.estimatedCents > 0 && <>, {formatDollars(p.estimatedCents)} estimated</>} ·{" "}
-            {p.conf.high} high · {p.conf.medium} medium confidence.
+        {/* Surfaced breakdown, shown as a split bar instead of a sentence */}
+        <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+          <div className="flex items-baseline justify-between text-[11px] font-medium">
+            <span className="uppercase tracking-wider text-slate-400">
+              {formatDollars(p.totalCents)} surfaced across {p.categoryCount}{" "}
+              {p.categoryCount === 1 ? "category" : "categories"}
+            </span>
+          </div>
+          <div className="mt-2 flex h-2 overflow-hidden rounded-full bg-slate-200">
+            <div
+              className="h-full"
+              style={{
+                width: `${(p.provableCents / Math.max(p.totalCents, 1)) * 100}%`,
+                backgroundColor: ACCENT,
+              }}
+            />
             {p.estimatedCents > 0 && (
-              <>
-                {" "}
-                The estimated figure is a flat per-item placeholder, fenced in the Findings tab and
-                not counted in the provable number.
-              </>
+              <div
+                className="h-full bg-slate-300"
+                style={{ width: `${(p.estimatedCents / Math.max(p.totalCents, 1)) * 100}%` }}
+              />
             )}
-          </p>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full" style={{ backgroundColor: ACCENT }} />
+              <span className="font-semibold text-slate-700">{formatDollars(p.provableCents)}</span>
+              <span className="text-slate-400">provable</span>
+            </span>
+            {p.estimatedCents > 0 && (
+              <span className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-slate-300" />
+                <span className="font-semibold text-slate-600">
+                  {formatDollars(p.estimatedCents)}
+                </span>
+                <span className="text-slate-400">estimated, a flat placeholder, not counted</span>
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -161,22 +184,31 @@ export function OverviewTab(p: OverviewTabProps) {
         ))}
       </div>
 
-      {/* Executive summary (right after the KPIs, as the narrative lead-in) */}
+      {/* Executive summary: figure tiles up top, prose beneath */}
       {p.execSummary && (
         <DashboardCard title="Executive summary">
-          <div className="mb-3 flex flex-wrap gap-1.5 text-[11px] font-medium">
-            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
-              {p.stats.find((s) => s.label === "Findings")?.value ?? p.stats[0]?.value}{" "}
-              discrepancies
-            </span>
-            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">
-              {formatDollars(p.totalCents)} surfaced
-            </span>
-            {p.urgentCents > 0 && (
-              <span className="rounded-md bg-amber-50 px-2 py-1 text-amber-700">
-                {formatDollars(p.urgentCents)} time-sensitive
-              </span>
-            )}
+          <div className="mb-4 grid grid-cols-3 divide-x divide-slate-100 rounded-lg bg-slate-50 py-3 text-center">
+            <div className="px-2">
+              <p className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+                {p.stats.find((s) => s.label === "Findings")?.value ?? p.stats[0]?.value}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400">Discrepancies</p>
+            </div>
+            <div className="px-2">
+              <p className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+                {formatDollars(p.provableCents)}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400">Provable</p>
+            </div>
+            <div className="px-2">
+              <p
+                className="font-mono text-lg font-semibold tabular-nums"
+                style={{ color: p.urgentCents > 0 ? "#b45309" : "#0f172a" }}
+              >
+                {p.urgentCents > 0 ? formatDollars(p.urgentCents) : "None"}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400">Time-sensitive</p>
+            </div>
           </div>
           <p className="text-sm leading-relaxed text-slate-600">{p.execSummary}</p>
         </DashboardCard>

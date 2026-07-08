@@ -33,6 +33,9 @@ interface NarrativeInput {
   // narrative must match (fixes the recurring/urgent "two bases on one page" bug,
   // decisions.md 2026-07-07). Optional: legacy callers fall back to the old aggregates.
   provable_urgent_cents?: number;
+  /** Provable-tier total (row-level amounts; estimated tier fenced out). The exec summary
+   *  LEADS with this, not the soft all-in total (Vyshag, 2026-07-08). */
+  provable_cents?: number;
   /** High-confidence rolling overcharge, cumulative across the settlement window. */
   provable_forward_cents?: number;
   /** High-confidence rolling overcharge as a monthly run-rate; null when window unknown. */
@@ -66,9 +69,7 @@ export interface NarrativeOutput {
  * LLM enhancement will be added in Phase 1.5.
  */
 export function generateNarrative(input: NarrativeInput): NarrativeOutput {
-  const { brand_name, total_recoverable_cents, urgent_recoverable_cents, findings_count, categories, settlement_months } = input;
-
-  const totalFormatted = formatDollars(total_recoverable_cents);
+  const { brand_name, total_recoverable_cents, urgent_recoverable_cents, categories, settlement_months } = input;
 
   // The exec summary quotes the SAME figures the hero leads with. When data-builder passes
   // reconciled figures, trust them exactly; otherwise fall back to the pre-reconciliation
@@ -99,11 +100,15 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
       : null;
   const recurringLine = recurringCents > 0
     ? recurringMonthlyCents !== null
-      ? ` About ${formatDollars(recurringMonthlyCents)} of that is a recurring overcharge that keeps accruing each month until the root cause is corrected — ${formatDollars(recurringCents)} has built up over the ${settlement_months} months of data you provided.`
-      : ` ${formatDollars(recurringCents)} of it is a recurring overcharge that keeps accruing until the root cause is corrected.`
+      ? ` About ${formatDollars(recurringMonthlyCents)} of that keeps accruing each month until the root cause is corrected, ${formatDollars(recurringCents)} built up over the ${settlement_months} months of data you provided.`
+      : ` ${formatDollars(recurringCents)} of it keeps accruing until the root cause is corrected.`
     : "";
 
-  const executive_summary = `Our forensic audit of ${brand_name}'s Amazon settlement, fee, and inventory data found ${findings_count} discrepancies totaling ${totalFormatted} where what Amazon charged or credited doesn't match what you're actually owed.${urgentLine}${recurringLine} Each finding below is backed by row-level evidence from your own reports and is ready to dispute.`;
+  // Lead with the PROVABLE, row-traceable figure, not the soft all-in total (which
+  // includes flat estimates). The soft total + estimated split is shown visually on the
+  // report, so the prose stays tight (Vyshag, 2026-07-08).
+  const leadFormatted = formatDollars(input.provable_cents ?? total_recoverable_cents);
+  const executive_summary = `We recomputed ${brand_name}'s Amazon settlement, fee, and inventory data and found ${leadFormatted} in provable overcharges and missing credits, every figure traced to a specific row in your own reports.${urgentLine}${recurringLine} Each finding below is ready to dispute.`;
 
   // Per-category narratives
   const category_narratives: Record<string, string> = {};
@@ -121,7 +126,7 @@ export function generateNarrative(input: NarrativeInput): NarrativeOutput {
       return_credit: `We found ${cat.count} SKUs where customer returns were credited back on paper but the inventory or cash credit never landed in your account, totaling ${catTotal}. Top affected SKUs: ${skuList || "multiple products"}.${urgentNote}`,
       aged_surcharge: `We found ${cat.count} SKUs charged an aged-inventory surcharge while they were actively selling, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}.${urgentNote}`,
       low_price_fee: `We found ${cat.count} sub-$10 SKUs billed the full fulfillment fee where Amazon's automatic Low-Price FBA discount should have applied, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}. The missed discount recurs on every unit until it's corrected.${urgentNote}`,
-      coupon_fee: `We found ${cat.count} orders charged a coupon redemption fee with no matching promotion on the same order, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"} — you were billed for a redemption that didn't happen.${urgentNote}`,
+      coupon_fee: `We found ${cat.count} orders charged a coupon redemption fee with no matching promotion on the same order, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}; you were billed for a redemption that didn't happen.${urgentNote}`,
       deal_fee: `We found ${cat.count} SKUs charged two or more deal fees within a single deal window, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}. A deal runs one fee; the duplicates are recoverable.${urgentNote}`,
       storage_cube: `We found ${cat.count} SKUs billed monthly storage on a larger cubic-foot volume than their measured dimensions warrant, totaling ${catTotal}. Affected SKUs include ${skuList || "multiple products"}. A re-measurement confirms the true cube before filing.${urgentNote}`,
       // Reimbursement findings (demoted add-ons).
