@@ -92,13 +92,13 @@ export function Spotlight(props: SpotlightProps) {
       <p className="max-w-3xl text-[17px] leading-relaxed text-slate-700">{headline}</p>
 
       {/* The math, shown. Every figure is from the row above; the result box pops in accent. */}
-      <div className="mt-5 flex flex-wrap items-stretch gap-2">
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
         {math.map((m, i) => {
           const isResult = i === math.length - 1;
           return (
             <div
               key={m.label}
-              className={cn("rounded-lg border px-3 py-2", !isResult && "border-slate-200 bg-white")}
+              className={cn("rounded-lg border px-3 py-2 sm:flex-1", !isResult && "border-slate-200 bg-white")}
               style={
                 isResult
                   ? { borderColor: "rgba(73,113,255,0.35)", backgroundColor: "rgba(73,113,255,0.08)" }

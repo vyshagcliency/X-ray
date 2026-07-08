@@ -3,6 +3,7 @@ import { FileText, Gauge, Calculator, ArrowRight } from "lucide-react";
 import { formatDollars } from "@/lib/format";
 import { catMeta } from "./category-meta";
 import { financeMath } from "./finding-math";
+import { ACCENT } from "./DashboardCard";
 import { DisputeDraftBlock } from "./DisputeDraftBlock";
 import { draftDispute } from "@/lib/llm/draft-dispute";
 
@@ -292,20 +293,29 @@ export function CategoryDeepDive({
                 </>
               )}
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               {math.rows.map((m) => (
                 <div
                   key={m.label}
-                  className={`rounded-lg border px-3 py-2 ${
+                  className="rounded-lg border px-3 py-2 sm:flex-1"
+                  style={
                     m.emphasis
-                      ? "border-slate-300 bg-white"
-                      : "border-slate-200 bg-white/70"
-                  }`}
+                      ? {
+                          borderColor: "rgba(73,113,255,0.35)",
+                          backgroundColor: "rgba(73,113,255,0.08)",
+                        }
+                      : { borderColor: "#e2e8f0", backgroundColor: "rgba(255,255,255,0.7)" }
+                  }
                 >
                   <p className="text-[11px] leading-tight text-muted-foreground">
                     {m.label}
                   </p>
-                  <p className="font-mono text-sm font-bold tabular-nums">{m.value}</p>
+                  <p
+                    className="font-mono text-sm font-bold tabular-nums"
+                    style={{ color: m.emphasis ? ACCENT : "#0f172a" }}
+                  >
+                    {m.value}
+                  </p>
                 </div>
               ))}
             </div>
