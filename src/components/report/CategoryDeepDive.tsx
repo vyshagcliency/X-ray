@@ -28,11 +28,12 @@ const month = (v: unknown) => {
     ? str(v)
     : d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 };
-// A dispute window renders as a real countdown, "closed" once past, or "—" when the
-// finding has no deadline (rolling overcharge). Never "N/A" beside an urgency claim (D5).
+// A dispute window renders as a real countdown, "closed" once past, or "no deadline"
+// when the finding has no deadline (rolling overcharge). Never "N/A" beside an urgency
+// claim (D5); em dashes are avoided in customer-facing copy.
 const windowLabel = (daysRemaining: number | null) =>
   daysRemaining == null
-    ? "—"
+    ? "no deadline"
     : daysRemaining < 0
       ? "closed"
       : `${daysRemaining}d left`;
@@ -193,27 +194,17 @@ export function CategoryDeepDive({
     : "";
 
   return (
-    <section
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
-      style={{ borderTop: `3px solid ${meta.color}` }}
-    >
-      <div className="p-6">
-        {/* Header */}
+    <div>
+      <div className="px-1 pb-6">
+        {/* Header (the drawer title already carries the category name + color dot) */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span
-                className="inline-block size-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: meta.color }}
-              />
-              <h3 className="text-lg font-bold">{meta.label}</h3>
-              {meta.recurring && (
-                <Badge variant="outline" className="border-amber-300 text-amber-700">
-                  recurring
-                </Badge>
-              )}
-            </div>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            {meta.recurring && (
+              <Badge variant="outline" className="mb-2 border-amber-300 text-amber-700">
+                recurring
+              </Badge>
+            )}
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
               {narrative ?? meta.mechanism}
             </p>
           </div>
@@ -239,7 +230,7 @@ export function CategoryDeepDive({
       </div>
 
       {/* 2 — The evidence (exact rows, traceable) */}
-      <div className="overflow-x-auto border-t border-slate-100">
+      <div className="mt-5 overflow-x-auto rounded-xl ring-1 ring-slate-200/70">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50/60 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -277,14 +268,14 @@ export function CategoryDeepDive({
         </table>
       </div>
       {remaining > 0 && (
-        <p className="border-t border-slate-100 px-4 py-2.5 text-xs text-muted-foreground">
+        <p className="mt-2 px-1 text-xs text-muted-foreground">
           + {remaining.toLocaleString()} more case{remaining !== 1 ? "s" : ""} in this category. Full detail is in the PDF and CSV export.
         </p>
       )}
 
       {/* Dossier footer: the math, how to file, and confidence — so any single row is
           filable from the report alone (Phase 2 exit gate). */}
-      <div className="space-y-5 border-t border-slate-200 bg-slate-50/30 p-6">
+      <div className="mt-6 space-y-5 rounded-xl bg-slate-50 p-5">
         {/* 3 — The math, shown */}
         {math && (
           <div>
@@ -376,6 +367,6 @@ export function CategoryDeepDive({
           </p>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

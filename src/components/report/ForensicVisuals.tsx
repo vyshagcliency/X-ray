@@ -70,28 +70,24 @@ function shortDollars(cents: number): string {
   return `$${Math.round(d)}`;
 }
 
-function ChartCard({
+function ChartBlock({
   title,
   subtitle,
   icon,
-  className,
   children,
 }: {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
-  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${className ?? ""}`}
-    >
+    <div>
       <div className="flex items-center gap-2 text-slate-700">
         {icon}
-        <h3 className="text-base font-bold">{title}</h3>
+        <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+      <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{subtitle}</p>
       {children}
     </div>
   );
@@ -234,7 +230,8 @@ export function ForensicVisuals({
   confidenceCents,
   urgencyBuckets,
   forwardMonthlyCents,
-}: ForensicVisualsProps) {
+  only,
+}: ForensicVisualsProps & { only?: "money" | "urgency" }) {
   // Keep the incoming confidence×punch order (P1.6: "ordered by confidence×punch to
   // match the body, not raw $") — re-sorting by total would re-hero the soft giant (D4).
   const catData = categories.map((c) => ({
@@ -254,47 +251,54 @@ export function ForensicVisuals({
     sub: `${b.count} finding${b.count !== 1 ? "s" : ""}`,
   }));
 
+  const showMoney = !only || only === "money";
+  const showUrgency = !only || only === "urgency";
+
   return (
-    <section className="mt-8 grid gap-6 lg:grid-cols-6">
-      {forwardMonthlyCents !== null && forwardMonthlyCents > 0 && (
-        <ChartCard
-          className="lg:col-span-6"
-          icon={<TrendingUp className="size-4 stroke-[1.5]" />}
-          title="The overcharge compounds forward"
-          subtitle={`Projected from your ${formatDollars(forwardMonthlyCents)}/mo high-confidence run-rate — the reason to stop it now, not just claw back the past.`}
-        >
-          <ForwardBleedChart monthlyCents={forwardMonthlyCents} />
-        </ChartCard>
+    <div className="mt-6 grid gap-x-10 gap-y-8 md:grid-cols-2">
+      {showUrgency && forwardMonthlyCents !== null && forwardMonthlyCents > 0 && (
+        <div className="md:col-span-2">
+          <ChartBlock
+            icon={<TrendingUp className="size-4 stroke-[1.5]" />}
+            title="The overcharge compounds forward"
+            subtitle={`Projected from your ${formatDollars(forwardMonthlyCents)}/mo high-confidence run-rate, the reason to stop it now, not just claw back the past.`}
+          >
+            <ForwardBleedChart monthlyCents={forwardMonthlyCents} />
+          </ChartBlock>
+        </div>
       )}
 
-      <ChartCard
-        className="lg:col-span-3"
-        icon={<Layers className="size-4 stroke-[1.5]" />}
-        title="Where the money is"
-        subtitle="Provable categories, ordered by evidence strength"
-      >
-        <HBarChart data={catData} height={catData.length * 52 + 24} yWidth={150} />
-      </ChartCard>
-
-      <ChartCard
-        className="lg:col-span-3"
-        icon={<ShieldCheck className="size-4 stroke-[1.5]" />}
-        title="How solid is each dollar?"
-        subtitle="Provable dollars by evidence strength — the sharp wedge is smaller but undeniable"
-      >
-        <HBarChart data={confData} height={confData.length * 52 + 24} yWidth={70} />
-      </ChartCard>
-
-      {urgData.length > 0 && (
-        <ChartCard
-          className="lg:col-span-6"
-          icon={<Clock className="size-4 stroke-[1.5]" />}
-          title="Time-sensitive dollars"
-          subtitle="Provable findings with a closing dispute window, by days remaining"
+      {showMoney && (
+        <ChartBlock
+          icon={<Layers className="size-4 stroke-[1.5]" />}
+          title="Where the money is"
+          subtitle="Provable categories, ordered by evidence strength"
         >
-          <HBarChart data={urgData} height={urgData.length * 46 + 24} yWidth={90} />
-        </ChartCard>
+          <HBarChart data={catData} height={catData.length * 52 + 24} yWidth={150} />
+        </ChartBlock>
       )}
-    </section>
+
+      {showMoney && (
+        <ChartBlock
+          icon={<ShieldCheck className="size-4 stroke-[1.5]" />}
+          title="How solid is each dollar?"
+          subtitle="Provable dollars by evidence strength, the sharp wedge is smaller but undeniable"
+        >
+          <HBarChart data={confData} height={confData.length * 52 + 24} yWidth={70} />
+        </ChartBlock>
+      )}
+
+      {showUrgency && urgData.length > 0 && (
+        <div className="md:col-span-2">
+          <ChartBlock
+            icon={<Clock className="size-4 stroke-[1.5]" />}
+            title="Time-sensitive dollars"
+            subtitle="Provable findings with a closing dispute window, by days remaining"
+          >
+            <HBarChart data={urgData} height={urgData.length * 46 + 24} yWidth={90} />
+          </ChartBlock>
+        </div>
+      )}
+    </div>
   );
 }
