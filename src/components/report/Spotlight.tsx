@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { formatDollars, formatPct } from "@/lib/format";
 import { financeMath } from "./finding-math";
+import { ACCENT } from "./DashboardCard";
 
 /**
  * The single sharpest "you found what?" finding (P1.2), featured above the forensic
@@ -90,22 +91,30 @@ export function Spotlight(props: SpotlightProps) {
     <div>
       <p className="max-w-3xl text-[17px] leading-relaxed text-slate-700">{headline}</p>
 
-      {/* The math, shown. Every figure is from the row above. */}
-      <div className="mt-5 flex flex-wrap gap-2">
-        {math.map((m, i) => (
-          <div
-            key={m.label}
-            className={cn(
-              "rounded-lg border px-3 py-2",
-              i === math.length - 1
-                ? "border-slate-300 bg-slate-50"
-                : "border-slate-200 bg-white",
-            )}
-          >
-            <p className="text-[11px] leading-tight text-slate-500">{m.label}</p>
-            <p className="font-mono text-sm font-bold tabular-nums text-slate-900">{m.value}</p>
-          </div>
-        ))}
+      {/* The math, shown. Every figure is from the row above; the result box pops in accent. */}
+      <div className="mt-5 flex flex-wrap items-stretch gap-2">
+        {math.map((m, i) => {
+          const isResult = i === math.length - 1;
+          return (
+            <div
+              key={m.label}
+              className={cn("rounded-lg border px-3 py-2", !isResult && "border-slate-200 bg-white")}
+              style={
+                isResult
+                  ? { borderColor: "rgba(73,113,255,0.35)", backgroundColor: "rgba(73,113,255,0.08)" }
+                  : undefined
+              }
+            >
+              <p className="text-[11px] leading-tight text-slate-500">{m.label}</p>
+              <p
+                className="font-mono text-sm font-bold tabular-nums"
+                style={{ color: isResult ? ACCENT : "#0f172a" }}
+              >
+                {m.value}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       <p className="mt-4 text-xs text-slate-500">

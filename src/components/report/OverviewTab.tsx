@@ -7,6 +7,12 @@ import {
   ShieldCheck,
   ArrowRight,
   Crosshair,
+  Search,
+  Layers,
+  Boxes,
+  Scale,
+  Flag,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,12 +50,20 @@ const CONFIDENCE_LEGEND = [
   { dot: "#94a3b8", term: "Review", def: "human look before filing" },
 ];
 
-/** The method, shown as three steps instead of one dense clause. */
-const METHOD_STEPS = [
-  { n: "1", term: "Recompute", def: "what Amazon should have charged or credited on each sale" },
-  { n: "2", term: "Match", def: "it against what Amazon actually did" },
-  { n: "3", term: "Flag", def: "every discrepancy, with a confidence level" },
+/** The method, shown as three icon-led steps instead of one dense clause. */
+const METHOD_STEPS: { icon: LucideIcon; term: string; def: string }[] = [
+  { icon: Calculator, term: "Recompute", def: "what Amazon should have charged or credited on each sale" },
+  { icon: Scale, term: "Match", def: "it against what Amazon actually did" },
+  { icon: Flag, term: "Flag", def: "every discrepancy, with a confidence level" },
 ];
+
+/** Icon per KPI tile, keyed by the stat label from the model. */
+const KPI_ICON: Record<string, LucideIcon> = {
+  Findings: Search,
+  Categories: Layers,
+  "SKUs affected": Boxes,
+  "High confidence": ShieldCheck,
+};
 
 /** The Seller Central reports the audit reads (the fixed ingest surface). */
 const REPORTS_READ = [
@@ -179,30 +193,44 @@ export function OverviewTab(p: OverviewTabProps) {
 
       {/* KPI tiles */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {p.stats.map((s) => (
-          <StatTile key={s.label} label={s.label} value={s.value} />
-        ))}
+        {p.stats.map((s) => {
+          const Icon = KPI_ICON[s.label];
+          return (
+            <StatTile
+              key={s.label}
+              label={s.label}
+              value={s.value}
+              icon={Icon ? <Icon className="size-4 stroke-[1.5]" /> : undefined}
+            />
+          );
+        })}
       </div>
 
-      {/* Executive summary: figure tiles up top, prose beneath */}
+      {/* Executive summary: figure tiles up top, prose as support beneath */}
       {p.execSummary && (
         <DashboardCard title="Executive summary">
-          <div className="mb-4 grid grid-cols-3 divide-x divide-slate-100 rounded-lg bg-slate-50 py-3 text-center">
+          <div className="mb-4 grid grid-cols-3 divide-x divide-slate-100 rounded-lg bg-slate-50 py-3.5 text-center">
             <div className="px-2">
-              <p className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+              <ScanLine className="mx-auto size-4 stroke-[1.5] text-slate-300" />
+              <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-slate-900">
                 {p.stats.find((s) => s.label === "Findings")?.value ?? p.stats[0]?.value}
               </p>
               <p className="text-[10px] uppercase tracking-wider text-slate-400">Discrepancies</p>
             </div>
             <div className="px-2">
-              <p className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+              <ShieldCheck className="mx-auto size-4 stroke-[1.5] text-slate-300" />
+              <p
+                className="mt-1 font-mono text-lg font-semibold tabular-nums"
+                style={{ color: ACCENT }}
+              >
                 {formatDollars(p.provableCents)}
               </p>
               <p className="text-[10px] uppercase tracking-wider text-slate-400">Provable</p>
             </div>
             <div className="px-2">
+              <AlertTriangle className="mx-auto size-4 stroke-[1.5] text-slate-300" />
               <p
-                className="font-mono text-lg font-semibold tabular-nums"
+                className="mt-1 font-mono text-lg font-semibold tabular-nums"
                 style={{ color: p.urgentCents > 0 ? "#b45309" : "#0f172a" }}
               >
                 {p.urgentCents > 0 ? formatDollars(p.urgentCents) : "None"}
@@ -210,7 +238,7 @@ export function OverviewTab(p: OverviewTabProps) {
               <p className="text-[10px] uppercase tracking-wider text-slate-400">Time-sensitive</p>
             </div>
           </div>
-          <p className="text-sm leading-relaxed text-slate-600">{p.execSummary}</p>
+          <p className="text-[13px] leading-relaxed text-slate-500">{p.execSummary}</p>
         </DashboardCard>
       )}
 
@@ -332,23 +360,24 @@ export function OverviewTab(p: OverviewTabProps) {
       {p.methodologyNote && (
         <DashboardCard title="How we found this">
           <div className="grid gap-5 lg:grid-cols-3">
-            <ol className="space-y-2 lg:col-span-1">
-              {METHOD_STEPS.map((s) => (
-                <li key={s.n} className="flex items-start gap-2.5">
-                  <span
-                    className="flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
-                    style={{ backgroundColor: "rgba(73,113,255,0.1)", color: ACCENT }}
-                  >
-                    {s.n}
-                  </span>
-                  <span className="text-xs leading-relaxed text-slate-600">
-                    <span className="font-medium text-slate-800">{s.term}</span> {s.def}.
-                  </span>
-                </li>
-              ))}
+            <ol className="space-y-3 lg:col-span-1">
+              {METHOD_STEPS.map((s, i) => {
+                const Icon = s.icon;
+                return (
+                  <li key={s.term} className="flex items-start gap-3">
+                    <TrustBadge icon={<Icon className="size-4 stroke-[1.5]" />} />
+                    <div className="text-xs leading-relaxed">
+                      <p className="font-semibold text-slate-800">
+                        {i + 1}. {s.term}
+                      </p>
+                      <p className="text-slate-500">{s.def}.</p>
+                    </div>
+                  </li>
+                );
+              })}
             </ol>
             <div className="lg:col-span-2">
-              <p className="text-sm leading-relaxed text-slate-600">{p.methodologyNote}</p>
+              <p className="text-[13px] leading-relaxed text-slate-500">{p.methodologyNote}</p>
               <div className="mt-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Reports we read
