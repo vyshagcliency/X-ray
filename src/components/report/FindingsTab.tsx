@@ -6,6 +6,7 @@ import { formatDollars } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ReportDrawer } from "./ReportDrawer";
 import { CategoryDeepDive } from "./CategoryDeepDive";
+import { CARD_CLASS } from "./DashboardCard";
 
 interface Finding {
   id: string;
@@ -94,9 +95,10 @@ export function FindingsTab({
   const hasEstimated = categories.some((c) => c.estimated);
 
   return (
-    <div>
+    <div className="space-y-4">
+      <div className={cn(CARD_CLASS, "overflow-hidden")}>
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-3">
         <span className="mr-1 text-xs uppercase tracking-wider text-slate-400">Confidence</span>
         <FilterChip active={conf === "all"} onClick={() => setConf("all")}>
           All
@@ -128,7 +130,7 @@ export function FindingsTab({
       </div>
 
       {/* Category table */}
-      <div className="mt-5 overflow-x-auto rounded-xl ring-1 ring-slate-200">
+      <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 text-left text-[11px] font-medium uppercase tracking-wider text-slate-400">
@@ -202,6 +204,7 @@ export function FindingsTab({
             ))}
           </tbody>
         </table>
+      </div>
       </div>
 
       {kind !== "provable" && hasEstimated && (
