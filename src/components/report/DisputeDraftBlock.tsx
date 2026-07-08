@@ -53,7 +53,7 @@ export function DisputeDraftBlock({
             {body}
           </pre>
           <p className="mt-3 text-[11px] text-muted-foreground">
-            A starter message, not a finished filing — replace{" "}
+            A starter message, not a finished filing. Replace{" "}
             <span className="font-mono">[SELLER_SIGNATURE]</span> and attach the CSV or PDF
             export. A draft for every finding is in the CSV export.
           </p>

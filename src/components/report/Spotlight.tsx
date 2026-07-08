@@ -43,7 +43,7 @@ function headlineFor(s: SpotlightProps): React.ReactNode {
         <span className="font-semibold text-slate-900">
           {formatDollars(s.amount_cents)}
         </span>{" "}
-        overcharge — and it repeats on every {group} sale until the category is fixed.
+        overcharge, and it repeats on every {group} sale until the category is fixed.
       </>
     );
   }
@@ -58,7 +58,7 @@ function headlineFor(s: SpotlightProps): React.ReactNode {
         <span className="font-semibold text-slate-900">
           {String(e.correct_tier)}
         </span>
-        {" "}— overcharging{" "}
+        , overcharging{" "}
         <span className="font-semibold text-slate-900">
           {formatDollars(num(e.per_unit_overcharge_cents))}
         </span>{" "}
@@ -92,11 +92,8 @@ export function Spotlight(props: SpotlightProps) {
     props.order_id && props.order_id !== "N/A" ? props.order_id : props.sku;
 
   return (
-    <section
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
-      style={{ borderLeft: `4px solid ${meta.color}` }}
-    >
-      <div className="p-6 lg:p-7">
+    <div>
+      <div className="rounded-xl bg-white p-6 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 lg:p-7">
         <div className="flex items-center gap-2">
           <Crosshair className="size-4 stroke-[1.5]" style={{ color: meta.color }} />
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -136,9 +133,9 @@ export function Spotlight(props: SpotlightProps) {
         <p className="mt-4 text-xs text-muted-foreground">
           Traces to {traceLabel}{" "}
           <span className="font-mono">{traceValue}</span> in your own Seller Central
-          data — verify it line by line.
+          data. Verify it line by line.
         </p>
       </div>
-    </section>
+    </div>
   );
 }

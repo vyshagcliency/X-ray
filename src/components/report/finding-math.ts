@@ -154,7 +154,7 @@ export function financeMath(
   if (category === "returns" || category === "lost_inventory") {
     return {
       formula:
-        "Estimated at a flat placeholder per item — the real per-item value is confirmed before filing.",
+        "Estimated at a flat placeholder per item. The real per-item value is confirmed before filing.",
       rows: [result("Per-item estimate")],
     };
   }
