@@ -6,13 +6,13 @@ const inter = Inter({ subsets: ["latin"] });
 
 // OG/share framing is payout-integrity — "Settlement Truth Audit," never "FBA
 // reimbursement" (the old, dying wedge). See report-killer-plan P4.3 / feex-rework R3.3.
-const OG_TITLE = "Settlement Truth Audit — your Amazon payouts, verified line by line";
+const OG_TITLE = "Settlement Truth Audit: your Amazon payouts, verified line by line";
 const OG_DESCRIPTION =
   "A free forensic audit that proves, row by row, where Amazon's settlement doesn't reconcile. Upload your own Seller Central reports; get a dispute-ready report in minutes.";
 
 export const metadata: Metadata = {
   title: {
-    default: "Baslix Leakage X-Ray — Settlement Truth Audit",
+    default: "Baslix Leakage X-Ray: Settlement Truth Audit",
     template: "%s · Baslix Leakage X-Ray",
   },
   description: OG_DESCRIPTION,
