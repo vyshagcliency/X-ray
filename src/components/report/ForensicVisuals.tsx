@@ -60,12 +60,15 @@ const CONF = {
   low: { color: "#94a3b8", label: "Review" },
 };
 
-// Urgency: a restrained warm ramp — sooner is deeper amber, never panic-red (frontend.md).
+// Filing timeline: near-term is deeper amber (act soon), long windows cool to slate (runway,
+// not panic-red per frontend.md). Covers the full band set out to 18 months.
 const URGENCY_COLOR: Record<string, string> = {
   "≤ 7 days": "#b45309",
   "8–14 days": "#d97706",
   "15–30 days": "#f59e0b",
-  "31–60 days": "#fbbf24",
+  "31–90 days": "#fbbf24",
+  "3–6 months": "#a3b8d8",
+  "6–18 months": "#94a3b8",
 };
 
 function shortDollars(cents: number): string {
@@ -364,10 +367,10 @@ export function ForensicVisuals({
         <ChartBlock
           className="md:col-span-2"
           icon={<Clock className="size-4 stroke-[1.5]" />}
-          title="Time-sensitive dollars"
-          subtitle="Provable findings with a closing dispute window, by days remaining"
+          title="Filing windows"
+          subtitle="Your provable recovery by how long until each dispute window closes. The near-term bands close soonest; the long bands hold the most, with more runway."
         >
-          <HBarChart data={urgData} height={urgData.length * 46 + 24} yWidth={90} />
+          <HBarChart data={urgData} height={urgData.length * 46 + 24} yWidth={104} />
         </ChartBlock>
       )}
     </div>

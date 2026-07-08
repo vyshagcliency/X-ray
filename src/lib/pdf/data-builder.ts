@@ -63,12 +63,44 @@ export interface UrgencyBucket {
   count: number;
 }
 
+// Bands span the full provable filing timeline, not just the near term: return-credit
+// carries an 18-month window, so a 60-day cap made the largest recovery invisible on the
+// timeline. Long bands read as calm (plenty of runway), near-term as urgent.
 const URGENCY_BANDS: Array<{ label: string; max_days: number }> = [
   { label: "≤ 7 days", max_days: 7 },
   { label: "8–14 days", max_days: 14 },
   { label: "15–30 days", max_days: 30 },
-  { label: "31–60 days", max_days: 60 },
+  { label: "31–90 days", max_days: 90 },
+  { label: "3–6 months", max_days: 180 },
+  { label: "6–18 months", max_days: 550 },
 ];
+
+/**
+ * Bucket provable, windowed findings by days-to-close across the full timeline. Shared by
+ * `buildReportData` (baked into report_data for the PDF + new audits) and the web report
+ * page (recomputed from the live finding set so existing reports get the fuller timeline
+ * without a re-run). Pass only the PROVABLE tier; the estimated tier is fenced elsewhere.
+ */
+export function bucketByWindow(
+  provableFindings: Array<{ window_days_remaining: number | null; amount_cents: number }>,
+): UrgencyBucket[] {
+  return URGENCY_BANDS.map((band, i) => {
+    const prevMax = i === 0 ? -1 : URGENCY_BANDS[i - 1].max_days;
+    const inBand = provableFindings.filter(
+      (f) =>
+        f.window_days_remaining !== null &&
+        f.window_days_remaining >= 0 &&
+        f.window_days_remaining > prevMax &&
+        f.window_days_remaining <= band.max_days,
+    );
+    return {
+      label: band.label,
+      max_days: band.max_days,
+      cents: inBand.reduce((s, f) => s + f.amount_cents, 0),
+      count: inBand.length,
+    };
+  }).filter((b) => b.count > 0);
+}
 
 /**
  * Precomputed, print-ready view (P4.1). The PDF renderers (Typst + React-PDF) cannot
@@ -655,22 +687,7 @@ export function buildReportData(
 
   // Provable findings with a live dispute window, banded by days-to-close (P1.6 timeline).
   // Estimated-tier windows are shown in their own fenced table, never here.
-  const urgencyBuckets: UrgencyBucket[] = URGENCY_BANDS.map((band, i) => {
-    const prevMax = i === 0 ? -1 : URGENCY_BANDS[i - 1].max_days;
-    const inBand = provableFindings.filter(
-      (f) =>
-        f.window_days_remaining !== null &&
-        f.window_days_remaining >= 0 &&
-        f.window_days_remaining > prevMax &&
-        f.window_days_remaining <= band.max_days,
-    );
-    return {
-      label: band.label,
-      max_days: band.max_days,
-      cents: inBand.reduce((s, f) => s + f.amount_cents, 0),
-      count: inBand.length,
-    };
-  }).filter((b) => b.count > 0);
+  const urgencyBuckets: UrgencyBucket[] = bucketByWindow(provableFindings);
 
   // The single sharpest "you found what?" finding (P1.2): the largest high-confidence
   // wedge, else the largest high-confidence finding, else the largest finding.

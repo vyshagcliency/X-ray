@@ -6,7 +6,7 @@ import { ReportShell, type ReportModel } from "@/components/report/ReportShell";
 import { deriveClosingSoon } from "@/components/report/urgent-cases";
 import { stripEmDashes } from "@/lib/report/text";
 import { catMeta } from "@/components/report/category-meta";
-import { REIMBURSEMENT_CATEGORIES } from "@/lib/pdf/data-builder";
+import { REIMBURSEMENT_CATEGORIES, bucketByWindow } from "@/lib/pdf/data-builder";
 
 interface Finding {
   id: string;
@@ -232,7 +232,12 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
   // legacy audits with no report_data — the page then leads with the provable figure.
   const forwardMonthly = rd?.provable_forward_monthly_cents ?? null;
   const spotlight = rd?.spotlight ?? null;
-  const urgencyBuckets = rd?.urgency_buckets ?? [];
+  // Recompute the filing timeline from the live provable findings (which carry their
+  // window dates) so existing reports show the full timeline — including the big
+  // long-window recovery — without waiting for a re-run. New audits bake the same bands.
+  const urgencyBuckets = bucketByWindow(
+    typedFindings.filter((f) => !REIMBURSEMENT_CATEGORIES.has(f.category)),
+  );
   // Provable dollars by confidence — for the confidence×dollars chart (P1.6).
   const provableConfidenceCents = rd?.provable_confidence_cents ?? {
     high: provableCategories.reduce((s, c) => s + (c.high_cents ?? 0), 0),
