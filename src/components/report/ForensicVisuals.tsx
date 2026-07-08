@@ -14,6 +14,8 @@ import {
 } from "recharts";
 import { TrendingUp, Layers, ShieldCheck, Clock } from "lucide-react";
 import { formatDollars } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { CARD_CLASS } from "./DashboardCard";
 
 /**
  * The forensic visual system (P1.6). Four charts, each answering one buyer question —
@@ -74,15 +76,17 @@ function ChartBlock({
   title,
   subtitle,
   icon,
+  className,
   children,
 }: {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <div className={cn(CARD_CLASS, "p-5", className)}>
       <div className="flex items-center gap-2 text-slate-700">
         {icon}
         <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
@@ -93,8 +97,9 @@ function ChartBlock({
   );
 }
 
-/** Endpoint-only label for the projection line (dataviz: label the endpoint, not every point). */
-function ForwardBleedChart({ monthlyCents }: { monthlyCents: number }) {
+/** Endpoint-only label for the projection line (dataviz: label the endpoint, not every point).
+ *  Exported so the Overview hero can render it as its signature area chart (Stripe pattern). */
+export function ForwardBleedChart({ monthlyCents }: { monthlyCents: number }) {
   const HORIZON = 12;
   const data = Array.from({ length: HORIZON + 1 }, (_, m) => ({
     month: m,
@@ -108,8 +113,8 @@ function ForwardBleedChart({ monthlyCents }: { monthlyCents: number }) {
         <AreaChart data={data} margin={{ top: 16, right: 64, left: 8, bottom: 4 }}>
           <defs>
             <linearGradient id="forwardFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2a78d6" stopOpacity={0.16} />
-              <stop offset="100%" stopColor="#2a78d6" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="#635bff" stopOpacity={0.18} />
+              <stop offset="100%" stopColor="#635bff" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <XAxis
@@ -135,7 +140,7 @@ function ForwardBleedChart({ monthlyCents }: { monthlyCents: number }) {
           <Area
             type="monotone"
             dataKey="cumulative"
-            stroke="#2a78d6"
+            stroke="#635bff"
             strokeWidth={2}
             fill="url(#forwardFill)"
             isAnimationActive={false}
@@ -255,17 +260,16 @@ export function ForensicVisuals({
   const showUrgency = !only || only === "urgency";
 
   return (
-    <div className="mt-6 grid gap-x-10 gap-y-8 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2">
       {showUrgency && forwardMonthlyCents !== null && forwardMonthlyCents > 0 && (
-        <div className="md:col-span-2">
-          <ChartBlock
-            icon={<TrendingUp className="size-4 stroke-[1.5]" />}
-            title="The overcharge compounds forward"
-            subtitle={`Projected from your ${formatDollars(forwardMonthlyCents)}/mo high-confidence run-rate, the reason to stop it now, not just claw back the past.`}
-          >
-            <ForwardBleedChart monthlyCents={forwardMonthlyCents} />
-          </ChartBlock>
-        </div>
+        <ChartBlock
+          className="md:col-span-2"
+          icon={<TrendingUp className="size-4 stroke-[1.5]" />}
+          title="The overcharge compounds forward"
+          subtitle={`Projected from your ${formatDollars(forwardMonthlyCents)}/mo high-confidence run-rate, the reason to stop it now, not just claw back the past.`}
+        >
+          <ForwardBleedChart monthlyCents={forwardMonthlyCents} />
+        </ChartBlock>
       )}
 
       {showMoney && (
@@ -289,15 +293,14 @@ export function ForensicVisuals({
       )}
 
       {showUrgency && urgData.length > 0 && (
-        <div className="md:col-span-2">
-          <ChartBlock
-            icon={<Clock className="size-4 stroke-[1.5]" />}
-            title="Time-sensitive dollars"
-            subtitle="Provable findings with a closing dispute window, by days remaining"
-          >
-            <HBarChart data={urgData} height={urgData.length * 46 + 24} yWidth={90} />
-          </ChartBlock>
-        </div>
+        <ChartBlock
+          className="md:col-span-2"
+          icon={<Clock className="size-4 stroke-[1.5]" />}
+          title="Time-sensitive dollars"
+          subtitle="Provable findings with a closing dispute window, by days remaining"
+        >
+          <HBarChart data={urgData} height={urgData.length * 46 + 24} yWidth={90} />
+        </ChartBlock>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ReportTopBar, type TabKey } from "./ReportTopBar";
+import { ReportSidebar, ReportMobileBar, type TabKey } from "./ReportSidebar";
 import { OverviewTab, type OverviewTabProps } from "./OverviewTab";
 import { FindingsTab, type CategoryRow } from "./FindingsTab";
 import { DeadlinesTab } from "./DeadlinesTab";
@@ -50,6 +50,21 @@ export interface ReportModel {
   catLabelMap: Record<string, string>;
 }
 
+const SECTION: Record<TabKey, { title: string; subtitle: string }> = {
+  overview: {
+    title: "Overview",
+    subtitle: "Where Amazon's settlement doesn't reconcile with what you're owed.",
+  },
+  findings: {
+    title: "Findings",
+    subtitle: "Every category, filterable, with the evidence behind each dollar.",
+  },
+  deadlines: {
+    title: "Deadlines",
+    subtitle: "What's closing now, and what compounds if you wait.",
+  },
+};
+
 export function ReportShell({ model: m }: { model: ReportModel }) {
   const [tab, setTab] = useState<TabKey>("overview");
   const overview: OverviewTabProps = {
@@ -70,65 +85,81 @@ export function ReportShell({ model: m }: { model: ReportModel }) {
     execSummary: m.execSummary,
     methodologyNote: m.methodologyNote,
   };
+  const section = SECTION[tab];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <ReportTopBar
-        brand={m.brand}
-        caseId={m.caseId}
-        uuid={m.uuid}
-        recoverableNowCents={m.provableOneTimeCents}
-        tab={tab}
-        onTab={setTab}
-      />
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <div
-          role="tabpanel"
-          id="panel-overview"
-          aria-labelledby="tab-overview"
-          hidden={tab !== "overview"}
-        >
-          {tab === "overview" && <OverviewTab {...overview} />}
-        </div>
-        <div
-          role="tabpanel"
-          id="panel-findings"
-          aria-labelledby="tab-findings"
-          hidden={tab !== "findings"}
-        >
-          {tab === "findings" && (
-            <FindingsTab
-              categories={m.categoryRows}
-              findingsByCategory={m.findingsByCategory}
-              narratives={m.categoryNarratives}
-              provableCents={m.provableCents}
-            />
-          )}
-        </div>
-        <div
-          role="tabpanel"
-          id="panel-deadlines"
-          aria-labelledby="tab-deadlines"
-          hidden={tab !== "deadlines"}
-        >
-          {tab === "deadlines" && (
-            <DeadlinesTab
-              forwardMonthlyCents={m.forwardMonthlyCents}
-              chartCategories={m.chartCategories}
-              provableConfidenceCents={m.provableConfidenceCents}
-              urgencyBuckets={m.urgencyBuckets}
-              closingSoon={m.closingSoon}
-              catLabel={(k) => m.catLabelMap[k] ?? k}
-            />
-          )}
-        </div>
-      </main>
-      <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6">
-        <p className="border-t border-slate-200 pt-4 text-xs text-slate-400">
-          Generated for {m.brand}
-          {m.completedLabel ? ` on ${m.completedLabel}` : ""} · Case ID {m.caseId}
-        </p>
-      </footer>
+      <ReportMobileBar tab={tab} onTab={setTab} />
+      <div className="lg:flex">
+        <ReportSidebar
+          brand={m.brand}
+          caseId={m.caseId}
+          uuid={m.uuid}
+          recoverableNowCents={m.provableOneTimeCents}
+          urgentCents={m.urgentCents}
+          tab={tab}
+          onTab={setTab}
+        />
+
+        <main className="min-w-0 flex-1">
+          <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+            <div className="mb-5">
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+                {section.title}
+              </h1>
+              <p className="mt-0.5 text-sm text-slate-500">{section.subtitle}</p>
+            </div>
+
+            <div
+              role="tabpanel"
+              id="panel-overview"
+              aria-labelledby="tab-overview"
+              hidden={tab !== "overview"}
+            >
+              {tab === "overview" && <OverviewTab {...overview} />}
+            </div>
+            <div
+              role="tabpanel"
+              id="panel-findings"
+              aria-labelledby="tab-findings"
+              hidden={tab !== "findings"}
+            >
+              {tab === "findings" && (
+                <FindingsTab
+                  categories={m.categoryRows}
+                  findingsByCategory={m.findingsByCategory}
+                  narratives={m.categoryNarratives}
+                  provableCents={m.provableCents}
+                />
+              )}
+            </div>
+            <div
+              role="tabpanel"
+              id="panel-deadlines"
+              aria-labelledby="tab-deadlines"
+              hidden={tab !== "deadlines"}
+            >
+              {tab === "deadlines" && (
+                <DeadlinesTab
+                  forwardMonthlyCents={m.forwardMonthlyCents}
+                  chartCategories={m.chartCategories}
+                  provableConfidenceCents={m.provableConfidenceCents}
+                  urgencyBuckets={m.urgencyBuckets}
+                  closingSoon={m.closingSoon}
+                  catLabel={(k) => m.catLabelMap[k] ?? k}
+                />
+              )}
+            </div>
+
+            <footer className="mt-8 border-t border-slate-200 pt-4">
+              <p className="text-xs text-slate-400">
+                Generated for {m.brand}
+                {m.completedLabel ? ` on ${m.completedLabel}` : ""} · Case ID {m.caseId}
+              </p>
+            </footer>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

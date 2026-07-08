@@ -1,7 +1,5 @@
-import { Crosshair } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { formatDollars, formatPct } from "@/lib/format";
-import { catMeta } from "./category-meta";
 import { financeMath } from "./finding-math";
 
 /**
@@ -83,59 +81,37 @@ function headlineFor(s: SpotlightProps): React.ReactNode {
 }
 
 export function Spotlight(props: SpotlightProps) {
-  const meta = catMeta(props.category);
   const headline = headlineFor(props);
   const { rows: math } = financeMath(props.category, props.evidence, props.amount_cents);
-  const traceLabel =
-    props.order_id && props.order_id !== "N/A" ? "order" : "SKU";
-  const traceValue =
-    props.order_id && props.order_id !== "N/A" ? props.order_id : props.sku;
+  const traceLabel = props.order_id && props.order_id !== "N/A" ? "order" : "SKU";
+  const traceValue = props.order_id && props.order_id !== "N/A" ? props.order_id : props.sku;
 
   return (
     <div>
-      <div className="rounded-xl bg-white p-6 shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 lg:p-7">
-        <div className="flex items-center gap-2">
-          <Crosshair className="size-4 stroke-[1.5]" style={{ color: meta.color }} />
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            The sharpest finding
-          </p>
-          {props.confidence === "high" && (
-            <Badge className="text-[11px]">high confidence</Badge>
-          )}
-          <span className="ml-auto text-xs text-muted-foreground">
-            {meta.label}
-          </span>
-        </div>
+      <p className="max-w-3xl text-[17px] leading-relaxed text-slate-700">{headline}</p>
 
-        <p className="mt-3 max-w-3xl text-lg leading-relaxed text-foreground/90">
-          {headline}
-        </p>
-
-        {/* The math, shown — every figure is from the row above. */}
-        <div className="mt-5 flex flex-wrap gap-2">
-          {math.map((m, i) => (
-            <div
-              key={m.label}
-              className={`rounded-lg border px-3 py-2 ${
-                i === math.length - 1
-                  ? "border-slate-300 bg-slate-50"
-                  : "border-slate-200 bg-white"
-              }`}
-            >
-              <p className="text-[11px] leading-tight text-muted-foreground">
-                {m.label}
-              </p>
-              <p className="font-mono text-sm font-bold tabular-nums">{m.value}</p>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-4 text-xs text-muted-foreground">
-          Traces to {traceLabel}{" "}
-          <span className="font-mono">{traceValue}</span> in your own Seller Central
-          data. Verify it line by line.
-        </p>
+      {/* The math, shown. Every figure is from the row above. */}
+      <div className="mt-5 flex flex-wrap gap-2">
+        {math.map((m, i) => (
+          <div
+            key={m.label}
+            className={cn(
+              "rounded-lg border px-3 py-2",
+              i === math.length - 1
+                ? "border-slate-300 bg-slate-50"
+                : "border-slate-200 bg-white",
+            )}
+          >
+            <p className="text-[11px] leading-tight text-slate-500">{m.label}</p>
+            <p className="font-mono text-sm font-bold tabular-nums text-slate-900">{m.value}</p>
+          </div>
+        ))}
       </div>
+
+      <p className="mt-4 text-xs text-slate-500">
+        Traces to {traceLabel} <span className="font-mono">{traceValue}</span> in your own
+        Seller Central data. Verify it line by line.
+      </p>
     </div>
   );
 }
