@@ -1,25 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/db/supabase";
-import { formatDollars } from "@/lib/format";
-import { Button } from "@/components/ui/button";
-import {
-  Download,
-  Table2,
-  AlertTriangle,
-  ArrowRight,
-  ShieldCheck,
-  FileSearch,
-  Calculator,
-  ScanLine,
-  Gauge,
-} from "lucide-react";
-import { NavBar } from "@/components/nav-bar";
-import { ForensicVisuals } from "@/components/report/ForensicVisuals";
-import { Spotlight, type SpotlightProps } from "@/components/report/Spotlight";
-import { CategoryDeepDive } from "@/components/report/CategoryDeepDive";
-import { ReportNav, type NavSection } from "@/components/report/ReportNav";
-import { ReportDock } from "@/components/report/ReportDock";
+import { type SpotlightProps } from "@/components/report/Spotlight";
+import { ReportShell, type ReportModel } from "@/components/report/ReportShell";
+import { deriveClosingSoon } from "@/components/report/urgent-cases";
+import { stripEmDashes } from "@/lib/report/text";
 import { catMeta } from "@/components/report/category-meta";
 import { REIMBURSEMENT_CATEGORIES } from "@/lib/pdf/data-builder";
 
@@ -121,28 +106,6 @@ function deriveCategorySummaries(
       const rb = REIMBURSEMENT_CATEGORIES.has(b.category) ? 1 : 0;
       return ra !== rb ? ra - rb : b.total_cents - a.total_cents;
     });
-}
-
-/** Numbered section header, set on the slate "desk" above the white document panels —
- * the numbering encodes the report's real reading sequence, not decoration. */
-function SectionHeader({
-  index,
-  title,
-  subtitle,
-}: {
-  index: string;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="flex items-baseline gap-3">
-      <span className="shrink-0 font-mono text-xs tabular-nums text-slate-400">{index}</span>
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h2>
-        <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>
-      </div>
-    </div>
-  );
 }
 
 /**
@@ -247,7 +210,6 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
     medium: typedFindings.filter((f) => f.confidence === "medium").length,
     low: typedFindings.filter((f) => f.confidence === "low").length,
   };
-  const confTotal = Math.max(conf.high + conf.medium + conf.low, 1);
   const skusAffected =
     rd?.skus_affected ??
     new Set(typedFindings.map((f) => f.evidence?.sku).filter(Boolean) as string[]).size;
@@ -287,364 +249,65 @@ export default async function ReportPage({ params }: { params: Promise<{ uuid: s
 
   const brand = typedAudit.brand_name;
   const caseId = uuid.slice(0, 8).toUpperCase();
-  const hasEstimated = estimatedCategories.length > 0;
-  const methodIndex = hasEstimated ? "05" : "04";
 
-  // The left ledger rail's model — one entry per section, categories nested as submenus.
-  // Anchor ids match the section/dossier ids below so scroll-spy lights the right row.
-  const navSections: NavSection[] = [
-    { id: "overview", index: "01", label: "Overview" },
-    { id: "map", index: "02", label: "Where the money is" },
-    {
-      id: "findings",
-      index: "03",
-      label: "The findings",
-      children: provableCategories.map((c) => ({
-        id: `cat-${c.category}`,
-        label: catMeta(c.category).label,
-        amount: formatDollars(c.total_cents),
-        color: catMeta(c.category).color,
-      })),
-    },
-    ...(hasEstimated
-      ? [
-          {
-            id: "estimated",
-            index: "04",
-            label: "Estimated",
-            children: estimatedCategories.map((c) => ({
-              id: `cat-${c.category}`,
-              label: catMeta(c.category).label,
-              amount: formatDollars(c.total_cents),
-              color: catMeta(c.category).color,
-            })),
-          } as NavSection,
-        ]
-      : []),
-    { id: "method", index: methodIndex, label: "How we found this" },
-  ];
-
-  return (
-    <div className="min-h-screen bg-slate-100 text-slate-700">
-      <NavBar />
-
-      <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 xl:grid xl:grid-cols-[15rem_minmax(0,1fr)_17rem] xl:gap-x-8">
-        <ReportNav sections={navSections} caseId={caseId} brand={brand} />
-
-        <main className="mx-auto min-w-0 max-w-4xl xl:max-w-none">
-          {/* 01 — Overview: the hero claim, the sharpest finding, why to trust it */}
-          <section id="overview" className="scroll-mt-24">
-            <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-9">
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                <span>Settlement Truth Audit</span>
-                <span className="text-slate-300">·</span>
-                <span className="text-slate-500">{brand}</span>
-                <span className="text-slate-300">·</span>
-                <span className="font-mono normal-case tracking-normal">{caseId}</span>
-              </div>
-
-              {forwardMonthly !== null && forwardMonthly > 0 ? (
-                <>
-                  <p className="mt-4 font-mono text-5xl font-semibold tabular-nums tracking-tight text-slate-900 sm:text-6xl">
-                    {formatDollars(forwardMonthly)}
-                    <span className="ml-1 align-baseline text-2xl font-medium text-slate-400">
-                      /mo
-                    </span>
-                  </p>
-                  <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-slate-600">
-                    Amazon is overbilling {brand} about{" "}
-                    <span className="font-semibold text-slate-900">
-                      {formatDollars(forwardMonthly)} every month
-                    </span>{" "}
-                    in high-confidence, provable overcharges — and it compounds until the
-                    wrong referral category and size-tier are corrected.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="mt-4 font-mono text-5xl font-semibold tabular-nums tracking-tight text-slate-900 sm:text-6xl">
-                    {formatDollars(provable)}
-                  </p>
-                  <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-slate-600">
-                    Provable overcharges and missing credits we found in {brand}&apos;s own
-                    Seller Central data — every figure below traces to a specific row.
-                  </p>
-                </>
-              )}
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                {provableOneTime > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                    <FileSearch className="size-3.5 stroke-[1.5]" />
-                    {formatDollars(provableOneTime)} recoverable now (one-time)
-                  </span>
-                )}
-                {urgentCents > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                    <AlertTriangle className="size-3.5 stroke-[1.5]" />
-                    {formatDollars(urgentCents)} closing within 14 days
-                  </span>
-                )}
-              </div>
-
-              <p className="mt-5 max-w-2xl text-sm text-slate-500">
-                <span className="font-semibold text-slate-700">{formatDollars(total)}</span>{" "}
-                surfaced in total across {categoryCount}{" "}
-                {categoryCount === 1 ? "category" : "categories"} — {formatDollars(provable)}{" "}
-                provable
-                {estimatedCents > 0 && <>, {formatDollars(estimatedCents)} estimated</>} ·{" "}
-                {conf.high} high · {conf.medium} medium confidence. Full forensic detail
-                below.
-              </p>
-              {estimatedCents > 0 && (
-                <p className="mt-2 max-w-2xl text-xs text-slate-400">
-                  The estimated figure is a flat per-item placeholder for reimbursement
-                  buckets, fenced below and <span className="font-medium">not</span> counted
-                  in the provable number — Amazon may have already auto-reimbursed some.
-                </p>
-              )}
-
-              {/* Actions live in the sticky dock on wide screens; shown inline below it. */}
-              <div className="mt-6 flex flex-wrap items-center gap-3 xl:hidden">
-                <Button asChild size="sm">
-                  <a
-                    href="https://calendly.com/vyshag-baslix/30min"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Talk to us: 15 minutes, no pitch <ArrowRight className="ml-1.5 size-4" />
-                  </a>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <a href={`/api/audit/pdf?id=${uuid}`} download>
-                    <Download className="mr-2 size-4" />
-                    Download PDF
-                  </a>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <a href={`/api/audit/csv?id=${uuid}`} download>
-                    <Table2 className="mr-2 size-4" />
-                    Export CSV
-                  </a>
-                </Button>
-              </div>
-
-              {/* KPI strip + confidence bar, ruled off the claim above */}
-              <div className="mt-7 grid gap-6 border-t border-slate-100 pt-6 sm:grid-cols-[1fr_auto] sm:items-end sm:gap-10">
-                <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-                  {stats.map((s) => (
-                    <div key={s.label}>
-                      <dt className="text-[11px] uppercase tracking-wider text-slate-400">
-                        {s.label}
-                      </dt>
-                      <dd className="mt-0.5 font-mono text-xl font-semibold tabular-nums text-slate-900">
-                        {s.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                <div className="sm:w-52">
-                  <p className="text-[11px] uppercase tracking-wider text-slate-400">
-                    Evidence confidence
-                  </p>
-                  <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-slate-200">
-                    <div className="bg-blue-600" style={{ width: `${(conf.high / confTotal) * 100}%` }} />
-                    <div className="bg-amber-400" style={{ width: `${(conf.medium / confTotal) * 100}%` }} />
-                    <div className="bg-slate-300" style={{ width: `${(conf.low / confTotal) * 100}%` }} />
-                  </div>
-                  <div className="mt-1.5 flex justify-between text-[11px] text-slate-400">
-                    <span>{conf.high} high</span>
-                    <span>{conf.medium} medium</span>
-                    <span>{conf.low} review</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* The single sharpest finding — undeniable in 30 seconds */}
-            {spotlight && (
-              <div className="mt-6">
-                <Spotlight {...spotlight} />
-              </div>
-            )}
-
-            {/* Trust strip: disarm the verifier before they doubt */}
-            <div className="mt-6 grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:grid-cols-3 sm:divide-x sm:divide-slate-100">
-              <div className="p-5">
-                <div className="flex items-center gap-2 text-slate-800">
-                  <Calculator className="size-4 stroke-[1.5]" />
-                  <p className="text-sm font-semibold">Recomputed, not guessed</p>
-                </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-                  We recompute what Amazon should have charged or credited on each sale and
-                  match it against what it actually did — using only your own reports.
-                </p>
-              </div>
-              <div className="p-5">
-                <div className="flex items-center gap-2 text-slate-800">
-                  <ScanLine className="size-4 stroke-[1.5]" />
-                  <p className="text-sm font-semibold">Every figure traces to a row</p>
-                </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-                  Each provable dollar carries the source order, SKU and date from your
-                  Seller Central data — defensible line by line, in the PDF and CSV.
-                </p>
-              </div>
-              <div className="p-5">
-                <div className="flex items-center gap-2 text-slate-800">
-                  <Gauge className="size-4 stroke-[1.5]" />
-                  <p className="text-sm font-semibold">Honest confidence</p>
-                </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-                  <span className="font-medium">High</span> = direct, unambiguous match ·{" "}
-                  <span className="font-medium">medium</span> = strong signal, legitimate
-                  exception possible · <span className="font-medium">review</span> = human
-                  look before filing.
-                </p>
-              </div>
-            </div>
-
-            {/* Executive summary — an editorial passage, not another boxed card */}
-            {narrative?.executive_summary && (
-              <div className="mt-8 border-l-2 border-slate-900 pl-5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Executive summary
-                </p>
-                <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-slate-700">
-                  {narrative.executive_summary}
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* 02 — Where the money is: the forensic visual system */}
-          <section id="map" className="mt-14 scroll-mt-24 border-t border-slate-200 pt-10">
-            <SectionHeader
-              index="02"
-              title="Where the money is"
-              subtitle="The same evidence seen by category, by confidence, and by the clock."
-            />
-            <ForensicVisuals
-              categories={chartCategories}
-              confidenceCents={provableConfidenceCents}
-              urgencyBuckets={urgencyBuckets}
-              forwardMonthlyCents={forwardMonthly}
-            />
-          </section>
-
-          {/* 03 — The findings: per-category dossiers (real per-row amounts) */}
-          <section id="findings" className="mt-14 scroll-mt-24 border-t border-slate-200 pt-10">
-            <SectionHeader
-              index="03"
-              title="The findings, in detail"
-              subtitle="Each category, how it happens, and the evidence behind every dollar."
-            />
-            <div className="mt-6 space-y-6">
-              {provableCategories.map((c) => (
-                <div key={c.category} id={`cat-${c.category}`} className="scroll-mt-24">
-                  <CategoryDeepDive
-                    categoryKey={c.category}
-                    summary={c}
-                    findings={byCategory[c.category] ?? []}
-                    narrative={narrative?.category_narratives?.[c.category]}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 04 — Estimated tier: fenced, excluded from the provable total above (D3) */}
-          {hasEstimated && (
-            <section id="estimated" className="mt-14 scroll-mt-24 border-t border-slate-200 pt-10">
-              <SectionHeader
-                index="04"
-                title="Estimated — needs confirmation"
-                subtitle="Flat per-item placeholders, not row-level amounts — confirmed before filing."
-              />
-              <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-500">
-                These reimbursement buckets are flagged from your reports but valued at a
-                flat per-item estimate, not a row-level amount — so they are{" "}
-                <span className="font-medium text-slate-700">
-                  not counted in the {formatDollars(provable)} above
-                </span>
-                . Amazon&apos;s 2024–25 auto-reimbursement may already have covered some. We
-                confirm the real per-item value before filing.
-              </p>
-              <div className="mt-6 space-y-6 rounded-2xl border border-dashed border-slate-300 bg-white/50 p-4 sm:p-5">
-                {estimatedCategories.map((c) => (
-                  <div key={c.category} id={`cat-${c.category}`} className="scroll-mt-24">
-                    <CategoryDeepDive
-                      categoryKey={c.category}
-                      summary={c}
-                      findings={byCategory[c.category] ?? []}
-                      narrative={narrative?.category_narratives?.[c.category]}
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* 05 — How we found this, then the close */}
-          <section id="method" className="mt-14 scroll-mt-24 border-t border-slate-200 pt-10">
-            <SectionHeader
-              index={methodIndex}
-              title="How we found this"
-              subtitle="The method behind every figure — and what to do next."
-            />
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-7">
-              <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
-                {narrative?.methodology_note ??
-                  "Each finding recomputes what Amazon should have charged or credited and matches it against what it actually did, using only your own Seller Central reports."}
-              </p>
-              <p className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-400">
-                Generated for {brand}
-                {typedAudit.completed_at &&
-                  ` on ${new Date(typedAudit.completed_at).toLocaleDateString()}`}{" "}
-                · Case ID {caseId}
-              </p>
-            </div>
-
-            {/* The close — the one ask, in ink. No modal, no popup. */}
-            <div className="mt-6 overflow-hidden rounded-2xl bg-slate-900 px-8 py-10 text-center text-white sm:px-10 sm:py-12">
-              <ShieldCheck className="mx-auto mb-4 size-7 stroke-[1.5] text-white/70" />
-              <p className="text-lg font-semibold">Every finding above is yours to file, free.</p>
-              <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
-                The report is the easy part. What needs our hands is what recurs:{" "}
-                {forwardMonthly !== null && forwardMonthly > 0 ? (
-                  <>
-                    the{" "}
-                    <span className="font-semibold text-white">
-                      {formatDollars(forwardMonthly)}/mo
-                    </span>{" "}
-                    overcharge that keeps compounding until the root cause is fixed
-                  </>
-                ) : (
-                  <>the overcharge that keeps compounding until the root cause is fixed</>
-                )}
-                , the same leakage across every channel you sell on, and the backward claims
-                that need direct access to your account to chase down.
-              </p>
-              <Button size="lg" variant="secondary" className="mt-6" asChild>
-                <a
-                  href="https://calendly.com/vyshag-baslix/30min"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Talk to us: 15 minutes, no pitch deck <ArrowRight className="ml-2 size-4" />
-                </a>
-              </Button>
-            </div>
-          </section>
-        </main>
-
-        <ReportDock
-          uuid={uuid}
-          recoverableNowCents={provableOneTime}
-          urgentCents={urgentCents}
-          forwardMonthlyCents={forwardMonthly}
-        />
-      </div>
-    </div>
+  const estimatedCatKeys = new Set(estimatedCategories.map((c) => c.category));
+  const categoryRows = categorySummaries.map((c) => ({
+    category: c.category,
+    label: catMeta(c.category).label,
+    color: catMeta(c.category).color,
+    recurring: catMeta(c.category).recurring,
+    estimated: c.estimated,
+    totalCents: c.total_cents,
+    count: c.count,
+    urgentCount: c.urgent_count ?? 0,
+    high: c.high,
+    medium: c.medium,
+    low: c.low,
+  }));
+  const catLabelMap = Object.fromEntries(
+    categorySummaries.map((c) => [c.category, catMeta(c.category).label]),
   );
+  const closingSoon = deriveClosingSoon(typedFindings, estimatedCatKeys, 14);
+
+  const model: ReportModel = {
+    brand,
+    caseId,
+    uuid,
+    completedLabel: typedAudit.completed_at
+      ? new Date(typedAudit.completed_at).toLocaleDateString()
+      : null,
+    forwardMonthlyCents: forwardMonthly,
+    provableCents: provable,
+    provableOneTimeCents: provableOneTime,
+    urgentCents,
+    totalCents: total,
+    estimatedCents,
+    categoryCount,
+    conf,
+    stats,
+    spotlight,
+    chartCategories,
+    provableConfidenceCents,
+    urgencyBuckets,
+    execSummary: narrative?.executive_summary
+      ? stripEmDashes(narrative.executive_summary)
+      : undefined,
+    methodologyNote: narrative?.methodology_note
+      ? stripEmDashes(narrative.methodology_note)
+      : undefined,
+    categoryRows,
+    findingsByCategory: byCategory,
+    categoryNarratives: narrative?.category_narratives
+      ? Object.fromEntries(
+          Object.entries(narrative.category_narratives).map(([k, v]) => [
+            k,
+            stripEmDashes(v),
+          ]),
+        )
+      : undefined,
+    closingSoon,
+    catLabelMap,
+  };
+
+  return <ReportShell model={model} />;
 }
