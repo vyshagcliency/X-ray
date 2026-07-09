@@ -12,34 +12,78 @@ import {
   Search,
   FileText,
   RotateCcw,
-  Ruler,
+  Receipt,
+  Check,
   ShieldCheck,
   TrendingUp,
   AlertTriangle,
 } from "lucide-react";
 import { NavBar } from "@/components/nav-bar";
 
-const auditCategories = [
+const detectionFamilies = [
   {
-    label: "Referral fee overcharges",
-    detail:
-      "Amazon charges a higher referral % than your category's contracted rate, and it can run for a year before anyone notices.",
-    stat: "A wrong rate on one category compounds every single sale",
-    icon: DollarSign,
+    icon: TrendingUp,
+    title: "Overcharges that compound",
+    summary:
+      "Wrong rates Amazon keeps billing on every sale, quietly, until the category is corrected.",
+    checks: [
+      {
+        name: "Referral fee overcharges",
+        detail: "A higher referral % than your category's published rate.",
+      },
+      {
+        name: "Size-tier overcharges",
+        detail: "Products re-measured into a bigger tier than they warrant.",
+      },
+      {
+        name: "Missed low-price discount",
+        detail: "Sub-$10 units billed the full fee, never the low-price rate.",
+      },
+    ],
   },
   {
-    label: "Size-tier overcharges",
-    detail:
-      "Amazon re-measures your products, bumps them into a bigger size tier, and overcharges the fulfillment fee on every unit.",
-    stat: "Affects ~10% of ASINs on average",
-    icon: Ruler,
+    icon: Receipt,
+    title: "Fee-line errors",
+    summary:
+      "Charges that shouldn't exist: duplicates, phantom fees, and inflated measurements.",
+    checks: [
+      {
+        name: "Coupon fees with no coupon",
+        detail: "A redemption fee on orders carrying no promotion discount.",
+      },
+      {
+        name: "Double-booked deal fees",
+        detail: "Two or more deal fees inside a single deal window.",
+      },
+      {
+        name: "Storage billed on an inflated cube",
+        detail: "Monthly storage charged on more volume than the item occupies.",
+      },
+      {
+        name: "Aged-stock surcharge on active SKUs",
+        detail: "Long-term surcharges on inventory that's still selling.",
+      },
+    ],
   },
   {
-    label: "Credits never applied",
-    detail:
-      "A customer return is credited to you on paper, but the money never lands, or an aged-stock fee hits SKUs you're actively selling.",
-    stat: "Silent on your books, invisible unless you reconcile",
     icon: RotateCcw,
+    title: "Money owed, never returned",
+    summary:
+      "Credits and reimbursements approved on paper that never actually landed.",
+    checks: [
+      {
+        name: "Return credits never applied",
+        detail: "Units returned as sellable, refunded, but never credited back.",
+      },
+      {
+        name: "Damaged returns, no reimbursement",
+        detail: "Customer-damaged returns with no matching reimbursement.",
+      },
+      {
+        name: "Lost & damaged inventory",
+        detail: "Units lost inside the network with no credit issued.",
+      },
+    ],
   },
 ];
 
@@ -448,11 +492,11 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Detection cards: individual cards */}
-          <div className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-3">
-            {auditCategories.map((c, i) => (
+          {/* Detection families: three grouped cards */}
+          <div className="mx-auto mt-12 grid max-w-5xl gap-5 lg:grid-cols-3">
+            {detectionFamilies.map((family, i) => (
               <div
-                key={c.label}
+                key={family.title}
                 className="reveal-item group relative overflow-hidden rounded-2xl border border-white/[0.08] opacity-0 translate-y-4 transition-all duration-700 hover:border-blue-500/30"
                 style={{ transitionDelay: `${i * 150}ms` }}
               >
@@ -470,22 +514,35 @@ export default function LandingPage() {
                 {/* Top accent line */}
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent transition-opacity duration-500 group-hover:via-blue-400/40" />
 
-                <div className="relative flex flex-col p-6 lg:p-7">
+                <div className="relative flex h-full flex-col p-6 lg:p-7">
                   <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/20">
-                    <c.icon className="size-5 text-blue-400" strokeWidth={1.5} />
+                    <family.icon className="size-5 text-blue-400" strokeWidth={1.5} />
                   </div>
                   <h3 className="mt-5 text-lg font-semibold text-white">
-                    {c.label}
+                    {family.title}
                   </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">
-                    {c.detail}
+                  <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                    {family.summary}
                   </p>
-                  {/* Stat bar */}
-                  <div className="mt-5 border-t border-white/[0.06] pt-4">
-                    <p className="text-xs font-medium text-blue-400">
-                      {c.stat}
-                    </p>
-                  </div>
+                  {/* Checks in this family */}
+                  <ul className="mt-5 space-y-3 border-t border-white/[0.06] pt-5">
+                    {family.checks.map((check) => (
+                      <li key={check.name} className="flex gap-3">
+                        <Check
+                          className="mt-0.5 size-4 shrink-0 text-blue-400"
+                          strokeWidth={2}
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-white">
+                            {check.name}
+                          </p>
+                          <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                            {check.detail}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             ))}
