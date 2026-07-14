@@ -83,6 +83,10 @@ const detectionFamilies = [
         name: "Lost & damaged inventory",
         detail: "Units lost inside the network with no credit issued.",
       },
+      {
+        name: "Refunded, never reimbursed",
+        detail: "Orders refunded to the buyer with no reimbursement to you.",
+      },
     ],
   },
 ];
@@ -377,8 +381,8 @@ export default function LandingPage() {
           {/* Metrics */}
           <div className="mx-auto grid max-w-5xl gap-8 px-6 text-center sm:grid-cols-3">
             {[
-              { value: "1-3%", label: "Of revenue typically recoverable" },
-              { value: "18 mo", label: "Of transaction data scanned" },
+              { value: "11", label: "Detection rules run on every upload" },
+              { value: "18 mo", label: "Scanned by the free tool" },
               { value: "< 8 min", label: "From upload to full report" },
             ].map((metric) => (
               <div key={metric.label}>
@@ -560,7 +564,7 @@ export default function LandingPage() {
                 {
                   icon: Clock,
                   title: "Results in minutes",
-                  text: "Most audits complete in 3\u20138 minutes.",
+                  text: "Most audits complete in 3 to 8 minutes.",
                 },
                 {
                   icon: DollarSign,
@@ -621,7 +625,22 @@ export default function LandingPage() {
               continuous payout-integrity monitoring across every channel you
               sell on, and chase the backward claims you can&apos;t file
               yourself. The audit above is free: it&apos;s proof of what we
-              catch.
+              catch. The full engagement audits 24 months back.
+            </p>
+            <p className="mx-auto mt-4 max-w-xl leading-relaxed text-slate-300">
+              Sell into Walmart, Target, or Kroger too? Retail deductions
+              can&apos;t be self-audited from an export. They have to be
+              checked against your actual agreements, so that side runs as our
+              managed service.{" "}
+              <a
+                href="https://calendly.com/vyshag-baslix/30min"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-white underline underline-offset-4 transition-colors hover:text-blue-300"
+              >
+                Book a walkthrough
+              </a>{" "}
+              and we&apos;ll show you how.
             </p>
             <Link
               href="/start"
